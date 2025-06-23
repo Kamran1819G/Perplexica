@@ -7,7 +7,7 @@ To update Perplexica to the latest version, follow these steps:
 1. Clone the latest version of Perplexica from GitHub:
 
    ```bash
-   git clone https://github.com/ItzCrazyKns/Perplexica.git
+   git clone https://github.com/Kamran1819G/Perplexica.git
    ```
 
 2. Navigate to the project directory.
@@ -33,7 +33,7 @@ To update Perplexica to the latest version, follow these steps:
 1. Clone the latest version of Perplexica from GitHub:
 
    ```bash
-   git clone https://github.com/ItzCrazyKns/Perplexica.git
+   git clone https://github.com/Kamran1819G/Perplexica.git
    ```
 
 2. Navigate to the project directory.

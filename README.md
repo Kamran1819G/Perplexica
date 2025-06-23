@@ -45,7 +45,7 @@ Perplexica is an open-source AI-powered searching tool or an AI-powered search e
 
 Using SearxNG to stay current and fully open source, Perplexica ensures you always get the most up-to-date information without compromising your privacy.
 
-Want to know more about its architecture and how it works? You can read it [here](https://github.com/ItzCrazyKns/Perplexica/tree/master/docs/architecture/README.md).
+Want to know more about its architecture and how it works? You can read it [here](https://github.com/Kamran1819G/Perplexica/tree/master/docs/architecture/README.md).
 
 ## Preview
 
@@ -79,7 +79,7 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
 2. Clone the Perplexica repository:
 
    ```bash
-   git clone https://github.com/ItzCrazyKns/Perplexica.git
+   git clone https://github.com/Kamran1819G/Perplexica.git
    ```
 
 3. After cloning, navigate to the directory containing the project files.
@@ -117,7 +117,7 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
 
 **Note**: Using Docker is recommended as it simplifies the setup process, especially for managing environment variables and dependencies.
 
-See the [installation documentation](https://github.com/ItzCrazyKns/Perplexica/tree/master/docs/installation) for more information like updating, etc.
+See the [installation documentation](https://github.com/Kamran1819G/Perplexica/tree/master/docs/installation) for more information like updating, etc.
 
 ### Ollama Connection Errors
 
@@ -151,7 +151,7 @@ If you wish to use Perplexica as an alternative to traditional search engines li
 
 Perplexica also provides an API for developers looking to integrate its powerful search engine into their own applications. You can run searches, use multiple models and get answers to your queries.
 
-For more details, check out the full documentation [here](https://github.com/ItzCrazyKns/Perplexica/tree/master/docs/API/SEARCH.md).
+For more details, check out the full documentation [here](https://github.com/Kamran1819G/Perplexica/tree/master/docs/API/SEARCH.md).
 
 ## Expose Perplexica to network
 
@@ -191,6 +191,6 @@ Perplexica is built on the idea that AI and large language models should be easy
 
 ## Help and Support
 
-If you have any questions or feedback, please feel free to reach out to us. You can create an issue on GitHub or join our Discord server. There, you can connect with other users, share your experiences and reviews, and receive more personalized help. [Click here](https://discord.gg/EFwsmQDgAu) to join the Discord server. To discuss matters outside of regular support, feel free to contact me on Discord at `itzcrazykns`.
+If you have any questions or feedback, please feel free to reach out to us. You can create an issue on GitHub or join our Discord server. There, you can connect with other users, share your experiences and reviews, and receive more personalized help. [Click here](https://discord.gg/EFwsmQDgAu) to join the Discord server. To discuss matters outside of regular support, feel free to contact me on Discord at `Kamran1819G`.
 
 Thank you for exploring Perplexica, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexica and expand its capabilities. We value your feedback and contributions which help us make Perplexica even better. Don't forget to check back for updates and new features!

@@ -3,7 +3,7 @@ name: Build & Push Docker Images
 on:
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
 
@@ -31,16 +31,16 @@ jobs:
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Build and push AMD64 Docker image
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/amd64 \
-            --cache-from=type=registry,ref=itzcrazykns1337/${IMAGE_NAME}:amd64 \
+            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:amd64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t itzcrazykns1337/${IMAGE_NAME}:amd64 \
+            -t Kamran1819G/${IMAGE_NAME}:amd64 \
             --push .
 
       - name: Build and push AMD64 release Docker image
@@ -49,11 +49,11 @@ jobs:
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/amd64 \
-            --cache-from=type=registry,ref=itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
+            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
+            -t Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
             --push .
 
   build-arm64:
@@ -79,16 +79,16 @@ jobs:
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Build and push ARM64 Docker image
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/arm64 \
-            --cache-from=type=registry,ref=itzcrazykns1337/${IMAGE_NAME}:arm64 \
+            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:arm64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t itzcrazykns1337/${IMAGE_NAME}:arm64 \
+            -t Kamran1819G/${IMAGE_NAME}:arm64 \
             --push .
 
       - name: Build and push ARM64 release Docker image
@@ -97,11 +97,11 @@ jobs:
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/arm64 \
-            --cache-from=type=registry,ref=itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
+            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
+            -t Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
             --push .
 
   manifest:
@@ -120,19 +120,19 @@ jobs:
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Create and push multi-arch manifest for main
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           IMAGE_NAME=perplexica
-          docker manifest create itzcrazykns1337/${IMAGE_NAME}:main \
-            --amend itzcrazykns1337/${IMAGE_NAME}:amd64 \
-            --amend itzcrazykns1337/${IMAGE_NAME}:arm64
-          docker manifest push itzcrazykns1337/${IMAGE_NAME}:main
+          docker manifest create Kamran1819G/${IMAGE_NAME}:main \
+            --amend Kamran1819G/${IMAGE_NAME}:amd64 \
+            --amend Kamran1819G/${IMAGE_NAME}:arm64
+          docker manifest push Kamran1819G/${IMAGE_NAME}:main
 
       - name: Create and push multi-arch manifest for releases
         if: github.event_name == 'release'
         run: |
           IMAGE_NAME=perplexica
-          docker manifest create itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }} \
-            --amend itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
-            --amend itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64
-          docker manifest push itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}
+          docker manifest create Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }} \
+            --amend Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
+            --amend Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64
+          docker manifest push Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}
