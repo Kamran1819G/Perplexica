@@ -1,5 +1,52 @@
 # 🚀 Perplexica - An AI-powered search engine 🔎 <!-- omit in toc -->
 
+---
+
+## 🟢 Quick Start (For Beginners)
+
+Follow these simple steps to run Perplexica on your computer. No coding experience needed!
+
+### 1. Install Docker
+- Download and install Docker Desktop from [here](https://www.docker.com/products/docker-desktop/).
+- Follow the instructions for your operating system (Windows, Mac, or Linux).
+
+### 2. Download Perplexica
+- Open a terminal (Command Prompt, PowerShell, or Terminal app).
+- Run this command to download Perplexica:
+  ```bash
+  git clone https://github.com/Kamran1819G/Perplexica.git
+  ```
+- Go into the project folder:
+  ```bash
+  cd Perplexica
+  ```
+
+### 3. Copy the Example Config
+- Find the file named `sample.config.toml` in the project folder.
+- Make a copy and rename it to `config.toml`.
+- (Optional) You can edit `config.toml` later to change settings, but the default works for most users.
+
+### 4. Start Perplexica
+- In the terminal, run:
+  ```bash
+  docker-compose up --build
+  ```
+- The first time, this may take a few minutes.
+
+### 5. Open the App
+- Once you see messages that Perplexica is running, open your web browser.
+- Go to [http://localhost:3000](http://localhost:3000)
+
+That's it! 🎉
+
+### 6. Stop Perplexica
+- To stop the app, go back to your terminal and press `Ctrl+C`.
+- To remove the running containers, run:
+  ```bash
+  docker-compose down
+  ```
+
+---
 
 [![Discord](https://dcbadge.vercel.app/api/server/26aArMy8tT?style=flat&compact=true)](https://discord.gg/26aArMy8tT)
 
