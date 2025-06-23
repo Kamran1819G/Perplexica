@@ -23,6 +23,9 @@ interface Config {
     GROQ: {
       API_KEY: string;
     };
+    OPENROUTER: {
+      API_KEY: string;
+    };
     ANTHROPIC: {
       API_KEY: string;
     };
@@ -73,6 +76,9 @@ export const getKeepAlive = () => loadConfig().GENERAL.KEEP_ALIVE;
 export const getOpenaiApiKey = () => loadConfig().MODELS.OPENAI.API_KEY;
 
 export const getGroqApiKey = () => loadConfig().MODELS.GROQ.API_KEY;
+
+export const getOpenrouterApiKey = () =>
+  loadConfig().MODELS.OPENROUTER.API_KEY;
 
 export const getAnthropicApiKey = () => loadConfig().MODELS.ANTHROPIC.API_KEY;
 

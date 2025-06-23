@@ -5,6 +5,7 @@ import {
   getCustomOpenaiModelName,
   getGeminiApiKey,
   getGroqApiKey,
+  getOpenrouterApiKey,
   getOllamaApiEndpoint,
   getOpenaiApiKey,
   getDeepseekApiKey,
@@ -55,6 +56,7 @@ export const GET = async (req: Request) => {
     config['lmStudioApiUrl'] = getLMStudioApiEndpoint();
     config['anthropicApiKey'] = getAnthropicApiKey();
     config['groqApiKey'] = getGroqApiKey();
+    config['openrouterApiKey'] = getOpenrouterApiKey();
     config['geminiApiKey'] = getGeminiApiKey();
     config['deepseekApiKey'] = getDeepseekApiKey();
     config['customOpenaiApiUrl'] = getCustomOpenaiApiUrl();

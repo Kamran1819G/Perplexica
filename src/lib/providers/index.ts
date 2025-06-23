@@ -18,6 +18,7 @@ import {
   PROVIDER_INFO as OllamaInfo,
 } from './ollama';
 import { loadGroqChatModels, PROVIDER_INFO as GroqInfo } from './groq';
+import { loadOpenrouterChatModels } from '@/lib/providers/openrouter';
 import {
   loadAnthropicChatModels,
   PROVIDER_INFO as AnthropicInfo,
@@ -75,6 +76,7 @@ export const chatModelProviders: Record<
   groq: loadGroqChatModels,
   anthropic: loadAnthropicChatModels,
   gemini: loadGeminiChatModels,
+  openrouter: loadOpenrouterChatModels,
   deepseek: loadDeepseekChatModels,
   lmstudio: loadLMStudioChatModels,
 };

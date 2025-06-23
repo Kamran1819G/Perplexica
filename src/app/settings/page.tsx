@@ -7,7 +7,6 @@ import { Switch } from '@headlessui/react';
 import ThemeSwitcher from '@/components/theme/Switcher';
 import { ImagesIcon, VideoIcon } from 'lucide-react';
 import Link from 'next/link';
-import { PROVIDER_METADATA } from '@/lib/providers';
 
 interface SettingsType {
   chatModelProviders: {
@@ -18,11 +17,10 @@ interface SettingsType {
   };
   openaiApiKey: string;
   groqApiKey: string;
+  openrouterApiKey: string;
   anthropicApiKey: string;
   geminiApiKey: string;
   ollamaApiUrl: string;
-  lmStudioApiUrl: string;
-  deepseekApiKey: string;
   customOpenaiApiKey: string;
   customOpenaiApiUrl: string;
   customOpenaiModelName: string;
@@ -143,7 +141,7 @@ const Page = () => {
   const [selectedEmbeddingModel, setSelectedEmbeddingModel] = useState<
     string | null
   >(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [automaticImageSearch, setAutomaticImageSearch] = useState(false);
   const [automaticVideoSearch, setAutomaticVideoSearch] = useState(false);
   const [systemInstructions, setSystemInstructions] = useState<string>('');
@@ -151,6 +149,7 @@ const Page = () => {
 
   useEffect(() => {
     const fetchConfig = async () => {
+      setIsLoading(true);
       const res = await fetch(`/api/config`, {
         headers: {
           'Content-Type': 'application/json',
@@ -549,9 +548,8 @@ const Page = () => {
                         (provider) => ({
                           value: provider,
                           label:
-                            (PROVIDER_METADATA as any)[provider]?.displayName ||
                             provider.charAt(0).toUpperCase() +
-                              provider.slice(1),
+                            provider.slice(1),
                         }),
                       )}
                     />
@@ -692,9 +690,8 @@ const Page = () => {
                         (provider) => ({
                           value: provider,
                           label:
-                            (PROVIDER_METADATA as any)[provider]?.displayName ||
                             provider.charAt(0).toUpperCase() +
-                              provider.slice(1),
+                            provider.slice(1),
                         }),
                       )}
                     />
@@ -807,6 +804,25 @@ const Page = () => {
 
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
+                    OpenRouter API Key
+                  </p>
+                  <Input
+                    type="text"
+                    placeholder="OpenRouter API Key"
+                    value={config.openrouterApiKey}
+                    isSaving={savingStates['openrouterApiKey']}
+                    onChange={(e) => {
+                      setConfig((prev) => ({
+                        ...prev!,
+                        openrouterApiKey: e.target.value,
+                      }));
+                    }}
+                    onSave={(value) => saveConfig('openrouterApiKey', value)}
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-1">
+                  <p className="text-black/70 dark:text-white/70 text-sm">
                     Anthropic API Key
                   </p>
                   <Input
@@ -840,44 +856,6 @@ const Page = () => {
                       }));
                     }}
                     onSave={(value) => saveConfig('geminiApiKey', value)}
-                  />
-                </div>
-
-                <div className="flex flex-col space-y-1">
-                  <p className="text-black/70 dark:text-white/70 text-sm">
-                    Deepseek API Key
-                  </p>
-                  <Input
-                    type="text"
-                    placeholder="Deepseek API Key"
-                    value={config.deepseekApiKey}
-                    isSaving={savingStates['deepseekApiKey']}
-                    onChange={(e) => {
-                      setConfig((prev) => ({
-                        ...prev!,
-                        deepseekApiKey: e.target.value,
-                      }));
-                    }}
-                    onSave={(value) => saveConfig('deepseekApiKey', value)}
-                  />
-                </div>
-
-                <div className="flex flex-col space-y-1">
-                  <p className="text-black/70 dark:text-white/70 text-sm">
-                    LM Studio API URL
-                  </p>
-                  <Input
-                    type="text"
-                    placeholder="LM Studio API URL"
-                    value={config.lmStudioApiUrl}
-                    isSaving={savingStates['lmStudioApiUrl']}
-                    onChange={(e) => {
-                      setConfig((prev) => ({
-                        ...prev!,
-                        lmStudioApiUrl: e.target.value,
-                      }));
-                    }}
-                    onSave={(value) => saveConfig('lmStudioApiUrl', value)}
                   />
                 </div>
               </div>
