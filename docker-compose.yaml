@@ -14,29 +14,22 @@ services:
     build:
       context: .
       dockerfile: app.dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=http://127.0.0.1:3001/api
-        - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:3001
-    depends_on:
-      - perplexica-backend
+    environment:
+      - SEARXNG_API_URL=http://searxng:8080
+      - DATA_DIR=/home/perplexica
     ports:
       - 3000:3000
     networks:
       - perplexica-network
+    volumes:
+      - backend-dbstore:/home/perplexica/data
+      - uploads:/home/perplexica/uploads
+      - ./config.toml:/home/perplexica/config.toml
     restart: unless-stopped
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend
-          target: /app
-          ignore:
-            - node_modules/
-            - .next/
-        - action: rebuild
-          path: app.dockerfile
 
 networks:
   perplexica-network:
 
 volumes:
   backend-dbstore:
+  uploads:
