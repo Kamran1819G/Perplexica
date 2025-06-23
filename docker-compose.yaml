@@ -25,8 +25,6 @@ services:
       - backend-dbstore:/home/perplexica/data
       - uploads:/home/perplexica/uploads
       - ./config.toml:/home/perplexica/config.toml
-      - ./src:/home/perplexica/src
-      - ./public:/home/perplexica/public
       - ./drizzle:/home/perplexica/drizzle
       - ./entrypoint.sh:/home/perplexica/entrypoint.sh
       - ./package.json:/home/perplexica/package.json
