@@ -20,6 +20,7 @@ interface VideoSearchBody {
   chatModel?: ChatModel;
 }
 
+// Only SearxNG is used for video search. YouTube Data API is NOT used.
 export const POST = async (req: Request) => {
   try {
     const body: VideoSearchBody = await req.json();
@@ -71,6 +72,12 @@ export const POST = async (req: Request) => {
       },
       llm,
     );
+
+    if (!videos || videos.length === 0) {
+      return Response.json({
+        message: 'No real-time video results found. SearxNG may be rate-limited, blocked, or the query returned no results.'
+      }, { status: 200 });
+    }
 
     return Response.json({ videos }, { status: 200 });
   } catch (err) {
