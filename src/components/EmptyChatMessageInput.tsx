@@ -5,6 +5,7 @@ import CopilotToggle from './MessageInputActions/Copilot';
 import Focus from './MessageInputActions/Focus';
 import Optimization from './MessageInputActions/Optimization';
 import Attach from './MessageInputActions/Attach';
+import Microphone from './MessageInputActions/Microphone';
 import { File } from './ChatWindow';
 
 const EmptyChatMessageInput = ({
@@ -97,6 +98,9 @@ const EmptyChatMessageInput = ({
             <Optimization
               optimizationMode={optimizationMode}
               setOptimizationMode={setOptimizationMode}
+            />
+            <Microphone
+              onDictate={(text) => setMessage((prev) => prev + (prev ? ' ' : '') + text)}
             />
             <button
               disabled={message.trim().length === 0}

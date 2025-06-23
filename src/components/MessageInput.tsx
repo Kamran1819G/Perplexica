@@ -6,6 +6,7 @@ import Attach from './MessageInputActions/Attach';
 import CopilotToggle from './MessageInputActions/Copilot';
 import { File } from './ChatWindow';
 import AttachSmall from './MessageInputActions/AttachSmall';
+import Microphone from './MessageInputActions/Microphone';
 
 const MessageInput = ({
   sendMessage,
@@ -103,6 +104,10 @@ const MessageInput = ({
             copilotEnabled={copilotEnabled}
             setCopilotEnabled={setCopilotEnabled}
           />
+          <Microphone
+            onDictate={(text) => setMessage((prev) => prev + (prev ? ' ' : '') + text)}
+            disabled={loading}
+          />
           <button
             disabled={message.trim().length === 0 || loading}
             className="bg-[#24A0ED] text-white disabled:text-black/50 dark:disabled:text-white/50 hover:bg-opacity-85 transition duration-100 disabled:bg-[#e0e0dc79] dark:disabled:bg-[#ececec21] rounded-full p-2"
@@ -123,6 +128,10 @@ const MessageInput = ({
             <CopilotToggle
               copilotEnabled={copilotEnabled}
               setCopilotEnabled={setCopilotEnabled}
+            />
+            <Microphone
+              onDictate={(text) => setMessage((prev) => prev + (prev ? ' ' : '') + text)}
+              disabled={loading}
             />
             <button
               disabled={message.trim().length === 0 || loading}
