@@ -1,12 +1,13 @@
 import { cn } from '@/lib/utils';
 import { ArrowUp } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import Attach from './MessageInputActions/Attach';
 import CopilotToggle from './MessageInputActions/Copilot';
 import { File } from './ChatWindow';
 import AttachSmall from './MessageInputActions/AttachSmall';
 import Microphone from './MessageInputActions/Microphone';
+import axios from 'axios';
 
 const MessageInput = ({
   sendMessage,
@@ -27,6 +28,9 @@ const MessageInput = ({
   const [message, setMessage] = useState('');
   const [textareaRows, setTextareaRows] = useState(1);
   const [mode, setMode] = useState<'multi' | 'single'>('single');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (textareaRows >= 2 && message && mode === 'single') {
@@ -60,6 +64,31 @@ const MessageInput = ({
     };
   }, []);
 
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const searxngURL = process.env.NEXT_PUBLIC_SEARXNG_API_URL || '';
+      const url = `${searxngURL}/search?format=json&q=${encodeURIComponent(q)}`;
+      const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      setSuggestions(res.data.suggestions || []);
+    } catch {
+      setSuggestions([]);
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    if (suggestionTimeout.current) clearTimeout(suggestionTimeout.current);
+    const value = e.target.value;
+    suggestionTimeout.current = setTimeout(() => {
+      fetchSuggestions(value);
+      setShowSuggestions(!!value);
+    }, 250);
+  };
+
   return (
     <form
       onSubmit={(e) => {
@@ -91,13 +120,31 @@ const MessageInput = ({
       <TextareaAutosize
         ref={inputRef}
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={handleInputChange}
+        onFocus={() => setShowSuggestions(!!message)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
         onHeightChange={(height, props) => {
           setTextareaRows(Math.ceil(height / props.rowHeight));
         }}
         className="transition bg-transparent dark:placeholder:text-white/50 placeholder:text-sm text-sm dark:text-white resize-none focus:outline-none w-full px-2 max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink"
         placeholder="Ask a follow-up"
       />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full max-w-xl bg-dark-secondary border border-dark-200 rounded-lg shadow-lg overflow-hidden">
+          {suggestions.map((s, i) => (
+            <div
+              key={i}
+              className="px-4 py-2 text-white hover:bg-[#24A0ED]/20 cursor-pointer text-sm"
+              onMouseDown={() => {
+                setMessage(s);
+                setShowSuggestions(false);
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
       {mode === 'single' && (
         <div className="flex flex-row items-center space-x-4">
           <CopilotToggle

@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import CopilotToggle from './MessageInputActions/Copilot';
 import Focus from './MessageInputActions/Focus';
@@ -7,6 +7,7 @@ import Optimization from './MessageInputActions/Optimization';
 import Attach from './MessageInputActions/Attach';
 import Microphone from './MessageInputActions/Microphone';
 import { File } from './ChatWindow';
+import axios from 'axios';
 
 const EmptyChatMessageInput = ({
   sendMessage,
@@ -31,6 +32,9 @@ const EmptyChatMessageInput = ({
 }) => {
   const [copilotEnabled, setCopilotEnabled] = useState(false);
   const [message, setMessage] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -58,6 +62,31 @@ const EmptyChatMessageInput = ({
     };
   }, []);
 
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const searxngURL = process.env.NEXT_PUBLIC_SEARXNG_API_URL || '';
+      const url = `${searxngURL}/search?format=json&q=${encodeURIComponent(q)}`;
+      const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      setSuggestions(res.data.suggestions || []);
+    } catch {
+      setSuggestions([]);
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    if (suggestionTimeout.current) clearTimeout(suggestionTimeout.current);
+    const value = e.target.value;
+    suggestionTimeout.current = setTimeout(() => {
+      fetchSuggestions(value);
+      setShowSuggestions(!!value);
+    }, 250);
+  };
+
   return (
     <form
       onSubmit={(e) => {
@@ -78,11 +107,29 @@ const EmptyChatMessageInput = ({
         <TextareaAutosize
           ref={inputRef}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleInputChange}
+          onFocus={() => setShowSuggestions(!!message)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           minRows={2}
           className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-sm text-black dark:text-white resize-none focus:outline-none w-full max-h-24 lg:max-h-36 xl:max-h-48"
           placeholder="Ask anything..."
         />
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-50 mt-1 w-full max-w-xl bg-dark-secondary border border-dark-200 rounded-lg shadow-lg overflow-hidden">
+            {suggestions.map((s, i) => (
+              <div
+                key={i}
+                className="px-4 py-2 text-white hover:bg-[#24A0ED]/20 cursor-pointer text-sm"
+                onMouseDown={() => {
+                  setMessage(s);
+                  setShowSuggestions(false);
+                }}
+              >
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex flex-row items-center justify-between mt-4">
           <div className="flex flex-row items-center space-x-2 lg:space-x-4">
             <Focus focusMode={focusMode} setFocusMode={setFocusMode} />
