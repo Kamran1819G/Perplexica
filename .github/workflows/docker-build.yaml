@@ -36,11 +36,11 @@ jobs:
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/amd64 \
-            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:amd64 \
+            --cache-from=type=registry,ref=kamran1819g/${IMAGE_NAME}:amd64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t Kamran1819G/${IMAGE_NAME}:amd64 \
+            -t kamran1819g/${IMAGE_NAME}:amd64 \
             --push .
 
       - name: Build and push AMD64 release Docker image
@@ -49,11 +49,11 @@ jobs:
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/amd64 \
-            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
+            --cache-from=type=registry,ref=kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
+            -t kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
             --push .
 
   build-arm64:
@@ -84,11 +84,11 @@ jobs:
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/arm64 \
-            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:arm64 \
+            --cache-from=type=registry,ref=kamran1819g/${IMAGE_NAME}:arm64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t Kamran1819G/${IMAGE_NAME}:arm64 \
+            -t kamran1819g/${IMAGE_NAME}:arm64 \
             --push .
 
       - name: Build and push ARM64 release Docker image
@@ -97,11 +97,11 @@ jobs:
           DOCKERFILE=app.dockerfile
           IMAGE_NAME=perplexica
           docker buildx build --platform linux/arm64 \
-            --cache-from=type=registry,ref=Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
+            --cache-from=type=registry,ref=kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
             --cache-to=type=inline \
             --provenance false \
             -f $DOCKERFILE \
-            -t Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
+            -t kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64 \
             --push .
 
   manifest:
@@ -123,16 +123,16 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           IMAGE_NAME=perplexica
-          docker manifest create Kamran1819G/${IMAGE_NAME}:main \
-            --amend Kamran1819G/${IMAGE_NAME}:amd64 \
-            --amend Kamran1819G/${IMAGE_NAME}:arm64
-          docker manifest push Kamran1819G/${IMAGE_NAME}:main
+          docker manifest create kamran1819g/${IMAGE_NAME}:main \
+            --amend kamran1819g/${IMAGE_NAME}:amd64 \
+            --amend kamran1819g/${IMAGE_NAME}:arm64
+          docker manifest push kamran1819g/${IMAGE_NAME}:main
 
       - name: Create and push multi-arch manifest for releases
         if: github.event_name == 'release'
         run: |
           IMAGE_NAME=perplexica
-          docker manifest create Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }} \
-            --amend Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
-            --amend Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64
-          docker manifest push Kamran1819G/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}
+          docker manifest create kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }} \
+            --amend kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-amd64 \
+            --amend kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}-arm64
+          docker manifest push kamran1819g/${IMAGE_NAME}:${{ env.RELEASE_VERSION }}

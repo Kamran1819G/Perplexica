@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: Kamran1819G/perplexica:main
+    image: kamran1819g/perplexica:main
     build:
       context: .
       dockerfile: app.dockerfile
