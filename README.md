@@ -23,6 +23,7 @@
   - [Donations](#donations)
 - [Contribution](#contribution)
 - [Help and Support](#help-and-support)
+- [Development vs Production Compose Files](#development-vs-production-compose-files)
 
 ## Overview
 
@@ -69,28 +70,34 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
 
 3. After cloning, navigate to the directory containing the project files.
 
-4. Rename the `sample.config.toml` file to `config.toml`. For Docker setups, you need only fill in the following fields:
+4. Rename the `sample.config.toml` file to `config.toml` and fill in the required fields as described below.
 
-   - `OPENAI`: Your OpenAI API key. **You only need to fill this if you wish to use OpenAI's models**.
-   - `OLLAMA`: Your Ollama API URL. You should enter it as `http://host.docker.internal:PORT_NUMBER`. If you installed Ollama on port 11434, use `http://host.docker.internal:11434`. For other ports, adjust accordingly. **You need to fill this if you wish to use Ollama's models instead of OpenAI's**.
-   - `GROQ`: Your Groq API key. **You only need to fill this if you wish to use Groq's hosted models**.
-   - `OPENROUTER`: Your OpenRouter API key. **You only need to fill this if you wish to use models via OpenRouter**.
-   - `ANTHROPIC`: Your Anthropic API key. **You only need to fill this if you wish to use Anthropic models**.
-   - `Gemini`: Your Gemini API key.  **You only need to fill this if you wish to use Google's models**.
-
-     **Note**: You can change these after starting Perplexica from the settings dialog.
-
-   - `SIMILARITY_MEASURE`: The similarity measure to use (This is filled by default; you can leave it as is if you are unsure about it.)
-
-5. Ensure you are in the directory containing the `docker-compose.yaml` file and execute:
-
-   ```bash
-   docker compose up -d
-   ```
+5. **Local Build (Recommended for Development):**
+   - The `docker-compose.yaml` is now set up to always build the app from your local code and Dockerfile.
+   - Your source code, config, and assets are mounted as volumes into the container, so changes are reflected live (with a container restart or hot reload, depending on your setup).
+   - To start the stack:
+     ```bash
+     docker-compose up --build
+     ```
+   - To rebuild after changing dependencies:
+     ```bash
+     docker-compose up --build
+     ```
+   - To stop:
+     ```bash
+     docker-compose down
+     ```
+   - You do **not** need to pull or push any Docker images for development.
 
 6. Wait a few minutes for the setup to complete. You can access Perplexica at http://localhost:3000 in your web browser.
 
-**Note**: After the containers are built, you can start Perplexica directly from Docker without having to open a terminal.
+**Note:** After the containers are built, you can start Perplexica directly from Docker without having to open a terminal.
+
+#### For Contributors
+- All development should use the local build workflow above.
+- Your changes will be reflected live in the running container.
+- If you add dependencies, rebuild with `docker-compose up --build`.
+- The GitHub Actions workflow for Docker images is now only for official releases and is not required for local development.
 
 ### Non-Docker Installation
 
@@ -179,3 +186,29 @@ Perplexica is built on the idea that AI and large language models should be easy
 If you have any questions or feedback, please feel free to reach out to us. You can create an issue on GitHub or join our Discord server. There, you can connect with other users, share your experiences and reviews, and receive more personalized help. [Click here](https://discord.gg/EFwsmQDgAu) to join the Discord server. To discuss matters outside of regular support, feel free to contact me on Discord at `Kamran1819G`.
 
 Thank you for exploring Perplexica, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexica and expand its capabilities. We value your feedback and contributions which help us make Perplexica even better. Don't forget to check back for updates and new features!
+
+## Development vs Production Compose Files
+
+- `docker-compose.dev.yaml`: For development. Mounts your code and runs the dev server for hot reload. Use this for active development.
+- `docker-compose.prod.yaml`: For production. No code mounting, runs the optimized production build. Use this for deployment.
+- `docker-compose.yaml`: The base file, extended by the above for each environment.
+
+### Development Usage
+```bash
+docker-compose -f docker-compose.dev.yaml up --build
+```
+- Edit your code locally and see changes live (hot reload).
+- Stop with:
+```bash
+docker-compose -f docker-compose.dev.yaml down
+```
+
+### Production Usage
+```bash
+docker-compose -f docker-compose.prod.yaml up --build
+```
+- Runs the optimized production build, no code mounting.
+- Stop with:
+```bash
+docker-compose -f docker-compose.prod.yaml down
+```

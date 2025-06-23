@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app.dockerfile
+    environment:
+      - SEARXNG_API_URL=http://searxng:8080
+      - DATA_DIR=/home/perplexica
+      - NODE_ENV=production
+    ports:
+      - 3000:3000
+    networks:
+      - perplexica-network
+    volumes:
+      - ./config.toml:/home/perplexica/config.toml
+      - backend-dbstore:/home/perplexica/data
+      - uploads:/home/perplexica/uploads
+    restart: unless-stopped
+
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    ports:
+      - 4000:8080
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
+networks:
+  perplexica-network:
+
+volumes:
+  backend-dbstore:
+  uploads: 
