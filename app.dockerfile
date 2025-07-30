@@ -30,6 +30,7 @@ COPY --from=builder /home/perplexica/migrator/index.js ./migrate.js
 
 RUN mkdir /home/perplexica/uploads
 
+COPY config.toml ./config.toml
 COPY entrypoint.sh ./entrypoint.sh
 RUN dos2unix ./entrypoint.sh || true
 RUN chmod +x ./entrypoint.sh

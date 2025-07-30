@@ -68,9 +68,8 @@ const EmptyChatMessageInput = ({
       return;
     }
     try {
-      const searxngURL = process.env.NEXT_PUBLIC_SEARXNG_API_URL || '';
-      const url = `${searxngURL}/search?format=json&q=${encodeURIComponent(q)}`;
-      const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const url = `/api/searxng?format=json&q=${encodeURIComponent(q)}`;
+      const res = await axios.get(url);
       setSuggestions(res.data.suggestions || []);
     } catch {
       setSuggestions([]);
