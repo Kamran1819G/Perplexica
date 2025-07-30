@@ -32,9 +32,9 @@ services:
     restart: unless-stopped
 
   searxng:
-    image: docker.io/searxng/searxng:latest
-    volumes:
-      - ./searxng:/etc/searxng:rw
+    build:
+      context: .
+      dockerfile: searxng.dockerfile
     ports:
       - 4000:8080
     networks:
