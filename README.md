@@ -29,7 +29,7 @@ Follow these simple steps to run Perplexica on your computer. No coding experien
 ### 4. Start Perplexica
 - In the terminal, run:
   ```bash
-  docker-compose up --build
+  docker compose up --build or docker compose up -d --build
   ```
 - The first time, this may take a few minutes.
 
@@ -43,7 +43,7 @@ That's it! 🎉
 - To stop the app, go back to your terminal and press `Ctrl+C`.
 - To remove the running containers, run:
   ```bash
-  docker-compose down
+  docker compose down
   ```
 
 ---
@@ -124,15 +124,15 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
    - Your source code, config, and assets are mounted as volumes into the container, so changes are reflected live (with a container restart or hot reload, depending on your setup).
    - To start the stack:
      ```bash
-     docker-compose up --build
+     docker compose up --build
      ```
    - To rebuild after changing dependencies:
      ```bash
-     docker-compose up --build
+     docker compose up --build
      ```
    - To stop:
      ```bash
-     docker-compose down
+     docker compose down
      ```
    - You do **not** need to pull or push any Docker images for development.
 
@@ -143,7 +143,7 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
 #### For Contributors
 - All development should use the local build workflow above.
 - Your changes will be reflected live in the running container.
-- If you add dependencies, rebuild with `docker-compose up --build`.
+- If you add dependencies, rebuild with `docker compose up --build`.
 - The GitHub Actions workflow for Docker images is now only for official releases and is not required for local development.
 
 ### Non-Docker Installation
