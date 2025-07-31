@@ -28,12 +28,6 @@ services:
     volumes:
       - backend-dbstore:/home/perplexica/data
       - uploads:/home/perplexica/uploads
-      - ./tsconfig.json:/home/perplexica/tsconfig.json
-      - ./next.config.mjs:/home/perplexica/next.config.mjs
-      - ./next-env.d.ts:/home/perplexica/next-env.d.ts
-      - ./postcss.config.js:/home/perplexica/postcss.config.js
-      - ./drizzle.config.ts:/home/perplexica/drizzle.config.ts
-      - ./tailwind.config.ts:/home/perplexica/tailwind.config.ts
     restart: unless-stopped
 
 networks:
