@@ -1,5 +1,7 @@
 # 🚀 Perplexica - An AI-powered search engine 🔎 <!-- omit in toc -->
 
+> **Note:** This is a fork of the original [Perplexica project](https://github.com/ItzCrazyKns/Perplexica) by [@ItzCrazyKns](https://github.com/ItzCrazyKns). This fork is maintained separately with additional features, improvements, and independent installation using local build for complete independence from external registries.
+
 ---
 
 ## 🟢 Quick Start (For Beginners)
@@ -77,6 +79,8 @@ That's it! 🎉
 Perplexica is an open-source AI-powered searching tool or an AI-powered search engine that goes deep into the internet to find answers. Inspired by Perplexity AI, it's an open-source option that not just searches the web but understands your questions. It uses advanced machine learning algorithms like similarity searching and embeddings to refine results and provides clear answers with sources cited.
 
 Using SearxNG to stay current and fully open source, Perplexica ensures you always get the most up-to-date information without compromising your privacy.
+
+**This Fork:** This repository is a fork of the original [Perplexica project](https://github.com/ItzCrazyKns/Perplexica) with additional features, improvements, and an independent installation system using local build for complete independence from external registries. We maintain this fork separately to provide enhanced functionality while staying true to the original project's goals.
 
 Want to know more about its architecture and how it works? You can read it [here](https://github.com/Kamran1819G/Perplexica/tree/master/docs/architecture/README.md).
 
