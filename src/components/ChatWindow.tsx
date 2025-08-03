@@ -394,19 +394,19 @@ const ChatWindow = ({ id }: { id?: string }) => {
             },
           ]);
           added = true;
+          recievedMessage = data.data;
+        } else if (!data.isComplete) {
+          // Only append if this is NOT a complete response (streaming)
+          setMessages((prev) =>
+            prev.map((message) => {
+              if (message.messageId === data.messageId) {
+                return { ...message, content: message.content + data.data };
+              }
+              return message;
+            }),
+          );
+          recievedMessage += data.data;
         }
-
-        setMessages((prev) =>
-          prev.map((message) => {
-            if (message.messageId === data.messageId) {
-              return { ...message, content: message.content + data.data };
-            }
-
-            return message;
-          }),
-        );
-
-        recievedMessage += data.data;
         setMessageAppeared(true);
       }
 

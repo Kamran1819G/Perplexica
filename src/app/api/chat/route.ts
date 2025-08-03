@@ -21,6 +21,7 @@ import {
   getCustomOpenaiModelName,
 } from '@/lib/config';
 import { searchHandlers } from '@/lib/search';
+import { containsYouTubeLink, extractYouTubeLinks } from '@/lib/utils/youtube';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -182,6 +183,8 @@ const handleHistorySave = async (
 };
 
 export const POST = async (req: Request) => {
+  const requestId = Date.now().toString(36);
+  console.log(`=== Chat API route called (ID: ${requestId}) ===`);
   try {
     const body = (await req.json()) as Body;
     const { message } = body;
@@ -260,6 +263,98 @@ export const POST = async (req: Request) => {
         });
       }
     });
+
+    // Check for YouTube links in the message
+    const youtubeLinks = extractYouTubeLinks(message.content);
+    
+    if (youtubeLinks.length > 0) {
+      console.log(`=== Found ${youtubeLinks.length} YouTube links, processing... (ID: ${requestId}) ===`);
+      
+      // Process the first YouTube link found
+      const youtubeUrl = youtubeLinks[0];
+      
+      try {
+        // Call the YouTube API directly
+        console.log(`=== Calling YouTube API for URL: ${youtubeUrl} (ID: ${requestId}) ===`);
+        const url = new URL(req.url);
+        const summaryResponse = await fetch(`${url.origin}/api/youtube`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: youtubeUrl,
+            chatHistory: body.history.map(([role, content]) => ({ role, content })),
+            chatModel: body.chatModel,
+            systemInstructions: `${body.systemInstructions}\n\nUser's current request: ${message.content}`,
+          }),
+        });
+        
+        if (!summaryResponse.ok) {
+          throw new Error('Failed to generate YouTube analysis');
+        }
+        
+        const summaryData = await summaryResponse.json();
+        console.log(`=== YouTube API response received, summary length: ${summaryData.summary?.length || 0} (ID: ${requestId}) ===`);
+        
+        // Create response stream
+        const responseStream = new TransformStream();
+        const writer = responseStream.writable.getWriter();
+        const encoder = new TextEncoder();
+        
+        // Send the response based on user's request
+        const responseTitle = message.content.toLowerCase().includes('recipe') ? 'YouTube Recipe' :
+                             message.content.toLowerCase().includes('tutorial') ? 'YouTube Tutorial' :
+                             message.content.toLowerCase().includes('how') ? 'YouTube How-to Guide' :
+                             'YouTube Video Analysis';
+        
+        const responseData = `## ${responseTitle}\n\n**${summaryData.videoInfo.title}**\n\n*by ${summaryData.videoInfo.channel} • ${summaryData.videoInfo.duration} • ${summaryData.videoInfo.viewCount} views*\n\n${summaryData.summary}\n\n---\n*[Watch on YouTube](${youtubeUrl})*`;
+        console.log(`=== Response data created, length: ${responseData.length} (ID: ${requestId}) ===`);
+        
+        // Send the complete response in one message with a special flag
+        console.log(`=== Sending complete response (ID: ${requestId}) ===`);
+        writer.write(
+          encoder.encode(
+            JSON.stringify({
+              type: 'message',
+              data: responseData,
+              messageId: aiMessageId,
+              isComplete: true, // Flag to indicate this is a complete response
+            }) + '\n',
+          ),
+        );
+        
+        writer.write(
+          encoder.encode(
+            JSON.stringify({
+              type: 'messageEnd',
+              messageId: aiMessageId,
+            }) + '\n',
+          ),
+        );
+        
+        writer.close();
+        
+        // Save to history
+        handleHistorySave(message, humanMessageId, body.focusMode, body.files);
+        
+        console.log(`YouTube processing completed successfully, returning response (ID: ${requestId})`);
+        
+        // Return the response and EXIT - no fallback to normal search
+        return new Response(responseStream.readable, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            Connection: 'keep-alive',
+            'Cache-Control': 'no-cache, no-transform',
+          },
+        });
+        
+      } catch (error) {
+        console.error('Error processing YouTube link:', error);
+        console.log('YouTube processing failed, will continue to normal search');
+        // Continue to normal search if YouTube processing fails
+      }
+    }
 
     const handler = searchHandlers[body.focusMode];
 
