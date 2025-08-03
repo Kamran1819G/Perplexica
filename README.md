@@ -110,45 +110,15 @@ It has many more features like image and video search. Some of the planned featu
 
 There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. Using Docker is highly recommended.
 
-### Getting Started with Docker (Recommended)
+### Docker Installation (Recommended)
 
-1. Ensure Docker is installed and running on your system.
-2. Clone the Perplexica repository:
-
-   ```bash
-   git clone https://github.com/Kamran1819G/Perplexica.git
-   ```
-
-3. After cloning, navigate to the directory containing the project files.
-
-4. Rename the `sample.config.toml` file to `config.toml` and fill in the required fields as described below.
-
-5. **Local Build (Recommended for Development):**
-   - The `docker-compose.yaml` is now set up to always build the app from your local code and Dockerfile.
-   - Your source code, config, and assets are mounted as volumes into the container, so changes are reflected live (with a container restart or hot reload, depending on your setup).
-   - To start the stack:
-     ```bash
-     docker compose up --build
-     ```
-   - To rebuild after changing dependencies:
-     ```bash
-     docker compose up --build
-     ```
-   - To stop:
-     ```bash
-     docker compose down
-     ```
-   - You do **not** need to pull or push any Docker images for development.
-
-6. Wait a few minutes for the setup to complete. You can access Perplexica at http://localhost:3000 in your web browser.
-
-**Note:** After the containers are built, you can start Perplexica directly from Docker without having to open a terminal.
+The quick start guide above covers the basic Docker setup. For detailed Docker instructions including development with live updates, production deployment, and troubleshooting, see the **[Docker Setup Guide](docs/DOCKER.md)**.
 
 #### For Contributors
-- All development should use the local build workflow above.
-- Your changes will be reflected live in the running container.
-- If you add dependencies, rebuild with `docker compose up --build`.
-- The GitHub Actions workflow for Docker images is now only for official releases and is not required for local development.
+- Use `docker-compose -f docker-compose.dev.yaml up --build` for development with live updates
+- Your changes will be reflected live in the running container
+- If you add dependencies, rebuild with `docker compose up --build`
+- The GitHub Actions workflow for Docker images is now only for official releases and is not required for local development
 
 ### Non-Docker Installation
 
@@ -202,9 +172,37 @@ Perplexica runs on Next.js and handles all API requests. It works right away on 
 
 ## One-Click Deployment
 
-[![Deploy to Sealos](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://usw.sealos.io/?openapp=system-template%3FtemplateName%3Dperplexica)
-[![Deploy to RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/?app_id=267)
-[![Run on ClawCloud](https://raw.githubusercontent.com/ClawCloud/Run-Template/refs/heads/main/Run-on-ClawCloud.svg)](https://template.run.claw.cloud/?referralCode=U11MRQ8U9RM4&openapp=system-fastdeploy%3FtemplateName%3Dperplexica)
+> **⚠️ Note:** One-click deployment services may not work with the current local build setup. These services typically expect pre-built Docker images from registries, but this project uses local builds for complete independence.
+
+### Alternative Deployment Options
+
+#### Option 1: Manual Deployment (Recommended)
+Use the provided Docker Compose files for reliable deployment:
+
+```bash
+# Production deployment
+docker-compose -f docker-compose.prod.yaml up --build -d
+
+# Or use the deployment-specific compose file
+docker-compose -f docker-compose.deploy.yaml up --build -d
+```
+
+#### Option 2: Cloud Platform Deployment
+For cloud platforms that support local builds:
+
+- **Railway**: Connect your GitHub repo and use `docker-compose.deploy.yaml`
+- **Render**: Use the deployment compose file with build context
+- **DigitalOcean App Platform**: Supports Docker Compose with local builds
+
+#### Option 3: Kubernetes Deployment
+Use the provided Kubernetes template:
+
+```bash
+# Apply the deployment template
+kubectl apply -f deploy-template.yaml
+```
+
+📖 **For comprehensive deployment instructions, see the [Deployment Guide](docs/DEPLOYMENT.md)**
 
 ## Upcoming Features
 
@@ -216,17 +214,7 @@ Perplexica runs on Next.js and handles all API requests. It works right away on 
 - [x] Adding Discover
 - [ ] Finalizing Copilot Mode
 
-## Support Us
 
-If you find Perplexica useful, consider giving us a star on GitHub. This helps more people discover Perplexica and supports the development of new features. Your support is greatly appreciated.
-
-### Donations
-
-We also accept donations to help sustain our project. If you would like to contribute, you can use the following options to donate. Thank you for your support!
-
-| Ethereum                                              |
-| ----------------------------------------------------- |
-| Address: `0xB025a84b2F269570Eb8D4b05DEdaA41D8525B6DD` |
 
 ## Contribution
 
@@ -238,28 +226,13 @@ If you have any questions or feedback, please feel free to reach out to us. You 
 
 Thank you for exploring Perplexica, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexica and expand its capabilities. We value your feedback and contributions which help us make Perplexica even better. Don't forget to check back for updates and new features!
 
-## Development vs Production Compose Files
+## 📚 Docker Documentation
 
-- `docker-compose.dev.yaml`: For development. Mounts your code and runs the dev server for hot reload. Use this for active development.
-- `docker-compose.prod.yaml`: For production. No code mounting, runs the optimized production build. Use this for deployment.
-- `docker-compose.yaml`: The base file, extended by the above for each environment.
+For comprehensive Docker setup instructions, including:
+- **Development environment** with live updates
+- **Production deployment** 
+- **Troubleshooting** common issues
+- **Performance optimization** tips
+- **External services** integration (Ollama, LM Studio)
 
-### Development Usage
-```bash
-docker-compose -f docker-compose.dev.yaml up --build
-```
-- Edit your code locally and see changes live (hot reload).
-- Stop with:
-```bash
-docker-compose -f docker-compose.dev.yaml down
-```
-
-### Production Usage
-```bash
-docker-compose -f docker-compose.prod.yaml up --build
-```
-- Runs the optimized production build, no code mounting.
-- Stop with:
-```bash
-docker-compose -f docker-compose.prod.yaml down
-```
+📖 **Read the complete [Docker Setup Guide](docs/DOCKER.md)**

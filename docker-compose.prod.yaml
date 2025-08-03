@@ -1,9 +1,23 @@
-version: '3.8'
 services:
+  searxng:
+    build:
+      context: .
+      dockerfile: searxng.dockerfile
+    container_name: perplexica-searxng-1
+    environment:
+      - SEARXNG_BOTDETECTION_ENABLED=false
+    ports:
+      - 4000:8080
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
   app:
+    # Build from local Dockerfile and code for production
     build:
       context: .
       dockerfile: app.dockerfile
+    container_name: perplexica-app-1
     environment:
       - SEARXNG_API_URL=http://searxng:8080
       - DATA_DIR=/home/perplexica
@@ -13,19 +27,8 @@ services:
     networks:
       - perplexica-network
     volumes:
-      - ./config.toml:/home/perplexica/config.toml
       - backend-dbstore:/home/perplexica/data
       - uploads:/home/perplexica/uploads
-    restart: unless-stopped
-
-  searxng:
-    build:
-      context: .
-      dockerfile: searxng.dockerfile
-    ports:
-      - 4000:8080
-    networks:
-      - perplexica-network
     restart: unless-stopped
 
 networks:
