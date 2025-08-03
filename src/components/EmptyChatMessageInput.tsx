@@ -102,7 +102,7 @@ const EmptyChatMessageInput = ({
       }}
       className="w-full"
     >
-      <div className="flex flex-col bg-light-secondary dark:bg-dark-secondary px-5 pt-5 pb-2 rounded-lg w-full border border-light-200 dark:border-dark-200">
+      <div className="relative flex flex-col bg-light-secondary dark:bg-dark-secondary px-5 pt-5 pb-2 rounded-lg w-full border border-light-200 dark:border-dark-200">
         <TextareaAutosize
           ref={inputRef}
           value={message}
@@ -114,16 +114,19 @@ const EmptyChatMessageInput = ({
           placeholder="Ask anything..."
         />
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute z-50 mt-1 w-full max-w-xl bg-dark-secondary border border-dark-200 rounded-lg shadow-lg overflow-hidden">
+          <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-dark-secondary border border-dark-200 rounded-lg shadow-xl overflow-hidden">
             {suggestions.map((s, i) => (
               <div
                 key={i}
-                className="px-4 py-2 text-white hover:bg-[#24A0ED]/20 cursor-pointer text-sm"
+                className="flex items-center px-4 py-3 text-white hover:bg-[#24A0ED]/10 cursor-pointer text-sm border-b border-dark-200 last:border-b-0 transition-colors duration-150"
                 onMouseDown={() => {
                   setMessage(s);
                   setShowSuggestions(false);
                 }}
               >
+                <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 {s}
               </div>
             ))}
