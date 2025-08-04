@@ -6,6 +6,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/useTranslation';
+import WeatherWidget from '@/components/WeatherWidget';
 
 interface Discover {
   title: string;
@@ -509,30 +510,7 @@ const Page = () => {
           </div>
 
           {/* Weather Widget */}
-          <div className="bg-light-secondary dark:bg-dark-secondary rounded-lg p-4 border border-light-200 dark:border-dark-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl text-black dark:text-white">31°</span>
-                <div className="w-8 h-8 bg-yellow-400 rounded-full"></div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-black dark:text-white">Cloudy</div>
-                <div className="text-xs text-black/60 dark:text-white/60">Navi Mumbai</div>
-              </div>
-            </div>
-            <div className="text-sm text-black/60 dark:text-white/60 mb-3">
-              H: 32° L: 26°
-            </div>
-            <div className="flex justify-between text-xs">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-black/60 dark:text-white/60">{day}</div>
-                  <div className="w-6 h-6 bg-light-200 dark:bg-dark-200 rounded mx-auto my-1"></div>
-                  <div className="text-black dark:text-white">28°</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <WeatherWidget />
 
           {/* Market Outlook Widget */}
           <div className="bg-light-secondary dark:bg-dark-secondary rounded-lg p-4 border border-light-200 dark:border-dark-200">

@@ -1,0 +1,16 @@
+services:
+  searxng:
+    build:
+      context: .
+      dockerfile: searxng.dockerfile
+    container_name: perplexica-searxng-dev
+    environment:
+      - SEARXNG_BOTDETECTION_ENABLED=false
+    ports:
+      - 4000:8080
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
+networks:
+  perplexica-network: 

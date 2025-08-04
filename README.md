@@ -67,6 +67,7 @@ That's it! 🎉
 - [Using Perplexica's API](#using-perplexicas-api)
 - [Expose Perplexica to a network](#expose-perplexica-to-network)
 - [One-Click Deployment](#one-click-deployment)
+- [🛠️ Development Setup](#️-development-setup)
 - [Upcoming Features](#upcoming-features)
 - [Support Us](#support-us)
   - [Donations](#donations)
@@ -232,6 +233,60 @@ Your contributions help make Perplexica accessible to users worldwide! 🌍
 If you have any questions or feedback, please feel free to reach out to us. You can create an issue on GitHub or join our Discord server. There, you can connect with other users, share your experiences and reviews, and receive more personalized help. [Click here](https://discord.gg/EFwsmQDgAu) to join the Discord server. To discuss matters outside of regular support, feel free to contact me on Discord at `Kamran1819G`.
 
 Thank you for exploring Perplexica, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexica and expand its capabilities. We value your feedback and contributions which help us make Perplexica even better. Don't forget to check back for updates and new features!
+
+## 🛠️ Development Setup
+
+For developers who want to contribute to Perplexica or run it in development mode with hot reloading:
+
+### Quick Development Start
+
+#### Linux/macOS:
+```bash
+# Start development environment (SearXNG in Docker + Next.js on host)
+./dev.sh
+
+# Stop development environment
+./stop-dev.sh
+```
+
+#### Windows:
+```cmd
+# Start development environment (SearXNG in Docker + Next.js on host)
+dev.bat
+
+# Stop development environment
+stop-dev.bat
+```
+
+### Manual Development Setup
+
+1. **Start SearXNG in Docker:**
+   ```bash
+   docker compose -f docker-compose.dev.yaml up -d searxng
+   ```
+
+2. **Start Next.js on Host Machine:**
+   ```bash
+   yarn install
+   yarn dev
+   ```
+
+### Development Architecture
+
+- **SearXNG**: Runs in Docker container (http://localhost:4000)
+- **Next.js App**: Runs directly on host machine (http://localhost:3000)
+- **Hot Reloading**: Full hot reloading for Next.js development
+- **Search Integration**: App connects to SearXNG via localhost:4000
+
+### Why This Approach?
+
+**Docker hot reloading was not possible** due to volume mounting conflicts with Next.js App Router. The Next.js application couldn't find the `app` directory when mounted as volumes in Docker containers.
+
+**Solution**: Hybrid approach where:
+- SearXNG runs in Docker (for search functionality)
+- Next.js runs directly on host machine (for fast development with hot reloading)
+
+📖 **Read the complete [Development Guide](DEVELOPMENT.md)**
 
 ## 📚 Docker Documentation
 
