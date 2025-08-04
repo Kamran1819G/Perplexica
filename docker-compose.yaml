@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
 
   app:
-    # Build from local Dockerfile and code for development
+    # Build from local Dockerfile and code
     build:
       context: .
       dockerfile: app.dockerfile
@@ -21,6 +21,7 @@ services:
     environment:
       - SEARXNG_API_URL=http://searxng:8080
       - DATA_DIR=/home/perplexica
+      - NODE_ENV=${NODE_ENV:-development}
     ports:
       - 3000:3000
     networks:

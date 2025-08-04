@@ -27,11 +27,11 @@ nano config.toml  # or use your preferred editor
 
 ### 3. Start the Application
 ```bash
-# For development (with live updates)
-docker-compose -f docker-compose.dev.yaml up --build
+# For development (default)
+docker-compose up --build
 
 # For production
-docker-compose -f docker-compose.prod.yaml up --build -d
+NODE_ENV=production docker-compose up --build -d
 ```
 
 ### 4. Access the Application
@@ -50,21 +50,21 @@ The development environment is designed for active development with live code up
 
 ### Start Development
 ```bash
-# Start development environment
-docker-compose -f docker-compose.dev.yaml up --build
+# Start development environment (defaults to development mode)
+docker-compose up --build
 
 # Run in detached mode
-docker-compose -f docker-compose.dev.yaml up --build -d
+docker-compose up --build -d
 
 # View logs
-docker-compose -f docker-compose.dev.yaml logs -f app
+docker-compose logs -f app
 ```
 
 ### Development Workflow
 1. **Start the environment** (see above)
 2. **Make code changes** in `src/`, `public/`, etc.
 3. **See changes immediately** - no rebuild needed for most changes
-4. **For package changes**: Rebuild with `docker-compose -f docker-compose.dev.yaml up --build`
+4. **For package changes**: Rebuild with `docker-compose up --build`
 
 ### Volume Mounts (Development)
 The development setup mounts these directories for live updates:
@@ -90,13 +90,13 @@ The production environment is optimized for performance and security.
 ### Start Production
 ```bash
 # Start production environment
-docker-compose -f docker-compose.prod.yaml up --build -d
+NODE_ENV=production docker-compose up --build -d
 
 # View logs
-docker-compose -f docker-compose.prod.yaml logs -f
+docker-compose logs -f
 
 # Stop production
-docker-compose -f docker-compose.prod.yaml down
+docker-compose down
 ```
 
 ### Production Optimizations
@@ -141,6 +141,9 @@ You can override environment variables:
 # Create .env file
 echo "NODE_ENV=development" > .env
 echo "CUSTOM_VAR=value" >> .env
+
+# Or set directly when running
+NODE_ENV=production docker-compose up
 ```
 
 ## 🛠 Useful Commands
@@ -148,16 +151,16 @@ echo "CUSTOM_VAR=value" >> .env
 ### Development Commands
 ```bash
 # Start development with live updates
-docker-compose -f docker-compose.dev.yaml up
+docker-compose up
 
 # Rebuild development containers
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose up --build
 
 # View development logs
-docker-compose -f docker-compose.dev.yaml logs -f app
+docker-compose logs -f app
 
 # Stop development environment
-docker-compose -f docker-compose.dev.yaml down
+docker-compose down
 
 # Access development container shell
 docker exec -it perplexica-app-1 /bin/bash
@@ -166,16 +169,16 @@ docker exec -it perplexica-app-1 /bin/bash
 ### Production Commands
 ```bash
 # Start production environment
-docker-compose -f docker-compose.prod.yaml up -d
+NODE_ENV=production docker-compose up -d
 
 # Rebuild production containers
-docker-compose -f docker-compose.prod.yaml up --build -d
+NODE_ENV=production docker-compose up --build -d
 
 # View production logs
-docker-compose -f docker-compose.prod.yaml logs -f
+docker-compose logs -f
 
 # Stop production environment
-docker-compose -f docker-compose.prod.yaml down
+docker-compose down
 
 # Access production container shell
 docker exec -it perplexica-app-1 /bin/bash
@@ -216,12 +219,12 @@ docker volume rm perplexica_backend-dbstore
 ### Rebuilding When Needed
 ```bash
 # After changing package.json or yarn.lock
-docker-compose -f docker-compose.dev.yaml down
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose down
+docker-compose up --build
 
 # After changing Dockerfile
-docker-compose -f docker-compose.dev.yaml down
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose down
+docker-compose up --build
 ```
 
 ## 🐛 Troubleshooting
@@ -241,12 +244,12 @@ sudo kill -9 <PID>
 #### 2. Container Won't Start
 ```bash
 # Check logs
-docker-compose -f docker-compose.dev.yaml logs app
+docker-compose logs app
 
 # Rebuild from scratch
-docker-compose -f docker-compose.dev.yaml down
+docker-compose down
 docker system prune -a
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose up --build
 ```
 
 #### 3. Permission Issues
@@ -261,7 +264,7 @@ chmod +x entrypoint.sh
 # Reset database volume
 docker-compose down -v
 docker volume rm perplexica_backend-dbstore
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose up --build
 ```
 
 #### 5. Ollama Connection Issues
@@ -314,7 +317,7 @@ SEARXNG = "http://your-searxng-instance:8080"
 - Restart containers periodically for clean state
 
 ### Production
-- Use production compose file
+- Set NODE_ENV=production for optimized builds
 - Monitor logs for errors
 - Set up proper backup for volumes
 - Consider using Docker Swarm or Kubernetes for scaling

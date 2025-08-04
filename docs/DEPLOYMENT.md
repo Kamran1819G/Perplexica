@@ -22,17 +22,14 @@ cd Perplexica
 cp sample.config.toml config.toml
 # Edit config.toml with your API keys
 
-# Deploy using production compose file
-docker-compose -f docker-compose.prod.yaml up --build -d
-
-# Or use the deployment-specific compose file
-docker-compose -f docker-compose.deploy.yaml up --build -d
+# Deploy using production environment
+NODE_ENV=production docker-compose up --build -d
 ```
 
 ### Development Deployment
 ```bash
 # For development with live updates
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose up --build
 ```
 
 ## ☁️ Cloud Platform Deployment
@@ -142,12 +139,12 @@ API_KEY = "your-anthropic-key"
 #### Build Failures
 ```bash
 # Check build logs
-docker-compose -f docker-compose.prod.yaml logs
+docker-compose logs
 
 # Rebuild from scratch
-docker-compose -f docker-compose.prod.yaml down
+docker-compose down
 docker system prune -a
-docker-compose -f docker-compose.prod.yaml up --build
+docker-compose up --build
 ```
 
 #### Configuration Issues
@@ -177,7 +174,7 @@ netstat -tulpn | grep :4000
 - Verify environment variables are set
 
 #### Render
-- Use build command: `docker-compose -f docker-compose.deploy.yaml up --build -d`
+- Use build command: `docker-compose up --build -d`
 - Set proper environment variables
 - Check build logs for errors
 
@@ -207,10 +204,10 @@ curl http://localhost:4000/api/v1/info
 ### Logs and Monitoring
 ```bash
 # View application logs
-docker-compose -f docker-compose.prod.yaml logs -f app
+docker-compose logs -f app
 
 # View SearXNG logs
-docker-compose -f docker-compose.prod.yaml logs -f searxng
+docker-compose logs -f searxng
 
 # Monitor resource usage
 docker stats perplexica-app-1 perplexica-searxng-1
@@ -233,8 +230,8 @@ docker run --rm -v perplexica_backend-dbstore:/data -v $(pwd):/backup alpine tar
 git pull origin main
 
 # Rebuild and restart
-docker-compose -f docker-compose.prod.yaml down
-docker-compose -f docker-compose.prod.yaml up --build -d
+docker-compose down
+docker-compose up --build -d
 ```
 
 ### Database Migrations

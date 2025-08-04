@@ -115,9 +115,9 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
 The quick start guide above covers the basic Docker setup. For detailed Docker instructions including development with live updates, production deployment, and troubleshooting, see the **[Docker Setup Guide](docs/DOCKER.md)**.
 
 #### For Contributors
-- Use `docker-compose -f docker-compose.dev.yaml up --build` for development with live updates
+- Use `docker-compose up --build` for development with live updates
 - Your changes will be reflected live in the running container
-- If you add dependencies, rebuild with `docker compose up --build`
+- If you add dependencies, rebuild with `docker-compose up --build`
 - The GitHub Actions workflow for Docker images is now only for official releases and is not required for local development
 
 ### Non-Docker Installation
@@ -177,14 +177,11 @@ Perplexica runs on Next.js and handles all API requests. It works right away on 
 ### Alternative Deployment Options
 
 #### Option 1: Manual Deployment (Recommended)
-Use the provided Docker Compose files for reliable deployment:
+Use the provided Docker Compose file for reliable deployment:
 
 ```bash
 # Production deployment
-docker-compose -f docker-compose.prod.yaml up --build -d
-
-# Or use the deployment-specific compose file
-docker-compose -f docker-compose.deploy.yaml up --build -d
+NODE_ENV=production docker-compose up --build -d
 ```
 
 #### Option 2: Cloud Platform Deployment

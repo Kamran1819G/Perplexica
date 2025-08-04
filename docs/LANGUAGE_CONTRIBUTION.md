@@ -312,7 +312,7 @@ git checkout -b feature/add-[language]-translations
 ```bash
 npm run dev
 # or
-docker-compose -f docker-compose.dev.yaml up --build
+docker-compose up --build
 ```
 
 ### 5. Submit a Pull Request
