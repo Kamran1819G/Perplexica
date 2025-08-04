@@ -124,173 +124,183 @@ const Page = () => {
       </svg>
     </div>
   ) : (
-    <div>
-      <div className="flex flex-col pt-4">
-        <div className="flex items-center">
-          <BookOpenText />
-          <h1 className="text-3xl font-medium p-2">Library</h1>
-        </div>
-        <hr className="border-t border-[#2B2C2C] my-4 w-full" />
-        
-        {/* Search Box */}
-        <div className="relative mt-6 mb-6">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="w-5 h-5 text-black/50 dark:text-white/50" />
+    <div className="flex h-screen bg-light-primary dark:bg-dark-primary">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="bg-light-primary dark:bg-dark-primary border-b border-light-200 dark:border-dark-200 px-4 sm:px-6 py-4">
+          <div className="flex items-center">
+            <BookOpenText className="w-5 h-5 sm:w-6 sm:h-6" />
+            <h1 className="text-2xl sm:text-3xl font-medium p-2">Library</h1>
           </div>
-          <input
-            type="text"
-            className="block w-full p-2 pl-10 pr-10 bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 rounded-md text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            placeholder="Search your threads..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-          {searchQuery && (
-            <button
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
-            >
-              <X className="w-5 h-5 text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white" />
-            </button>
-          )}
         </div>
-        
-        {/* Thread Count and Selection Controls */}
-        <div className="mb-4">
-          {!selectionMode ? (
-            <div className="flex items-center justify-between">
-              <div className="text-black/70 dark:text-white/70">
-                You have {chats.length} threads in Perplexica
+
+        {/* Content Area with Scroll */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:px-6 lg:px-8">
+            {/* Search Box */}
+            <div className="relative mt-6 mb-6">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-black/50 dark:text-white/50" />
               </div>
-              <button
-                onClick={toggleSelectionMode}
-                className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white text-sm transition duration-200"
-              >
-                Select
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div className="text-black/70 dark:text-white/70">
-                {selectedChats.length} selected thread{selectedChats.length !== 1 ? 's' : ''}
-              </div>
-              <div className="flex space-x-4">
+              <input
+                type="text"
+                className="block w-full p-2 sm:p-3 pl-10 pr-10 bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 rounded-md text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
+                placeholder="Search your threads..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+              {searchQuery && (
                 <button
-                  onClick={selectAllChats}
-                  className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white text-sm transition duration-200"
+                  onClick={clearSearch}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
-                  {selectedChats.length === filteredChats.length ? 'Deselect all' : 'Select all'}
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white" />
                 </button>
-                
-                <button
-                  onClick={toggleSelectionMode}
-                  className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white text-sm transition duration-200"
-                >
-                  Cancel
-                </button>
-                
-                <button
-                  onClick={deleteSelectedChats}
-                  disabled={selectedChats.length === 0}
-                  className={cn(
-                    "text-sm transition duration-200",
-                    selectedChats.length === 0 
-                      ? "text-red-400/50 hover:text-red-500/50 cursor-not-allowed" 
-                      : "text-red-400 hover:text-red-500 cursor-pointer"
-                  )}
-                >
-                  Delete Selected
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {filteredChats.length === 0 && (
-        <div className="flex flex-row items-center justify-center min-h-[50vh]">
-          <p className="text-black/70 dark:text-white/70 text-sm">
-            {searchQuery ? 'No threads found matching your search.' : 'No threads found.'}
-          </p>
-        </div>
-      )}
-      
-      {filteredChats.length > 0 && (
-        <div className="flex flex-col pb-20 lg:pb-2">
-          {filteredChats.map((chat, i) => (
-            <div
-              className={cn(
-                'flex flex-col space-y-4 py-6',
-                i !== filteredChats.length - 1
-                  ? 'border-b border-white-200 dark:border-dark-200'
-                  : '',
               )}
-              key={i}
-              onMouseEnter={() => setHoveredChatId(chat.id)}
-              onMouseLeave={() => setHoveredChatId(null)}
-            >
-              <div className="flex items-center">
-                {/* Checkbox - visible when in selection mode or when hovering */}
-                {(selectionMode || hoveredChatId === chat.id) && (
-                  <div 
-                    className="mr-3 cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (!selectionMode) setSelectionMode(true);
-                      toggleChatSelection(chat.id);
-                    }}
+            </div>
+            
+            {/* Thread Count and Selection Controls */}
+            <div className="mb-4">
+              {!selectionMode ? (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="text-black/70 dark:text-white/70 text-sm sm:text-base">
+                    You have {chats.length} threads in Perplexica
+                  </div>
+                  <button
+                    onClick={toggleSelectionMode}
+                    className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white text-sm transition duration-200 self-start sm:self-auto"
                   >
-                    <div className={cn(
-                      "w-5 h-5 border rounded flex items-center justify-center transition-colors",
-                      selectedChats.includes(chat.id) 
-                        ? "bg-blue-500 border-blue-500" 
-                        : "border-gray-400 dark:border-gray-600"
-                    )}>
-                      {selectedChats.includes(chat.id) && (
-                        <Check className="w-4 h-4 text-white" />
+                    Select
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="text-black/70 dark:text-white/70 text-sm sm:text-base">
+                    {selectedChats.length} selected thread{selectedChats.length !== 1 ? 's' : ''}
+                  </div>
+                  <div className="flex flex-wrap gap-2 sm:gap-4">
+                    <button
+                      onClick={selectAllChats}
+                      className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white text-sm transition duration-200"
+                    >
+                      {selectedChats.length === filteredChats.length ? 'Deselect all' : 'Select all'}
+                    </button>
+                    
+                    <button
+                      onClick={toggleSelectionMode}
+                      className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white text-sm transition duration-200"
+                    >
+                      Cancel
+                    </button>
+                    
+                    <button
+                      onClick={deleteSelectedChats}
+                      disabled={selectedChats.length === 0}
+                      className={cn(
+                        "text-sm transition duration-200",
+                        selectedChats.length === 0 
+                          ? "text-red-400/50 hover:text-red-500/50 cursor-not-allowed" 
+                          : "text-red-400 hover:text-red-500 cursor-pointer"
+                      )}
+                    >
+                      Delete Selected
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {filteredChats.length === 0 && (
+              <div className="flex flex-row items-center justify-center min-h-[50vh]">
+                <p className="text-black/70 dark:text-white/70 text-sm sm:text-base text-center">
+                  {searchQuery ? 'No threads found matching your search.' : 'No threads found.'}
+                </p>
+              </div>
+            )}
+            
+            {filteredChats.length > 0 && (
+              <div className="flex flex-col pb-20 lg:pb-2">
+                {filteredChats.map((chat, i) => (
+                  <div
+                    className={cn(
+                      'flex flex-col space-y-3 sm:space-y-4 py-4 sm:py-6',
+                      i !== filteredChats.length - 1
+                        ? 'border-b border-white-200 dark:border-dark-200'
+                        : '',
+                    )}
+                    key={i}
+                    onMouseEnter={() => setHoveredChatId(chat.id)}
+                    onMouseLeave={() => setHoveredChatId(null)}
+                  >
+                    <div className="flex items-start sm:items-center gap-3">
+                      {/* Checkbox - visible when in selection mode or when hovering */}
+                      {(selectionMode || hoveredChatId === chat.id) && (
+                        <div 
+                          className="cursor-pointer flex-shrink-0 mt-1 sm:mt-0"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (!selectionMode) setSelectionMode(true);
+                            toggleChatSelection(chat.id);
+                          }}
+                        >
+                          <div className={cn(
+                            "w-4 h-4 sm:w-5 sm:h-5 border rounded flex items-center justify-center transition-colors",
+                            selectedChats.includes(chat.id) 
+                              ? "bg-blue-500 border-blue-500" 
+                              : "border-gray-400 dark:border-gray-600"
+                          )}>
+                            {selectedChats.includes(chat.id) && (
+                              <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Chat Title */}
+                      <Link
+                        href={`/c/${chat.id}`}
+                        className={cn(
+                          "text-black dark:text-white text-base sm:text-lg lg:text-xl font-medium transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer flex-1 min-w-0",
+                          selectionMode && "pointer-events-none text-black dark:text-white hover:text-black dark:hover:text-white"
+                        )}
+                        onClick={(e) => {
+                          if (selectionMode) {
+                            e.preventDefault();
+                            toggleChatSelection(chat.id);
+                          }
+                        }}
+                      >
+                        <span className="block truncate">{chat.title}</span>
+                      </Link>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 sm:gap-0">
+                      <div className="flex flex-row items-center space-x-1 lg:space-x-1.5 text-black/70 dark:text-white/70">
+                        <ClockIcon size={14} className="sm:w-[15px] sm:h-[15px]" />
+                        <p className="text-xs sm:text-sm">
+                          {formatTimeDifference(new Date(), chat.createdAt)} Ago
+                        </p>
+                      </div>
+                      
+                      {/* Delete button - only visible when not in selection mode */}
+                      {!selectionMode && (
+                        <div className="self-start sm:self-auto">
+                          <DeleteChat
+                            chatId={chat.id}
+                            chats={chats}
+                            setChats={updateChatsAfterDelete}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
-                )}
-                
-                {/* Chat Title */}
-                <Link
-                  href={`/c/${chat.id}`}
-                  className={cn(
-                    "text-black dark:text-white lg:text-xl font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer",
-                    selectionMode && "pointer-events-none text-black dark:text-white hover:text-black dark:hover:text-white"
-                  )}
-                  onClick={(e) => {
-                    if (selectionMode) {
-                      e.preventDefault();
-                      toggleChatSelection(chat.id);
-                    }
-                  }}
-                >
-                  {chat.title}
-                </Link>
+                ))}
               </div>
-              
-              <div className="flex flex-row items-center justify-between w-full">
-                <div className="flex flex-row items-center space-x-1 lg:space-x-1.5 text-black/70 dark:text-white/70">
-                  <ClockIcon size={15} />
-                  <p className="text-xs">
-                    {formatTimeDifference(new Date(), chat.createdAt)} Ago
-                  </p>
-                </div>
-                
-                {/* Delete button - only visible when not in selection mode */}
-                {!selectionMode && (
-                  <DeleteChat
-                    chatId={chat.id}
-                    chats={chats}
-                    setChats={updateChatsAfterDelete}
-                  />
-                )}
-              </div>
-            </div>
-          ))}
+            )}
+          </div>
         </div>
-      )}
+      </div>
       
       {/* Batch Delete Confirmation Dialog */}
       <BatchDeleteChats

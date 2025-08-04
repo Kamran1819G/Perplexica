@@ -111,13 +111,13 @@ import {
 // Dynamic import function for translations
 const loadTranslation = async (language: string): Promise<TranslationMessages> => {
   try {
-    const module = await import(`@/lib/translations/${language}.json`);
-    return module.default;
+    const translationModule = await import(`@/lib/translations/${language}.json`);
+    return translationModule.default;
   } catch (error) {
     console.warn(`Failed to load translation for ${language}, falling back to English`);
             // Fallback to default language
-        const defaultModule = await import(`@/lib/translations/${DEFAULT_LANGUAGE}.json`);
-        return defaultModule.default;
+        const fallbackModule = await import(`@/lib/translations/${DEFAULT_LANGUAGE}.json`);
+        return fallbackModule.default;
   }
 };
 
