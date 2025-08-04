@@ -1,9 +1,12 @@
 import ChatWindow from '@/components/ChatWindow';
+import { Suspense } from 'react';
 
 export default function Home() {
   return (
     <div>
-      <ChatWindow />
+      <Suspense fallback={<div>Loading...</div>}>
+        <ChatWindow />
+      </Suspense>
     </div>
   );
 }
