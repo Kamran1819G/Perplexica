@@ -1,3 +1,17 @@
+// Import translation files
+import en from './en.json';
+import es from './es.json';
+import fr from './fr.json';
+import de from './de.json';
+import it from './it.json';
+import pt from './pt.json';
+import ru from './ru.json';
+import ja from './ja.json';
+import ko from './ko.json';
+import zh from './zh.json';
+import ar from './ar.json';
+import hi from './hi.json';
+
 // Export all translation files
 export { default as en } from './en.json';
 export { default as es } from './es.json';
