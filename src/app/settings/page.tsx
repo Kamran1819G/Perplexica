@@ -1,12 +1,13 @@
 'use client';
 
 import { Settings as SettingsIcon, ArrowLeft, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@headlessui/react';
 import ThemeSwitcher from '@/components/theme/Switcher';
 import { ImagesIcon, VideoIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SettingsType {
   chatModelProviders: {
@@ -64,12 +65,13 @@ const Textarea = ({
   className,
   isSaving,
   onSave,
+  placeholder,
   ...restProps
-}: TextareaProps) => {
+}: TextareaProps & { placeholder?: string }) => {
   return (
     <div className="relative">
       <textarea
-        placeholder="Any special instructions for the LLM"
+        placeholder={placeholder}
         className="placeholder:text-sm text-sm w-full flex items-center justify-between p-3 bg-light-secondary dark:bg-dark-secondary rounded-lg hover:bg-light-200 dark:hover:bg-dark-200 transition-colors"
         rows={4}
         onBlur={(e) => onSave?.(e.target.value)}
@@ -111,6 +113,8 @@ const Select = ({
   );
 };
 
+
+
 const SettingsSection = ({
   title,
   children,
@@ -125,6 +129,7 @@ const SettingsSection = ({
 );
 
 const Page = () => {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<SettingsType | null>(null);
   const [chatModels, setChatModels] = useState<Record<string, any>>({});
   const [embeddingModels, setEmbeddingModels] = useState<Record<string, any>>(
@@ -206,7 +211,7 @@ const Page = () => {
         localStorage.getItem('autoVideoSearch') === 'true',
       );
 
-      setSystemInstructions(localStorage.getItem('systemInstructions')!);
+      setSystemInstructions(localStorage.getItem('systemInstructions') || '');
 
       setIsLoading(false);
     };
@@ -386,7 +391,7 @@ const Page = () => {
           </Link>
           <div className="flex flex-row space-x-0.5 items-center">
             <SettingsIcon size={23} />
-            <h1 className="text-3xl font-medium p-2">Settings</h1>
+            <h1 className="text-3xl font-medium p-2">{t('settings.title')}</h1>
           </div>
         </div>
         <hr className="border-t border-[#2B2C2C] my-4 w-full" />
@@ -414,16 +419,26 @@ const Page = () => {
       ) : (
         config && (
           <div className="flex flex-col space-y-6 pb-28 lg:pb-8">
-            <SettingsSection title="Appearance">
-              <div className="flex flex-col space-y-1">
-                <p className="text-black/70 dark:text-white/70 text-sm">
-                  Theme
-                </p>
-                <ThemeSwitcher />
+            <SettingsSection title={t('settings.appearance')}>
+              <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-1">
+                                      <p className="text-black/70 dark:text-white/70 text-sm">
+                      {t('settings.theme')}
+                    </p>
+                  <ThemeSwitcher />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-black/70 dark:text-white/70 text-sm">
+                    {t('settings.language')}
+                  </p>
+                  <div className="text-sm text-gray-500">
+                    Language can be changed using the floating button
+                  </div>
+                </div>
               </div>
             </SettingsSection>
 
-            <SettingsSection title="Automatic Search">
+            <SettingsSection title={t('settings.automaticSearch')}>
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between p-3 bg-light-secondary dark:bg-dark-secondary rounded-lg hover:bg-light-200 dark:hover:bg-dark-200 transition-colors">
                   <div className="flex items-center space-x-3">
@@ -434,12 +449,11 @@ const Page = () => {
                       />
                     </div>
                     <div>
-                      <p className="text-sm text-black/90 dark:text-white/90 font-medium">
-                        Automatic Image Search
+                      <p className="text-sm text-black/90 dark:text-white/70 font-medium">
+                        {t('settings.autoImageSearch')}
                       </p>
                       <p className="text-xs text-black/60 dark:text-white/60 mt-0.5">
-                        Automatically search for relevant images in chat
-                        responses
+                        {t('settings.autoImageSearchDescription')}
                       </p>
                     </div>
                   </div>
@@ -476,12 +490,11 @@ const Page = () => {
                       />
                     </div>
                     <div>
-                      <p className="text-sm text-black/90 dark:text-white/90 font-medium">
-                        Automatic Video Search
+                      <p className="text-sm text-black/90 dark:text-white/70 font-medium">
+                        {t('settings.autoVideoSearch')}
                       </p>
                       <p className="text-xs text-black/60 dark:text-white/60 mt-0.5">
-                        Automatically search for relevant videos in chat
-                        responses
+                        {t('settings.autoVideoSearchDescription')}
                       </p>
                     </div>
                   </div>
@@ -511,11 +524,12 @@ const Page = () => {
               </div>
             </SettingsSection>
 
-            <SettingsSection title="System Instructions">
+            <SettingsSection title={t('settings.systemInstructions')}>
               <div className="flex flex-col space-y-4">
                 <Textarea
                   value={systemInstructions}
                   isSaving={savingStates['systemInstructions']}
+                  placeholder={t('settings.systemInstructionsPlaceholder')}
                   onChange={(e) => {
                     setSystemInstructions(e.target.value);
                   }}
@@ -524,12 +538,12 @@ const Page = () => {
               </div>
             </SettingsSection>
 
-            <SettingsSection title="Model Settings">
+            <SettingsSection title={t('settings.modelSettings')}>
               {config.chatModelProviders && (
                 <div className="flex flex-col space-y-4">
                   <div className="flex flex-col space-y-1">
                     <p className="text-black/70 dark:text-white/70 text-sm">
-                      Chat Model Provider
+                      {t('settings.chatModel')}
                     </p>
                     <Select
                       value={selectedChatModelProvider ?? undefined}
@@ -558,9 +572,9 @@ const Page = () => {
                   {selectedChatModelProvider &&
                     selectedChatModelProvider != 'custom_openai' && (
                       <div className="flex flex-col space-y-1">
-                        <p className="text-black/70 dark:text-white/70 text-sm">
-                          Chat Model
-                        </p>
+                                              <p className="text-black/70 dark:text-white/70 text-sm">
+                        {t('settings.model')}
+                      </p>
                         <Select
                           value={selectedChatModel ?? undefined}
                           onChange={(e) => {
@@ -579,21 +593,21 @@ const Page = () => {
                                     value: model.name,
                                     label: model.displayName,
                                   }))
-                                : [
-                                    {
-                                      value: '',
-                                      label: 'No models available',
-                                      disabled: true,
-                                    },
-                                  ]
-                              : [
+                                                              : [
                                   {
                                     value: '',
-                                    label:
-                                      'Invalid provider, please check backend logs',
+                                    label: t('settings.noModelsAvailable'),
                                     disabled: true,
                                   },
-                                ];
+                                ]
+                                                          : [
+                                {
+                                  value: '',
+                                  label:
+                                    t('settings.invalidProvider'),
+                                  disabled: true,
+                                },
+                              ];
                           })()}
                         />
                       </div>
@@ -606,11 +620,11 @@ const Page = () => {
                   <div className="flex flex-col space-y-4">
                     <div className="flex flex-col space-y-1">
                       <p className="text-black/70 dark:text-white/70 text-sm">
-                        Model Name
+                        {t('settings.modelName')}
                       </p>
                       <Input
                         type="text"
-                        placeholder="Model name"
+                        placeholder={t('settings.modelName')}
                         value={config.customOpenaiModelName}
                         isSaving={savingStates['customOpenaiModelName']}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -626,11 +640,11 @@ const Page = () => {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <p className="text-black/70 dark:text-white/70 text-sm">
-                        Custom OpenAI API Key
+                        {t('settings.customOpenaiApiKey')}
                       </p>
                       <Input
                         type="text"
-                        placeholder="Custom OpenAI API Key"
+                        placeholder={t('settings.customOpenaiApiKey')}
                         value={config.customOpenaiApiKey}
                         isSaving={savingStates['customOpenaiApiKey']}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -646,11 +660,11 @@ const Page = () => {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <p className="text-black/70 dark:text-white/70 text-sm">
-                        Custom OpenAI Base URL
+                        {t('settings.customOpenaiBaseUrl')}
                       </p>
                       <Input
                         type="text"
-                        placeholder="Custom OpenAI Base URL"
+                        placeholder={t('settings.customOpenaiBaseUrl')}
                         value={config.customOpenaiApiUrl}
                         isSaving={savingStates['customOpenaiApiUrl']}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -671,7 +685,7 @@ const Page = () => {
                 <div className="flex flex-col space-y-4 mt-4 pt-4 border-t border-light-200 dark:border-dark-200">
                   <div className="flex flex-col space-y-1">
                     <p className="text-black/70 dark:text-white/70 text-sm">
-                      Embedding Model Provider
+                      {t('settings.embeddingModel')}
                     </p>
                     <Select
                       value={selectedEmbeddingModelProvider ?? undefined}
@@ -700,7 +714,7 @@ const Page = () => {
                   {selectedEmbeddingModelProvider && (
                     <div className="flex flex-col space-y-1">
                       <p className="text-black/70 dark:text-white/70 text-sm">
-                        Embedding Model
+                        {t('settings.model')}
                       </p>
                       <Select
                         value={selectedEmbeddingModel ?? undefined}
@@ -723,7 +737,7 @@ const Page = () => {
                               : [
                                   {
                                     value: '',
-                                    label: 'No models available',
+                                    label: t('settings.noModelsAvailable'),
                                     disabled: true,
                                   },
                                 ]
@@ -731,7 +745,7 @@ const Page = () => {
                                 {
                                   value: '',
                                   label:
-                                    'Invalid provider, please check backend logs',
+                                    t('settings.invalidProvider'),
                                   disabled: true,
                                 },
                               ];
@@ -743,15 +757,15 @@ const Page = () => {
               )}
             </SettingsSection>
 
-            <SettingsSection title="API Keys">
+            <SettingsSection title={t('settings.apiKeys')}>
               <div className="flex flex-col space-y-4">
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
-                    OpenAI API Key
+                    {t('settings.openaiApiKey')}
                   </p>
                   <Input
                     type="text"
-                    placeholder="OpenAI API Key"
+                    placeholder={t('settings.openaiApiKey')}
                     value={config.openaiApiKey}
                     isSaving={savingStates['openaiApiKey']}
                     onChange={(e) => {
@@ -766,11 +780,11 @@ const Page = () => {
 
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
-                    Ollama API URL
+                    {t('settings.ollamaApiUrl')}
                   </p>
                   <Input
                     type="text"
-                    placeholder="Ollama API URL"
+                    placeholder={t('settings.ollamaApiUrl')}
                     value={config.ollamaApiUrl}
                     isSaving={savingStates['ollamaApiUrl']}
                     onChange={(e) => {
@@ -785,11 +799,11 @@ const Page = () => {
 
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
-                    GROQ API Key
+                    {t('settings.groqApiKey')}
                   </p>
                   <Input
                     type="text"
-                    placeholder="GROQ API Key"
+                    placeholder={t('settings.groqApiKey')}
                     value={config.groqApiKey}
                     isSaving={savingStates['groqApiKey']}
                     onChange={(e) => {
@@ -804,11 +818,11 @@ const Page = () => {
 
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
-                    OpenRouter API Key
+                    {t('settings.openrouterApiKey')}
                   </p>
                   <Input
                     type="text"
-                    placeholder="OpenRouter API Key"
+                    placeholder={t('settings.openrouterApiKey')}
                     value={config.openrouterApiKey}
                     isSaving={savingStates['openrouterApiKey']}
                     onChange={(e) => {
@@ -823,11 +837,11 @@ const Page = () => {
 
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
-                    Anthropic API Key
+                    {t('settings.anthropicApiKey')}
                   </p>
                   <Input
                     type="text"
-                    placeholder="Anthropic API key"
+                    placeholder={t('settings.anthropicApiKey')}
                     value={config.anthropicApiKey}
                     isSaving={savingStates['anthropicApiKey']}
                     onChange={(e) => {
@@ -842,11 +856,11 @@ const Page = () => {
 
                 <div className="flex flex-col space-y-1">
                   <p className="text-black/70 dark:text-white/70 text-sm">
-                    Gemini API Key
+                    {t('settings.geminiApiKey')}
                   </p>
                   <Input
                     type="text"
-                    placeholder="Gemini API key"
+                    placeholder={t('settings.geminiApiKey')}
                     value={config.geminiApiKey}
                     isSaving={savingStates['geminiApiKey']}
                     onChange={(e) => {

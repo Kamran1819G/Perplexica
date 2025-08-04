@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Select } from '@/components/ui/Select';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Discover {
   title: string;
@@ -13,29 +14,31 @@ interface Discover {
   thumbnail: string;
 }
 
-const TOPICS = [
-  { value: 'AI', label: 'AI' },
-  { value: 'tech', label: 'Tech' },
-  { value: 'custom', label: 'Custom...' },
-];
-const WEBSITES = [
-  { value: '', label: 'All Websites' },
-  { value: 'yahoo.com', label: 'Yahoo' },
-  { value: 'www.exchangewire.com', label: 'ExchangeWire' },
-  { value: 'businessinsider.com', label: 'Business Insider' },
-  // Add more as needed
-];
+const Page = () => {
+  const { t } = useTranslation();
+  
+  const TOPICS = [
+    { value: 'AI', label: 'AI' },
+    { value: 'tech', label: 'Tech' },
+    { value: 'custom', label: t('discover.customTopic') },
+  ];
+  const WEBSITES = [
+    { value: '', label: t('discover.allWebsites') },
+    { value: 'yahoo.com', label: 'Yahoo' },
+    { value: 'www.exchangewire.com', label: 'ExchangeWire' },
+    { value: 'businessinsider.com', label: 'Business Insider' },
+    // Add more as needed
+  ];
 
-const SORT_OPTIONS = [
-  { value: 'relevance', label: 'Relevance' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'oldest', label: 'Oldest' },
-  { value: 'website', label: 'Website A-Z' },
-];
+  const SORT_OPTIONS = [
+    { value: 'relevance', label: t('discover.relevance') },
+    { value: 'newest', label: t('discover.newest') },
+    { value: 'oldest', label: t('discover.oldest') },
+    { value: 'website', label: t('discover.websiteAZ') },
+  ];
 
 const PAGE_SIZE = 12;
 
-const Page = () => {
   const [discover, setDiscover] = useState<Discover[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [topic, setTopic] = useState('AI');
@@ -76,7 +79,7 @@ const Page = () => {
         setDiscover([]);
         setTotalPages(1);
         setTotalResults(0);
-        toast.error('Error fetching data');
+        toast.error(t('discover.errorFetchingData'));
       } finally {
         setLoading(false);
       }
@@ -103,7 +106,7 @@ const Page = () => {
       setTotalPages(data.totalPages || 1);
       setTotalResults(data.totalResults || 0);
     } catch (err) {
-      toast.error('Error fetching more articles');
+      toast.error(t('discover.errorFetchingMore'));
     } finally {
       setInfiniteLoading(false);
     }
@@ -130,7 +133,7 @@ const Page = () => {
     <div className="flex flex-col pt-4 max-w-7xl mx-auto w-full">
       <div className="flex flex-col md:flex-row md:items-end gap-4 mb-6 px-2">
         <div className="flex flex-col">
-          <label className="text-xs font-medium mb-1">Topic</label>
+          <label className="text-xs font-medium mb-1">{t('discover.topic')}</label>
           <Select
             options={TOPICS}
             value={topic}
@@ -142,14 +145,14 @@ const Page = () => {
               ref={customTopicInputRef}
               type="text"
               className="mt-2 px-3 py-2 border rounded-lg bg-light-secondary dark:bg-dark-secondary border-light-200 dark:border-dark-200 text-sm dark:text-white"
-              placeholder="Enter custom topic..."
+              placeholder={t('discover.enterCustomTopic')}
               value={customTopic}
               onChange={e => setCustomTopic(e.target.value)}
             />
           )}
         </div>
         <div className="flex flex-col">
-          <label className="text-xs font-medium mb-1">Website</label>
+          <label className="text-xs font-medium mb-1">{t('discover.website')}</label>
           <Select
             options={WEBSITES}
             value={website}
@@ -158,17 +161,17 @@ const Page = () => {
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs font-medium mb-1">Search</label>
+          <label className="text-xs font-medium mb-1">{t('discover.search')}</label>
           <input
             type="text"
             className="px-3 py-2 border rounded-lg bg-light-secondary dark:bg-dark-secondary border-light-200 dark:border-dark-200 text-sm dark:text-white w-full"
-            placeholder="Search articles..."
+            placeholder={t('discover.searchArticles')}
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs font-medium mb-1">Sort By</label>
+          <label className="text-xs font-medium mb-1">{t('discover.sortBy')}</label>
           <Select
             options={SORT_OPTIONS}
             value={sort}
@@ -177,20 +180,20 @@ const Page = () => {
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs font-medium mb-1">View Mode</label>
+          <label className="text-xs font-medium mb-1">{t('discover.viewMode')}</label>
           <select
             className="min-w-[120px] px-3 py-2 border rounded-lg bg-light-secondary dark:bg-dark-secondary border-light-200 dark:border-dark-200 text-sm dark:text-white"
             value={infiniteMode ? 'infinite' : 'pagination'}
             onChange={e => setInfiniteMode(e.target.value === 'infinite')}
           >
-            <option value="pagination">Pagination</option>
-            <option value="infinite">Infinite Scroll</option>
+            <option value="pagination">{t('discover.pagination')}</option>
+            <option value="infinite">{t('discover.infiniteScroll')}</option>
           </select>
         </div>
       </div>
       <hr className="border-t border-[#2B2C2C] my-2 w-full" />
       <div className="mb-2 text-xs text-black/60 dark:text-white/60 px-2">
-        Showing {infiniteMode ? infiniteArticles.length : (discover?.length || 0)} of {totalResults} articles
+        {t('discover.showingResults', { current: infiniteMode ? infiniteArticles.length : (discover?.length || 0), total: totalResults })}
       </div>
       <div className="grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6 pb-28 lg:pb-8 w-full justify-items-center lg:justify-items-start">
         {loading && !infiniteMode
@@ -292,19 +295,19 @@ const Page = () => {
               })
               : (
                 <div className="col-span-full text-center text-black/60 dark:text-white/60 py-12">
-                  No articles found for the selected filters.
+                  {t('discover.noArticlesFound')}
                 </div>
               )}
       </div>
       {!infiniteMode && totalPages > 1 && (
         <div className="flex flex-row items-center justify-center gap-2 my-6">
-          <button
-            className="px-3 py-1 rounded bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 text-sm disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Prev
-          </button>
+                      <button
+              className="px-3 py-1 rounded bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 text-sm disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              {t('discover.prev')}
+            </button>
           {Array.from({ length: totalPages }).map((_, i) => (
             <button
               key={i}
@@ -319,15 +322,15 @@ const Page = () => {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >
-            Next
+            {t('discover.next')}
           </button>
         </div>
       )}
       {infiniteMode && (
         <div ref={loadMoreRef} className="flex justify-center py-6">
-          {infiniteLoading && <span className="text-xs text-black/60 dark:text-white/60">Loading more...</span>}
+          {infiniteLoading && <span className="text-xs text-black/60 dark:text-white/60">{t('discover.loadingMore')}</span>}
           {!infiniteLoading && infiniteArticles.length >= totalResults && (
-            <span className="text-xs text-black/60 dark:text-white/60">No more articles.</span>
+            <span className="text-xs text-black/60 dark:text-white/60">{t('discover.noMoreArticles')}</span>
           )}
         </div>
       )}

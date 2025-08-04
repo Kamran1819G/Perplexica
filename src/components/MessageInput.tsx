@@ -8,6 +8,7 @@ import { File } from './ChatWindow';
 import AttachSmall from './MessageInputActions/AttachSmall';
 import Microphone from './MessageInputActions/Microphone';
 import axios from 'axios';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const MessageInput = ({
   sendMessage,
@@ -31,6 +32,7 @@ const MessageInput = ({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionTimeout = useRef<NodeJS.Timeout | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (textareaRows >= 2 && message && mode === 'single') {
@@ -126,7 +128,7 @@ const MessageInput = ({
           setTextareaRows(Math.ceil(height / props.rowHeight));
         }}
         className="transition bg-transparent dark:placeholder:text-white/50 placeholder:text-sm text-sm dark:text-white resize-none focus:outline-none w-full px-2 max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink"
-        placeholder="Ask a follow-up"
+                            placeholder={t('chat.typeMessage')}
       />
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-dark-secondary border border-dark-200 rounded-lg shadow-xl overflow-hidden">

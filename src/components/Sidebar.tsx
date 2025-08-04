@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
 import Layout from './Layout';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return (
@@ -13,27 +14,28 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const Sidebar = ({ children }: { children: React.ReactNode }) => {
+const Sidebar = ({ children }: { children: ReactNode }) => {
   const segments = useSelectedLayoutSegments();
+  const { t } = useTranslation();
 
   const navLinks = [
     {
       icon: Home,
       href: '/',
       active: segments.length === 0 || segments.includes('c'),
-      label: 'Home',
+      label: t('navigation.home'),
     },
     {
       icon: Search,
       href: '/discover',
       active: segments.includes('discover'),
-      label: 'Discover',
+      label: t('navigation.discover'),
     },
     {
       icon: BookOpenText,
       href: '/library',
       active: segments.includes('library'),
-      label: 'Library',
+      label: t('navigation.library'),
     },
   ];
 
@@ -64,9 +66,11 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             ))}
           </VerticalIconContainer>
 
-          <Link href="/settings">
-            <Settings className="cursor-pointer" />
-          </Link>
+          <div className="flex flex-col items-center gap-y-3">
+            <Link href="/settings">
+              <Settings className="cursor-pointer" />
+            </Link>
+          </div>
         </div>
       </div>
 

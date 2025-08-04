@@ -8,6 +8,7 @@ import Attach from './MessageInputActions/Attach';
 import Microphone from './MessageInputActions/Microphone';
 import { File } from './ChatWindow';
 import axios from 'axios';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const EmptyChatMessageInput = ({
   sendMessage,
@@ -30,6 +31,7 @@ const EmptyChatMessageInput = ({
   files: File[];
   setFiles: (files: File[]) => void;
 }) => {
+  const { t } = useTranslation();
   const [copilotEnabled, setCopilotEnabled] = useState(false);
   const [message, setMessage] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -111,7 +113,7 @@ const EmptyChatMessageInput = ({
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           minRows={2}
           className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-sm text-black dark:text-white resize-none focus:outline-none w-full max-h-24 lg:max-h-36 xl:max-h-48"
-          placeholder="Ask anything..."
+          placeholder={t('emptyChat.askAnything')}
         />
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-dark-secondary border border-dark-200 rounded-lg shadow-xl overflow-hidden">

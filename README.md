@@ -220,6 +220,16 @@ kubectl apply -f deploy-template.yaml
 
 Perplexica is built on the idea that AI and large language models should be easy for everyone to use. If you find bugs or have ideas, please share them in via GitHub Issues. For more information on contributing to Perplexica you can read the [CONTRIBUTING.md](CONTRIBUTING.md) file to learn more about Perplexica and how you can contribute to it.
 
+### 🌍 Language Contributions
+
+We welcome contributions to add new languages or improve existing translations! Perplexica currently supports **12 languages** including RTL support for Arabic.
+
+- **Want to add a new language?** Check out our [Language Contribution Guide](docs/LANGUAGE_CONTRIBUTION.md)
+- **Current languages**: English, Spanish, French, German, Italian, Portuguese, Russian, Japanese, Korean, Chinese, Arabic, Hindi
+- **Need help?** Join our [Discord community](https://discord.gg/EFwsmQDgAu) for translation support
+
+Your contributions help make Perplexica accessible to users worldwide! 🌍
+
 ## Help and Support
 
 If you have any questions or feedback, please feel free to reach out to us. You can create an issue on GitHub or join our Discord server. There, you can connect with other users, share your experiences and reviews, and receive more personalized help. [Click here](https://discord.gg/EFwsmQDgAu) to join the Discord server. To discuss matters outside of regular support, feel free to contact me on Discord at `Kamran1819G`.
