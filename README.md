@@ -4,49 +4,107 @@
 
 ---
 
-## 🟢 Quick Start (For Beginners)
+## 🚀 How to Run Perplexica
 
-Follow these simple steps to run Perplexica on your computer. No coding experience needed!
+There are **3 different ways** to run Perplexica depending on your needs:
 
-### 1. Install Docker
-- Download and install Docker Desktop from [here](https://www.docker.com/products/docker-desktop/).
-- Follow the instructions for your operating system (Windows, Mac, or Linux).
+### 🟢 **Option 1: Production Docker (Recommended for End Users)**
 
-### 2. Download Perplexica
-- Open a terminal (Command Prompt, PowerShell, or Terminal app).
-- Run this command to download Perplexica:
-  ```bash
-  git clone https://github.com/Kamran1819G/Perplexica.git
-  ```
-- Go into the project folder:
-  ```bash
-  cd Perplexica
-  ```
+**Best for**: Regular users who want to run Perplexica as a service
 
-### 3. Copy the Example Config
-- Find the file named `sample.config.toml` in the project folder.
-- Make a copy and rename it to `config.toml`.
-- (Optional) You can edit `config.toml` later to change settings, but the default works for most users.
+**Setup**:
+1. Install Docker Desktop from [here](https://www.docker.com/products/docker-desktop/)
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/Kamran1819G/Perplexica.git
+   cd Perplexica
+   ```
+3. Copy the config file:
+   ```bash
+   cp sample.config.toml config.toml
+   ```
+4. Start Perplexica:
+   ```bash
+   docker compose up --build
+   ```
+5. Open [http://localhost:3000](http://localhost:3000)
 
-### 4. Start Perplexica
-- In the terminal, run:
-  ```bash
-  docker compose up --build or docker compose up -d --build
-  ```
-- The first time, this may take a few minutes.
+**✅ Pros**: Easy setup, production-ready, isolated environment  
+**❌ Cons**: Slower startup, no hot reloading
 
-### 5. Open the App
-- Once you see messages that Perplexica is running, open your web browser.
-- Go to [http://localhost:3000](http://localhost:3000)
+---
 
-That's it! 🎉
+### 🛠️ **Option 2: Development Setup (Recommended for Contributors)**
 
-### 6. Stop Perplexica
-- To stop the app, go back to your terminal and press `Ctrl+C`.
-- To remove the running containers, run:
-  ```bash
-  docker compose down
-  ```
+**Best for**: Developers who want to contribute or modify the code
+
+**Setup**:
+1. Install Docker Desktop and Node.js/yarn
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/Kamran1819G/Perplexica.git
+   cd Perplexica
+   ```
+3. Copy the config file:
+   ```bash
+   cp sample.config.toml config.toml
+   ```
+4. Start development environment:
+
+   **Linux/macOS**:
+   ```bash
+   ./dev.sh
+   ```
+
+   **Windows**:
+   ```cmd
+   dev.bat
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000)
+
+**✅ Pros**: Fast hot reloading, easy debugging, instant code changes  
+**❌ Cons**: Requires Node.js/yarn installation
+
+---
+
+### 🔧 **Option 3: Manual Installation (Advanced Users)**
+
+**Best for**: Advanced users who want full control over the setup
+
+**Setup**:
+1. Install Node.js, SearXNG, and configure it
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/Kamran1819G/Perplexica.git
+   cd Perplexica
+   ```
+3. Copy and configure the config file:
+   ```bash
+   cp sample.config.toml config.toml
+   # Edit config.toml with your settings
+   ```
+4. Install dependencies and start:
+   ```bash
+   yarn install
+   yarn build
+   yarn start
+   ```
+
+**✅ Pros**: Full control, no Docker dependency  
+**❌ Cons**: Complex setup, manual dependency management
+
+---
+
+## 🎯 **Which Option Should You Choose?**
+
+| Use Case | Recommended Option | Why? |
+|----------|-------------------|------|
+| **Just want to use Perplexica** | Option 1: Production Docker | Easiest setup, works out of the box |
+| **Want to contribute code** | Option 2: Development Setup | Fast development with hot reloading |
+| **Advanced user, no Docker** | Option 3: Manual Installation | Full control over the environment |
+| **Testing/Evaluation** | Option 1: Production Docker | Quick to get started |
+| **Custom modifications** | Option 2: Development Setup | Easy to modify and test changes |
 
 ---
 
@@ -67,7 +125,7 @@ That's it! 🎉
 - [Using Perplexica's API](#using-perplexicas-api)
 - [Expose Perplexica to a network](#expose-perplexica-to-network)
 - [One-Click Deployment](#one-click-deployment)
-- [🛠️ Development Setup](#️-development-setup)
+
 - [Upcoming Features](#upcoming-features)
 - [Support Us](#support-us)
   - [Donations](#donations)
@@ -109,27 +167,57 @@ It has many more features like image and video search. Some of the planned featu
 
 ## Installation
 
-There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. Using Docker is highly recommended.
+There are **3 different installation methods** for Perplexica. Choose the one that best fits your needs:
 
-### Docker Installation (Recommended)
+### 🟢 **Option 1: Production Docker (Recommended for End Users)**
 
-The quick start guide above covers the basic Docker setup. For detailed Docker instructions including development with live updates, production deployment, and troubleshooting, see the **[Docker Setup Guide](docs/DOCKER.md)**.
+The easiest way to get started. Everything runs in Docker containers.
 
-#### For Contributors
-- Use `docker-compose up --build` for development with live updates
-- Your changes will be reflected live in the running container
-- If you add dependencies, rebuild with `docker-compose up --build`
-- The GitHub Actions workflow for Docker images is now only for official releases and is not required for local development
+**Quick Start**:
+```bash
+git clone https://github.com/Kamran1819G/Perplexica.git
+cd Perplexica
+cp sample.config.toml config.toml
+docker compose up --build
+```
 
-### Non-Docker Installation
+**✅ Best for**: Regular users, quick setup, production use  
+**📖 Details**: See the **[Docker Setup Guide](docs/DOCKER.md)**
 
-1. Install SearXNG and allow `JSON` format in the SearXNG settings.
-2. Clone the repository and rename the `sample.config.toml` file to `config.toml` in the root directory. Ensure you complete all required fields in this file.
-3. After populating the configuration run `npm i`.
-4. Install the dependencies and then execute `npm run build`.
-5. Finally, start the app by running `npm run start`
+### 🛠️ **Option 2: Development Setup (Recommended for Contributors)**
 
-**Note**: Using Docker is recommended as it simplifies the setup process, especially for managing environment variables and dependencies.
+Hybrid approach: SearXNG in Docker + Next.js on host for fast development.
+
+**Quick Start**:
+```bash
+git clone https://github.com/Kamran1819G/Perplexica.git
+cd Perplexica
+cp sample.config.toml config.toml
+./dev.sh  # Linux/macOS
+# or
+dev.bat   # Windows
+```
+
+**✅ Best for**: Developers, contributors, custom modifications  
+**📖 Details**: See the **[Development Guide](DEVELOPMENT.md)**
+
+### 🔧 **Option 3: Manual Installation (Advanced Users)**
+
+Full manual setup without Docker dependencies.
+
+**Setup**:
+1. Install Node.js, SearXNG, and configure it
+2. Clone the repository and copy config file
+3. Run `yarn install && yarn build && yarn start`
+
+**✅ Best for**: Advanced users, full control, no Docker dependency  
+**📖 Details**: See the **[Installation Documentation](docs/installation)**
+
+### 🎯 **Recommendation**
+
+- **New users**: Start with Option 1 (Production Docker)
+- **Contributors**: Use Option 2 (Development Setup)
+- **Advanced users**: Choose Option 3 (Manual Installation)
 
 See the [installation documentation](https://github.com/Kamran1819G/Perplexica/tree/master/docs/installation) for more information like updating, etc.
 
@@ -234,59 +322,7 @@ If you have any questions or feedback, please feel free to reach out to us. You 
 
 Thank you for exploring Perplexica, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexica and expand its capabilities. We value your feedback and contributions which help us make Perplexica even better. Don't forget to check back for updates and new features!
 
-## 🛠️ Development Setup
 
-For developers who want to contribute to Perplexica or run it in development mode with hot reloading:
-
-### Quick Development Start
-
-#### Linux/macOS:
-```bash
-# Start development environment (SearXNG in Docker + Next.js on host)
-./dev.sh
-
-# Stop development environment
-./stop-dev.sh
-```
-
-#### Windows:
-```cmd
-# Start development environment (SearXNG in Docker + Next.js on host)
-dev.bat
-
-# Stop development environment
-stop-dev.bat
-```
-
-### Manual Development Setup
-
-1. **Start SearXNG in Docker:**
-   ```bash
-   docker compose -f docker-compose.dev.yaml up -d searxng
-   ```
-
-2. **Start Next.js on Host Machine:**
-   ```bash
-   yarn install
-   yarn dev
-   ```
-
-### Development Architecture
-
-- **SearXNG**: Runs in Docker container (http://localhost:4000)
-- **Next.js App**: Runs directly on host machine (http://localhost:3000)
-- **Hot Reloading**: Full hot reloading for Next.js development
-- **Search Integration**: App connects to SearXNG via localhost:4000
-
-### Why This Approach?
-
-**Docker hot reloading was not possible** due to volume mounting conflicts with Next.js App Router. The Next.js application couldn't find the `app` directory when mounted as volumes in Docker containers.
-
-**Solution**: Hybrid approach where:
-- SearXNG runs in Docker (for search functionality)
-- Next.js runs directly on host machine (for fast development with hot reloading)
-
-📖 **Read the complete [Development Guide](DEVELOPMENT.md)**
 
 ## 📚 Docker Documentation
 
