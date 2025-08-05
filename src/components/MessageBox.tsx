@@ -15,6 +15,7 @@ import {
 import Markdown, { MarkdownToJSX } from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
+import Export from './MessageActions/Export';
 import MessageSources from './MessageSources';
 import SearchImages from './SearchImages';
 import SearchVideos from './SearchVideos';
@@ -180,6 +181,7 @@ const MessageBox = ({
                     <Rewrite rewrite={rewrite} messageId={message.messageId} />
                   </div>
                   <div className="flex flex-row items-center space-x-1">
+                    <Export initialMessage={message.content} message={message} />
                     <Copy initialMessage={message.content} message={message} />
                     <button
                       onClick={() => {

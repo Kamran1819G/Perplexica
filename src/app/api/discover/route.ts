@@ -1,4 +1,5 @@
 import { searchSearxng } from '@/lib/searxng';
+import { getNewsEnginesForCategory } from '@/lib/newsSearchEngines';
 
 const articleWebsites = [
   'yahoo.com',
@@ -13,6 +14,9 @@ const articleWebsites = [
 ];
 
 const topics = ['AI', 'tech']; /* TODO: Add UI to customize this */
+
+// Get primary news engines from configuration
+const newsEngines = getNewsEnginesForCategory('primary');
 
 export const GET = async (req: Request) => {
   try {
@@ -30,13 +34,22 @@ export const GET = async (req: Request) => {
 
     if (mode === 'normal') {
       if (q) {
-        // Custom query search
-        data = (
-          await searchSearxng(q, {
-            engines: ['bing news'],
+        // Custom query search - use multiple engines for better results
+        const searchPromises = newsEngines.map(engine => 
+          searchSearxng(q, {
+            engines: [engine],
             pageno: 1,
+          }).catch(err => {
+            console.warn(`Engine ${engine} failed:`, err);
+            return { results: [] };
           })
-        ).results;
+        );
+        
+        const results = await Promise.allSettled(searchPromises);
+        data = results
+          .filter(result => result.status === 'fulfilled')
+          .map(result => (result as PromiseFulfilledResult<any>).value.results)
+          .flat();
       } else if (topic || website) {
         // Filtered by topic and/or website
         const topicsToUse = topic ? [topic] : ['AI', 'tech'];
@@ -45,70 +58,104 @@ export const GET = async (req: Request) => {
           'www.exchangewire.com',
           'businessinsider.com',
         ];
-        data = (
-          await Promise.all(
-            websitesToUse.flatMap((w) =>
-              topicsToUse.map(async (t) => {
+        
+        const searchPromises = websitesToUse.flatMap((w) =>
+          topicsToUse.flatMap((t) =>
+            newsEngines.map(async (engine) => {
+              try {
                 return (
                   await searchSearxng(`site:${w} ${t}`, {
-                    engines: ['bing news'],
+                    engines: [engine],
                     pageno: 1,
                   })
                 ).results;
-              })
-            )
+              } catch (err) {
+                console.warn(`Engine ${engine} failed for site:${w} ${t}:`, err);
+                return [];
+              }
+            })
           )
-        )
+        );
+        
+        const results = await Promise.allSettled(searchPromises);
+        data = results
+          .filter(result => result.status === 'fulfilled')
+          .map(result => (result as PromiseFulfilledResult<any>).value)
           .flat()
           .sort(() => Math.random() - 0.5);
       } else {
-        // Default: all topics and all websites
+        // Default: all topics and all websites with multiple engines
         const articleWebsites = [
           'yahoo.com',
           'www.exchangewire.com',
           'businessinsider.com',
         ];
         const topics = ['AI', 'tech'];
-        data = (
-          await Promise.all([
-            ...new Array(articleWebsites.length * topics.length)
-              .fill(0)
-              .map(async (_, i) => {
+        
+        const searchPromises = articleWebsites.flatMap((w) =>
+          topics.flatMap((t) =>
+            newsEngines.map(async (engine) => {
+              try {
                 return (
                   await searchSearxng(
-                    `site:${articleWebsites[i % articleWebsites.length]} ${topics[i % topics.length]}`,
+                    `site:${w} ${t}`,
                     {
-                      engines: ['bing news'],
+                      engines: [engine],
                       pageno: 1,
                     },
                   )
                 ).results;
-              }),
-          ])
-        )
-          .map((result) => result)
+              } catch (err) {
+                console.warn(`Engine ${engine} failed for site:${w} ${t}:`, err);
+                return [];
+              }
+            })
+          )
+        );
+        
+        const results = await Promise.allSettled(searchPromises);
+        data = results
+          .filter(result => result.status === 'fulfilled')
+          .map(result => (result as PromiseFulfilledResult<any>).value)
           .flat()
           .sort(() => Math.random() - 0.5);
       }
     } else {
-      // Preview mode: random topic and website
+      // Preview mode: random topic and website with multiple engines
       const articleWebsites = [
         'yahoo.com',
         'www.exchangewire.com',
         'businessinsider.com',
       ];
       const topics = ['AI', 'tech'];
-      data = (
-        await searchSearxng(
-          `site:${articleWebsites[Math.floor(Math.random() * articleWebsites.length)]} ${topics[Math.floor(Math.random() * topics.length)]}`,
+      const randomWebsite = articleWebsites[Math.floor(Math.random() * articleWebsites.length)];
+      const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+      
+      // Use multiple engines for preview mode too
+      const searchPromises = newsEngines.map(engine =>
+        searchSearxng(
+          `site:${randomWebsite} ${randomTopic}`,
           {
-            categories: ['news'],
-            time_range: ['month'],
+            engines: [engine],
             pageno: 1,
           },
-        )
-      ).results;
+        ).catch(err => {
+          console.warn(`Engine ${engine} failed in preview mode:`, err);
+          return { results: [] };
+        })
+      );
+      
+      const results = await Promise.allSettled(searchPromises);
+      data = results
+        .filter(result => result.status === 'fulfilled')
+        .map(result => (result as PromiseFulfilledResult<any>).value.results)
+        .flat();
     }
+
+    // Remove duplicates based on URL
+    const uniqueData = data.filter((item, index, self) => 
+      index === self.findIndex(t => t.url === item.url)
+    );
 
     // Sorting
     const getDate = (item: any) => {
@@ -117,20 +164,20 @@ export const GET = async (req: Request) => {
       return 0;
     };
     if (sort === 'newest') {
-      data.sort((a, b) => getDate(b) - getDate(a));
+      uniqueData.sort((a, b) => getDate(b) - getDate(a));
     } else if (sort === 'oldest') {
-      data.sort((a, b) => getDate(a) - getDate(b));
+      uniqueData.sort((a, b) => getDate(a) - getDate(b));
     } else if (sort === 'website') {
-      data.sort((a, b) => {
+      uniqueData.sort((a, b) => {
         const hostA = (a.url ? new URL(a.url).hostname : '').replace('www.', '');
         const hostB = (b.url ? new URL(b.url).hostname : '').replace('www.', '');
         return hostA.localeCompare(hostB);
       });
     }
 
-    const totalResults = data.length;
+    const totalResults = uniqueData.length;
     const totalPages = Math.ceil(totalResults / pageSize);
-    const pagedData = data.slice((page - 1) * pageSize, page * pageSize);
+    const pagedData = uniqueData.slice((page - 1) * pageSize, page * pageSize);
 
     return Response.json(
       {

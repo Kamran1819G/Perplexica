@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/useTranslation';
 import WeatherWidget from '@/components/WeatherWidget';
+import MarketOutlookWidget from '@/components/MarketOutlookWidget';
+import TrendingCompaniesWidget from '@/components/TrendingCompaniesWidget';
+import MarketNewsWidget from '@/components/MarketNewsWidget';
 
 interface Discover {
   title: string;
@@ -14,7 +17,6 @@ interface Discover {
   url: string;
   thumbnail: string;
   published?: string;
-  sources?: number;
 }
 
 interface Interest {
@@ -22,10 +24,51 @@ interface Interest {
   icon: any;
 }
 
+// Utility function to extract source name from URL
+const getSourceName = (url: string): string => {
+  try {
+    const domain = url.replace(/.+\/\/|www.|\..+/g, '');
+    
+    // Map common domains to more readable names
+    const domainMap: { [key: string]: string } = {
+      'yahoo': 'Yahoo News',
+      'businessinsider': 'Business Insider',
+      'exchangewire': 'ExchangeWire',
+      'techcrunch': 'TechCrunch',
+      'wired': 'Wired',
+      'theverge': 'The Verge',
+      'mashable': 'Mashable',
+      'gizmodo': 'Gizmodo',
+      'cnet': 'CNET',
+      'venturebeat': 'VentureBeat',
+      'reuters': 'Reuters',
+      'bloomberg': 'Bloomberg',
+      'cnn': 'CNN',
+      'bbc': 'BBC',
+      'nytimes': 'The New York Times',
+      'washingtonpost': 'The Washington Post',
+      'guardian': 'The Guardian',
+      'forbes': 'Forbes',
+      'wsj': 'The Wall Street Journal',
+      'ft': 'Financial Times'
+    };
+    
+    // Check if we have a mapped name for this domain
+    if (domainMap[domain.toLowerCase()]) {
+      return domainMap[domain.toLowerCase()];
+    }
+    
+    // For unknown domains, capitalize and format nicely
+    return domain.charAt(0).toUpperCase() + domain.slice(1);
+  } catch {
+    return 'Unknown Source';
+  }
+};
+
 const Page = () => {
   const { t } = useTranslation();
   
-  const PAGE_SIZE = 12;
+  const PAGE_SIZE = 17;
 
   const [discover, setDiscover] = useState<Discover[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +80,7 @@ const Page = () => {
   const [infiniteMode, setInfiniteMode] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const [showInterests, setShowInterests] = useState(true);
+  const [showInterests, setShowInterests] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedInterestFilter, setSelectedInterestFilter] = useState<string>('all');
 
@@ -54,7 +97,13 @@ const Page = () => {
   useEffect(() => {
     const savedInterests = localStorage.getItem('userInterests');
     if (savedInterests) {
-      setSelectedInterests(JSON.parse(savedInterests));
+      const parsedInterests = JSON.parse(savedInterests);
+      setSelectedInterests(parsedInterests);
+      // Only show interests panel if no interests are selected
+      setShowInterests(parsedInterests.length === 0);
+    } else {
+      // If no saved interests, show the panel
+      setShowInterests(true);
     }
   }, []);
 
@@ -89,16 +138,9 @@ const Page = () => {
 
 
 
-  const marketData = [
-    { name: "S&P Futu...", symbol: "ESUSD", change: "+0.56%", value: "+$35", price: "$6,299.50", trend: "up" },
-    { name: "Bitcoin", symbol: "BTCUSD", change: "+0.43%", value: "+$495.09", price: "$114,712.57", trend: "up" },
-    { name: "NASDAQ...", symbol: "NQUSD", change: "+0.66%", value: "+$152", price: "$23,035.75", trend: "up" },
-    { name: "VIX", symbol: "^VIX", change: "-5.64%", value: "-$1.15", price: "$19.23", trend: "down" }
-  ];
 
-  const trendingCompanies = [
-    { name: "Palantir Technologies Inc.", price: "$24.50", change: "-2.3%" }
-  ];
+
+
 
   useEffect(() => {
     if (infiniteMode) return;
@@ -197,18 +239,12 @@ const Page = () => {
           </div>
           <div className="p-3 sm:p-4">
             <h3 className="font-semibold mb-2 line-clamp-2 hover:text-[#24A0ED] transition-colors duration-200 text-black dark:text-white text-sm sm:text-base">{item.title}</h3>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-start">
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
-                <span className="text-xs sm:text-sm text-black/60 dark:text-white/60">{item.sources || 20} sources</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <button className="p-1 hover:bg-light-200 dark:hover:bg-dark-200 rounded transition-colors duration-200">
-                  <Heart className="w-3 h-3 text-black/60 dark:text-white/60 hover:text-red-400" />
-                </button>
-                <button className="p-1 hover:bg-light-200 dark:hover:bg-dark-200 rounded transition-colors duration-200">
-                  <MoreHorizontal className="w-3 h-3 text-black/60 dark:text-white/60" />
-                </button>
+                <div className="flex items-center space-x-1.5 px-2 py-1 bg-black/5 dark:bg-white/5 rounded-full">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-xs sm:text-sm font-medium text-black/70 dark:text-white/70">{getSourceName(item.url)}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -230,18 +266,12 @@ const Page = () => {
             </div>
             <h2 className="text-lg sm:text-xl font-bold mb-3 hover:text-[#24A0ED] transition-colors duration-200 text-black dark:text-white">{item.title}</h2>
             <p className="text-black/70 dark:text-white/70 mb-4 leading-relaxed text-sm sm:text-base line-clamp-3">{item.content}</p>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-start">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-                <span className="text-xs sm:text-sm text-black/60 dark:text-white/60">{item.sources || 30} sources</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-1 sm:p-2 hover:bg-light-200 dark:hover:bg-dark-200 rounded transition-colors duration-200">
-                  <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-black/60 dark:text-white/60 hover:text-red-400" />
-                </button>
-                <button className="p-1 sm:p-2 hover:bg-light-200 dark:hover:bg-dark-200 rounded transition-colors duration-200">
-                  <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4 text-black/60 dark:text-white/60" />
-                </button>
+                <div className="flex items-center space-x-1.5 px-2 py-1 bg-black/5 dark:bg-white/5 rounded-full">
+                  <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full"></div>
+                  <span className="text-xs sm:text-sm font-medium text-black/70 dark:text-white/70">{getSourceName(item.url)}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -279,7 +309,7 @@ const Page = () => {
       {/* Main Content Layout */}
       <div className="flex gap-6 px-4 sm:px-6">
         {/* Left Navigation */}
-        <div className="hidden lg:flex flex-col w-16 bg-dark-secondary rounded-lg p-4 space-y-6">
+        <div className="hidden lg:flex flex-col w-16 bg-dark-secondary rounded-lg p-4 space-y-6 h-fit">
           {/* All Interests Logo */}
           <button
             onClick={() => handleInterestFilterSelect('all')}
@@ -288,7 +318,6 @@ const Page = () => {
                 ? 'bg-[#24A0ED]' 
                 : 'bg-dark-200 hover:bg-dark-100'
             }`}
-            title="All Interests"
           >
             <Sparkles className="w-5 h-5 text-white" />
             {/* Tooltip */}
@@ -297,10 +326,7 @@ const Page = () => {
             </div>
           </button>
           
-          {/* Add Button */}
-          <button className="w-8 h-8 bg-dark-200 rounded-lg flex items-center justify-center hover:bg-dark-100 transition-colors">
-            <Plus className="w-4 h-4 text-white" />
-          </button>
+
           
           {/* View Mode Selector */}
           <div className="flex flex-col space-y-1">
@@ -311,7 +337,6 @@ const Page = () => {
                   ? 'bg-[#24A0ED]' 
                   : 'bg-dark-200 hover:bg-dark-100'
               }`}
-              title="Pagination Mode"
             >
               <List className="w-4 h-4 text-white" />
               {/* Tooltip */}
@@ -326,7 +351,6 @@ const Page = () => {
                   ? 'bg-[#24A0ED]' 
                   : 'bg-dark-200 hover:bg-dark-100'
               }`}
-              title="Infinite Scroll Mode"
             >
               <ArrowUp className="w-4 h-4 text-white" />
               {/* Tooltip */}
@@ -349,7 +373,6 @@ const Page = () => {
                       ? 'bg-[#24A0ED]' 
                       : 'bg-dark-200 hover:bg-dark-100'
                   }`}
-                  title={interest.name}
                 >
                   <interest.icon className="w-4 h-4 text-white" />
                   {/* Tooltip */}
@@ -362,19 +385,16 @@ const Page = () => {
           )}
           
           {/* Edit Interests Button */}
-          <div className="flex flex-col space-y-4 mt-auto">
-            <button 
-              onClick={() => setShowInterests(true)}
-              className="w-8 h-8 bg-dark-200 rounded-lg flex items-center justify-center hover:bg-dark-100 transition-colors group relative"
-              title="Edit Interests"
-            >
-              <Settings className="w-4 h-4 text-white" />
-              {/* Tooltip */}
-              <div className="absolute left-full ml-2 px-2 py-1 bg-dark-200 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                Edit Interests
-              </div>
-            </button>
-          </div>
+          <button 
+            onClick={() => setShowInterests(true)}
+            className="w-8 h-8 bg-dark-200 rounded-lg flex items-center justify-center hover:bg-dark-100 transition-colors group relative"
+          >
+            <Settings className="w-4 h-4 text-white" />
+            {/* Tooltip */}
+            <div className="absolute left-full ml-2 px-2 py-1 bg-dark-200 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              Edit Interests
+            </div>
+          </button>
         </div>
 
         {/* Articles Feed */}
@@ -513,37 +533,13 @@ const Page = () => {
           <WeatherWidget />
 
           {/* Market Outlook Widget */}
-          <div className="bg-light-secondary dark:bg-dark-secondary rounded-lg p-4 border border-light-200 dark:border-dark-200">
-            <h3 className="font-semibold mb-3 text-black dark:text-white">Market Outlook</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {marketData.map((item, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="text-xs text-black/60 dark:text-white/60">{item.name}</div>
-                  <div className="text-xs text-black/70 dark:text-white/70">{item.symbol}</div>
-                  <div className={`text-xs ${item.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                    {item.change} {item.value}
-                  </div>
-                  <div className="text-sm font-medium text-black dark:text-white">{item.price}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <MarketOutlookWidget />
 
           {/* Trending Companies Widget */}
-          <div className="bg-light-secondary dark:bg-dark-secondary rounded-lg p-4 border border-light-200 dark:border-dark-200">
-            <h3 className="font-semibold mb-3 text-black dark:text-white">Trending Companies</h3>
-            <div className="space-y-3">
-              {trendingCompanies.map((company, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-black dark:text-white">{company.name}</div>
-                    <div className="text-xs text-black/60 dark:text-white/60">{company.price}</div>
-                  </div>
-                  <div className="text-red-400 text-sm">{company.change}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <TrendingCompaniesWidget />
+
+          {/* Market News Widget */}
+          <MarketNewsWidget />
         </div>
       </div>
     </div>
