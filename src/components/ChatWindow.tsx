@@ -421,20 +421,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
-        const autoImageSearch = localStorage.getItem('autoImageSearch');
-        const autoVideoSearch = localStorage.getItem('autoVideoSearch');
-
-        if (autoImageSearch === 'true') {
-          document
-            .getElementById(`search-images-${lastMsg.messageId}`)
-            ?.click();
-        }
-
-        if (autoVideoSearch === 'true') {
-          document
-            .getElementById(`search-videos-${lastMsg.messageId}`)
-            ?.click();
-        }
+        // Auto-search functionality is now handled by the tabbed interface
+        // Images and videos are automatically loaded when their respective tabs are opened
 
         if (
           lastMsg.role === 'assistant' &&
