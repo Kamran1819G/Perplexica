@@ -125,8 +125,6 @@ There are **3 different ways** to run Perplexica depending on your needs:
 - [Using Perplexica's API](#using-perplexicas-api)
 - [Expose Perplexica to a network](#expose-perplexica-to-network)
 - [One-Click Deployment](#one-click-deployment)
-
-- [Upcoming Features](#upcoming-features)
 - [Support Us](#support-us)
   - [Donations](#donations)
 - [Contribution](#contribution)
@@ -290,15 +288,7 @@ kubectl apply -f deploy-template.yaml
 
 📖 **For comprehensive deployment instructions, see the [Deployment Guide](docs/DEPLOYMENT.md)**
 
-## Upcoming Features
 
-- [x] Add settings page
-- [x] Adding support for local LLMs
-- [x] History Saving features
-- [x] Introducing various Focus Modes
-- [x] Adding API support
-- [x] Adding Discover
-- [ ] Finalizing Copilot Mode
 
 
 
