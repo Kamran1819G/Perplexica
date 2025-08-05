@@ -21,6 +21,8 @@ export type Message = {
   role: 'user' | 'assistant';
   suggestions?: string[];
   sources?: Document[];
+  currentStep?: string;
+  steps?: string[];
 };
 
 export interface File {
@@ -340,6 +342,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
     let sources: Document[] | undefined = undefined;
     let recievedMessage = '';
     let added = false;
+    let currentStep = 'search';
+    let completedSteps: string[] = [];
 
     messageId = messageId ?? crypto.randomBytes(7).toString('hex');
 
@@ -361,8 +365,33 @@ const ChatWindow = ({ id }: { id?: string }) => {
         return;
       }
 
+      if (data.type === 'step') {
+        currentStep = data.step;
+        if (data.completed) {
+          completedSteps.push(data.step);
+        }
+        
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === data.messageId) {
+              return {
+                ...msg,
+                currentStep: currentStep,
+                steps: completedSteps,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
+
       if (data.type === 'sources') {
         sources = data.data;
+        completedSteps.push('search');
+        completedSteps.push('refine');
+        completedSteps.push('read');
+        
         if (!added) {
           setMessages((prevMessages) => [
             ...prevMessages,
@@ -372,10 +401,26 @@ const ChatWindow = ({ id }: { id?: string }) => {
               chatId: chatId!,
               role: 'assistant',
               sources: sources,
+              currentStep: 'generate',
+              steps: completedSteps,
               createdAt: new Date(),
             },
           ]);
           added = true;
+        } else {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => {
+              if (msg.messageId === data.messageId) {
+                return {
+                  ...msg,
+                  sources: sources,
+                  currentStep: 'generate',
+                  steps: completedSteps,
+                };
+              }
+              return msg;
+            })
+          );
         }
         setMessageAppeared(true);
       }
@@ -390,6 +435,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
               chatId: chatId!,
               role: 'assistant',
               sources: sources,
+              currentStep: 'generate',
+              steps: completedSteps,
               createdAt: new Date(),
             },
           ]);
@@ -420,6 +467,20 @@ const ChatWindow = ({ id }: { id?: string }) => {
         setLoading(false);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+
+        // Mark all steps as completed
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === lastMsg.messageId) {
+              return {
+                ...msg,
+                currentStep: 'complete',
+                steps: ['search', 'refine', 'read', 'generate', 'complete'],
+              };
+            }
+            return msg;
+          })
+        );
 
         // Auto-search functionality is now handled by the tabbed interface
         // Images and videos are automatically loaded when their respective tabs are opened

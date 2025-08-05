@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import MessageInput from './MessageInput';
 import { File, Message } from './ChatWindow';
 import MessageBox from './MessageBox';
-import MessageBoxLoading from './MessageBoxLoading';
+// MessageBoxLoading removed - using timeline steps instead
 
 const Chat = ({
   loading,
@@ -85,7 +85,7 @@ const Chat = ({
           </Fragment>
         );
       })}
-      {loading && !messageAppeared && <MessageBoxLoading />}
+      {/* Timeline steps are now used as loading indicator instead of skeleton */}
       <div ref={messageEnd} className="h-0" />
       {dividerWidth > 0 && (
         <div

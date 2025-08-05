@@ -16,6 +16,10 @@ import {
   Network,
   List,
   Video,
+  Search,
+  CheckCircle,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 import Markdown, { MarkdownToJSX } from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
@@ -32,6 +36,207 @@ const ThinkTagProcessor = ({ children }: { children: React.ReactNode }) => {
 };
 
 type TabType = 'answer' | 'images' | 'videos' | 'sources' | 'steps';
+
+type StepStatus = 'pending' | 'active' | 'completed';
+
+interface Step {
+  id: string;
+  title: string;
+  description?: string;
+  status: StepStatus;
+  icon?: React.ReactNode;
+  details?: string[];
+}
+
+const StepsComponent = ({ 
+  loading, 
+  sources, 
+  query,
+  currentStep,
+  steps
+}: { 
+  loading: boolean;
+  sources?: any[];
+  query: string;
+  currentStep?: string;
+  steps?: string[];
+}) => {
+  // Dynamic step generation based on current state
+  const generateSteps = (): Step[] => {
+    const baseSteps = [
+      {
+        id: 'search',
+        title: 'Searching the web',
+        status: 'pending' as StepStatus,
+      },
+      {
+        id: 'refine',
+        title: 'Refining search',
+        description: query,
+        status: 'pending' as StepStatus,
+      },
+      {
+        id: 'read',
+        title: `Reading sources${sources && sources.length > 0 ? ` - ${sources.length}` : ''}`,
+        status: 'pending' as StepStatus,
+      },
+      {
+        id: 'generate',
+        title: 'Generating answer',
+        status: 'pending' as StepStatus,
+      },
+      {
+        id: 'complete',
+        title: 'Finished',
+        status: 'pending' as StepStatus,
+      },
+    ];
+
+    // Update step statuses based on current state
+    return baseSteps.map(step => {
+      if (currentStep && steps) {
+        if (steps.includes(step.id)) {
+          return { ...step, status: 'completed' as StepStatus };
+        } else if (step.id === currentStep) {
+          return { ...step, status: 'active' as StepStatus };
+        }
+      }
+      return step;
+    });
+  };
+
+  const [stepStates, setStepStates] = useState<Step[]>(generateSteps());
+  const [visibleSteps, setVisibleSteps] = useState<number>(1);
+
+  // Update steps when props change
+  useEffect(() => {
+    const newSteps = generateSteps();
+    setStepStates(newSteps);
+    
+    // Update visible steps
+    if (loading) {
+      if (currentStep && steps) {
+        const stepIndex = newSteps.findIndex(step => step.id === currentStep);
+        setVisibleSteps(Math.max(stepIndex + 1, visibleSteps));
+      } else {
+        // Simulate progression if no real data
+        setVisibleSteps(1);
+        const timers = [
+          setTimeout(() => setVisibleSteps(2), 1000),
+          setTimeout(() => setVisibleSteps(3), 2000),
+          setTimeout(() => setVisibleSteps(4), 3000),
+        ];
+        return () => timers.forEach(timer => clearTimeout(timer));
+      }
+    } else {
+      setVisibleSteps(newSteps.length);
+    }
+  }, [loading, currentStep, steps, query]);
+
+  const getStepIcon = (step: Step) => {
+    switch (step.status) {
+      case 'completed':
+        return <CheckCircle size={14} className="text-white" />;
+      case 'active':
+        return <Clock size={14} className="text-white animate-pulse" />;
+      default:
+        return step.icon || <div className="w-4 h-4 rounded-full bg-gray-400" />;
+    }
+  };
+
+  const getStepColor = (step: Step) => {
+    switch (step.status) {
+      case 'completed':
+        return 'text-gray-300';
+      case 'active':
+        return 'text-gray-300';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
+  const getStepBackground = (step: Step) => {
+    switch (step.status) {
+      case 'completed':
+        return 'bg-gray-800 border-gray-700';
+      case 'active':
+        return 'bg-gray-800 border-gray-700';
+      default:
+        return 'bg-gray-800 border-gray-700';
+    }
+  };
+
+    return (
+    <div className="flex flex-col space-y-4">
+      {/* Timeline Steps */}
+      <div className="relative">
+        {stepStates.slice(0, visibleSteps).map((step, index) => (
+          <div key={step.id} className="relative mb-6">
+            {/* Step Icon - Simple dot for all steps */}
+            <div className="absolute left-3 top-2 w-3 h-3 rounded-full bg-gray-600"></div>
+            
+            {/* Step Content */}
+            <div className="ml-8">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-sm text-gray-300">
+                  {step.title}
+                </span>
+              </div>
+              
+              {/* Search Query Box */}
+              {step.id === 'refine' && step.description && (
+                <div className="ml-4 mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                  <div className="flex items-center space-x-2">
+                    <Search size={14} className="text-gray-400" />
+                    <span className="text-sm text-gray-400 font-mono">{step.description}</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Sources Reading Section */}
+              {step.id === 'read' && sources && sources.length > 0 && (
+                <div className="ml-4 mt-3 max-h-48 overflow-y-auto">
+                  <div className="space-y-2">
+                    {sources.slice(0, 8).map((source, i) => (
+                      <div key={i} className="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg border border-gray-600">
+                        <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center">
+                          <img
+                            src={`https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`}
+                            alt="favicon"
+                            className="w-4 h-4 rounded"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-300 truncate">
+                            {source.metadata?.title || 'Untitled'}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {source.metadata?.url?.replace(/.+\/\/|www.|\..+/g, '')}
+                          </div>
+                        </div>
+                        <ExternalLink size={12} className="text-gray-500 flex-shrink-0" />
+                      </div>
+                    ))}
+                    {sources.length > 8 && (
+                      <div className="text-center py-1">
+                        <span className="text-xs text-gray-500">
+                          ... and {sources.length - 8} more sources
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const MessageBox = ({
   message,
@@ -55,6 +260,25 @@ const MessageBox = ({
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [activeTab, setActiveTab] = useState<TabType>('answer');
+  const [showSteps, setShowSteps] = useState(false);
+
+  // Show steps when loading starts, hide when complete
+  useEffect(() => {
+    if (loading && isLast) {
+      setShowSteps(true);
+      setActiveTab('steps');
+    } else if (!loading && showSteps) {
+      // Keep steps visible for a moment, then switch to answer
+      setTimeout(() => {
+        setShowSteps(false);
+        setActiveTab('answer');
+      }, 1000);
+    }
+  }, [loading, isLast, showSteps]);
+
+  // Show timeline steps for the last user message when loading
+  const shouldShowSteps = (loading && isLast && message.role === 'user') || 
+                         (message.role === 'assistant' && showSteps);
 
   useEffect(() => {
     const citationRegex = /\[([^\]]+)\]/g;
@@ -282,7 +506,13 @@ const MessageBox = ({
       case 'steps':
         return (
           <div className="flex flex-col space-y-4">
-            <p className="text-black/70 dark:text-white/70">Steps functionality coming soon...</p>
+            <StepsComponent 
+              loading={loading && isLast}
+              sources={message.sources}
+              query={message.role === 'user' ? message.content : (history[messageIndex - 1]?.content || '')}
+              currentStep={message.currentStep}
+              steps={message.steps}
+            />
           </div>
         );
       default:
@@ -306,7 +536,7 @@ const MessageBox = ({
         </div>
       )}
 
-      {message.role === 'assistant' && (
+      {(message.role === 'assistant' || shouldShowSteps) && (
         <div className="flex flex-col space-y-9 lg:space-y-0 lg:flex-row lg:justify-between lg:space-x-9">
           <div
             ref={dividerRef}
@@ -318,6 +548,11 @@ const MessageBox = ({
               <div className="flex flex-row space-x-1 border-b border-light-secondary dark:border-dark-secondary">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
+                  const isStepsTab = tab.id === 'steps';
+                  const shouldShowTab = isStepsTab || (!loading || !isLast || message.role === 'assistant');
+                  
+                  if (!shouldShowTab) return null;
+                  
                   return (
                     <button
                       key={tab.id}
