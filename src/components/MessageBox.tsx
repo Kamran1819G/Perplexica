@@ -31,7 +31,7 @@ import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 import ThinkBox from './ThinkBox';
 import SearchSteps from './SearchSteps';
-import CustomStepper, { SearchStep, SourcesStep, SimpleStep } from './ui/Stepper/Stepper';
+import CustomStepper, { SearchStep, SourcesStep, SimpleStep } from './Stepper';
 
 const ThinkTagProcessor = ({ children }: { children: React.ReactNode }) => {
   return <ThinkBox content={children as string} />;
@@ -104,31 +104,55 @@ const MessageBox = ({
 }) => {
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
-  const [activeTab, setActiveTab] = useState<TabType>('answer');
+  const [activeTab, setActiveTab] = useState<TabType>(
+    loading && isLast ? 'steps' : 'answer'
+  );
   const [showSteps, setShowSteps] = useState(false);
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set(['answer']));
+  const [availableTabs, setAvailableTabs] = useState<Set<TabType>>(new Set(['answer', 'steps']));
 
-  // Show steps when loading starts, hide when complete
+  // Track content availability and manage tab visibility
+  useEffect(() => {
+    const newAvailableTabs = new Set<TabType>();
+    
+    // Always show steps tab
+    newAvailableTabs.add('steps');
+    
+    // Always show answer tab for assistant messages or when not loading
+    if (message.role === 'assistant') {
+      newAvailableTabs.add('answer');
+    }
+    
+    // Show sources tab when sources are available
+    if (message.sources && message.sources.length > 0) {
+      newAvailableTabs.add('sources');
+    }
+    
+    // For assistant messages, show images/videos tabs (they will load content dynamically)
+    if (message.role === 'assistant') {
+      newAvailableTabs.add('images');
+      newAvailableTabs.add('videos');
+      if (!loading) {
+        setLoadedTabs(prev => new Set([...prev, 'images', 'videos']));
+      }
+    }
+    
+    setAvailableTabs(newAvailableTabs);
+  }, [message.sources, message.role, loading, isLast]);
+
+  // Show steps when loading starts, redirect to answer when complete
   useEffect(() => {
     if (loading && isLast) {
       setShowSteps(true);
       setActiveTab('steps');
-    } else if (!loading && showSteps) {
-      // Keep steps visible for a moment, then switch to answer
+    } else if (!loading && showSteps && message.role === 'assistant') {
+      // When loading completes, switch to answer tab after a brief delay
       setTimeout(() => {
         setShowSteps(false);
         setActiveTab('answer');
       }, 1000);
     }
-  }, [loading, isLast, showSteps]);
-
-  // Preload search components when message is rendered
-  useEffect(() => {
-    if (message.role === 'assistant' && !loading) {
-      // Preload images and videos tabs to reduce delay when clicked
-      setLoadedTabs(prev => new Set([...prev, 'images', 'videos']));
-    }
-  }, [message.role, loading]);
+  }, [loading, isLast, showSteps, message.role]);
 
   // Show timeline steps for the last user message when loading
   const shouldShowSteps = (loading && isLast && message.role === 'user') || 
@@ -423,10 +447,9 @@ const MessageBox = ({
               <div className="flex flex-row space-x-1 border-b border-light-secondary dark:border-dark-secondary">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
-                  const isStepsTab = tab.id === 'steps';
-                  const shouldShowTab = isStepsTab || (!loading || !isLast || message.role === 'assistant');
                   
-                  if (!shouldShowTab) return null;
+                  // Only show tabs that are available
+                  if (!availableTabs.has(tab.id)) return null;
                   
                   return (
                     <button

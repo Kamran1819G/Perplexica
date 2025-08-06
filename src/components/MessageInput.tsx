@@ -3,7 +3,7 @@ import { ArrowUp } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import Attach from './MessageInputActions/Attach';
-import CopilotToggle from './MessageInputActions/Copilot';
+
 import { File } from './ChatWindow';
 import AttachSmall from './MessageInputActions/AttachSmall';
 import Microphone from './MessageInputActions/Microphone';
@@ -25,7 +25,7 @@ const MessageInput = ({
   files: File[];
   setFiles: (files: File[]) => void;
 }) => {
-  const [copilotEnabled, setCopilotEnabled] = useState(false);
+
   const [message, setMessage] = useState('');
   const [textareaRows, setTextareaRows] = useState(1);
   const [mode, setMode] = useState<'multi' | 'single'>('single');
@@ -151,10 +151,6 @@ const MessageInput = ({
       )}
       {mode === 'single' && (
         <div className="flex flex-row items-center space-x-4">
-          <CopilotToggle
-            copilotEnabled={copilotEnabled}
-            setCopilotEnabled={setCopilotEnabled}
-          />
           <Microphone
             onDictate={(text) => setMessage((prev) => prev + (prev ? ' ' : '') + text)}
             disabled={loading}
@@ -176,10 +172,6 @@ const MessageInput = ({
             setFiles={setFiles}
           />
           <div className="flex flex-row items-center space-x-4">
-            <CopilotToggle
-              copilotEnabled={copilotEnabled}
-              setCopilotEnabled={setCopilotEnabled}
-            />
             <Microphone
               onDictate={(text) => setMessage((prev) => prev + (prev ? ' ' : '') + text)}
               disabled={loading}

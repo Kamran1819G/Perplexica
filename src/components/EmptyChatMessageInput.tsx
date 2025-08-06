@@ -1,7 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
-import CopilotToggle from './MessageInputActions/Copilot';
+
 
 import Optimization from './MessageInputActions/Optimization';
 import Attach from './MessageInputActions/Attach';
@@ -28,7 +28,7 @@ const EmptyChatMessageInput = ({
   setFiles: (files: File[]) => void;
 }) => {
   const { t } = useTranslation();
-  const [copilotEnabled, setCopilotEnabled] = useState(false);
+
   const [message, setMessage] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
