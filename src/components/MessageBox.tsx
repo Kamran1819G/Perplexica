@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import React, { MutableRefObject, useEffect, useState } from 'react';
+import React, { MutableRefObject, useEffect, useState, useMemo } from 'react';
 import { Message } from './ChatWindow';
 import { cn } from '@/lib/utils';
 import {
@@ -26,16 +26,19 @@ import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import Export from './MessageActions/Export';
 import MessageSources from './MessageSources';
+import FollowUpQuestions from './FollowUpQuestions';
 import SearchImages from './SearchImages';
 import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 import ThinkBox from './ThinkBox';
 import SearchSteps from './SearchSteps';
-import CustomStepper, { SearchStep, SourcesStep, SimpleStep } from './Stepper';
+import ProgressStepper, { SearchProgressStep, SourcesProgressStep, BasicProgressStep } from './Stepper';
 
 const ThinkTagProcessor = ({ children }: { children: React.ReactNode }) => {
   return <ThinkBox content={children as string} />;
 };
+
+
 
 type TabType = 'answer' | 'images' | 'videos' | 'sources' | 'steps';
 
@@ -44,41 +47,185 @@ const StepsComponent = ({
   sources, 
   query,
   currentStep,
-  steps
+  steps,
+  progress
 }: { 
   loading: boolean;
   sources?: any[];
   query: string;
   currentStep?: string;
   steps?: string[];
+  progress?: {
+    step: string;
+    message: string;
+    details: string;
+    progress: number;
+  };
 }) => {
   // Convert sources to the format expected by SourcesStep
-  const formattedSources = sources?.map(source => ({
+  const formattedSources = useMemo(() => sources?.map(source => ({
     title: source.metadata?.title || 'Untitled',
     url: source.metadata?.url || '',
     icon: `https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`
-  })) || [];
+  })) || [], [sources]);
 
-  // Determine current step number for progressive loading
-  const getCurrentStepNumber = () => {
-    if (!loading) return 3; // Show all steps when complete
+  // Define step progression mapping
+  const stepProgression = useMemo((): Record<string, string> => ({
+    // Search phase steps
+    'planning': 'search',
+    'pro_planning': 'search', 
+    'query_generation': 'search',
+    'queries_ready': 'search',
+    'searching': 'search',
+    'multi_search': 'search',
+    'searching_query': 'search',
     
-    if (!currentStep || !steps) return 1; // Start with first step
+    // Sources phase steps
+    'sources_found': 'sources',
+    'query_results': 'sources', 
+    'processing': 'sources',
     
-    const stepOrder = ['search', 'refine', 'read', 'generate', 'complete'];
-    const currentIndex = stepOrder.indexOf(currentStep);
-    return currentIndex >= 0 ? currentIndex + 1 : 1;
+    // Generation phase steps
+    'generating': 'generating',
+    'completing': 'generating',
+    
+    // Complete phase
+    'complete': 'finished'
+  }), []);
+
+  // Calculate current phase and steps
+  const currentPhase = useMemo(() => {
+    if (!progress) return 'search';
+    return stepProgression[progress.step] || 'search';
+  }, [progress, stepProgression]);
+
+  // Calculate visible steps based on current phase and sources
+  const visibleSteps = useMemo(() => {
+    if (!loading && !progress) {
+      return ['search', 'sources', 'generating', 'finished'];
+    }
+
+    const steps: string[] = [];
+    
+    // Always show search step
+    steps.push('search');
+    
+    // Add sources step if we have sources or we're in sources phase or beyond
+    if (formattedSources.length > 0 || ['sources', 'generating', 'finished'].includes(currentPhase)) {
+      steps.push('sources');
+    }
+    
+    // Add generating step if we're in generating phase or beyond
+    if (['generating', 'finished'].includes(currentPhase)) {
+      steps.push('generating');
+    }
+    
+    // Add finished step if we're in finished phase or loading is complete
+    if (currentPhase === 'finished' || !loading) {
+      steps.push('finished');
+    }
+    
+    return steps;
+  }, [loading, progress, currentPhase, formattedSources.length]);
+
+  // Calculate completed steps
+  const completedSteps = useMemo(() => {
+    if (!loading) {
+      return [...visibleSteps];
+    }
+
+    const completed: string[] = [];
+    
+    // Complete search if we're past it
+    if (['sources', 'generating', 'finished'].includes(currentPhase) || formattedSources.length > 0) {
+      completed.push('search');
+    }
+    
+    // Complete sources if we're past it
+    if (['generating', 'finished'].includes(currentPhase)) {
+      completed.push('sources');
+    }
+    
+    // Complete generating if we're finished
+    if (currentPhase === 'finished') {
+      completed.push('generating');
+    }
+    
+    // Complete finished if loading is done
+    if (!loading) {
+      completed.push('finished');
+    }
+    
+    return completed;
+  }, [loading, currentPhase, formattedSources.length, visibleSteps]);
+
+  // Get progress for a specific step
+  const getStepProgress = (stepName: string) => {
+    if (!progress) return undefined;
+    
+    const stepMapping: Record<string, string[]> = {
+      'search': ['planning', 'pro_planning', 'query_generation', 'queries_ready', 'searching', 'multi_search', 'searching_query'],
+      'sources': ['sources_found', 'query_results', 'processing'],
+      'generating': ['generating', 'completing'],
+      'finished': ['complete']
+    };
+    
+    const relevantSteps = stepMapping[stepName] || [];
+    if (relevantSteps.includes(progress.step)) {
+      return progress;
+    }
+    
+    return undefined;
   };
 
-  const currentStepNumber = getCurrentStepNumber();
+  // Determine if step is active (currently running)
+  const isStepActive = (stepName: string) => {
+    if (!loading || !progress) return false;
+    const stepProgress = getStepProgress(stepName);
+    return stepProgress !== undefined && !completedSteps.includes(stepName);
+  };
+
+  // Determine if step is completed
+  const isStepCompleted = (stepName: string) => {
+    return completedSteps.includes(stepName);
+  };
+
+  // Calculate current step number for ProgressStepper
+  const currentStepNumber = visibleSteps.length;
 
   return (
     <div className="w-full">
-      <CustomStepper currentStep={currentStepNumber}>
-        <SearchStep query={query} />
-        <SourcesStep sources={formattedSources} />
-        <SimpleStep>Finished</SimpleStep>
-      </CustomStepper>
+      <ProgressStepper currentStep={currentStepNumber}>
+        {visibleSteps.includes('search') && (
+          <SearchProgressStep 
+            query={query} 
+            progress={getStepProgress('search')}
+          />
+        )}
+        {visibleSteps.includes('sources') && (
+          <SourcesProgressStep 
+            sources={formattedSources}
+            progress={getStepProgress('sources')}
+          />
+        )}
+        {visibleSteps.includes('generating') && (
+          <BasicProgressStep 
+            progress={getStepProgress('generating')}
+            isActive={isStepActive('generating')}
+            isComplete={isStepCompleted('generating')}
+          >
+            Generating answer...
+          </BasicProgressStep>
+        )}
+        {visibleSteps.includes('finished') && (
+          <BasicProgressStep 
+            progress={getStepProgress('finished')}
+            isComplete={!loading || isStepCompleted('finished')}
+          >
+            Finished
+          </BasicProgressStep>
+        )}
+      </ProgressStepper>
     </div>
   );
 };
@@ -273,15 +420,82 @@ const MessageBox = ({
                 <span className="text-black dark:text-white">Generating answer...</span>
               </div>
             ) : (
-              <Markdown
-                className={cn(
-                  'prose prose-h1:mb-3 prose-h2:mb-2 prose-h2:mt-6 prose-h2:font-[800] prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:font-[600] dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 font-[400]',
-                  'max-w-none break-words text-black dark:text-white',
+              <>
+                <Markdown
+                  className={cn(
+                    'prose prose-h1:mb-3 prose-h2:mb-2 prose-h2:mt-6 prose-h2:font-[800] prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:font-[600] dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 font-[400]',
+                    'max-w-none break-words text-black dark:text-white',
+                  )}
+                  options={markdownOverrides}
+                >
+                  {parsedMessage}
+                </Markdown>
+
+                {/* Follow-up Questions */}
+                {!loading && (message.followUpQuestions || message.relatedQueries) && (
+                  <FollowUpQuestions
+                    followUpQuestions={message.followUpQuestions}
+                    relatedQueries={message.relatedQueries}
+                    onQuestionSelect={sendMessage}
+                    className="mt-6"
+                  />
                 )}
-                options={markdownOverrides}
-              >
-                {parsedMessage}
-              </Markdown>
+                
+
+                {/* Important Sources */}
+                {message.sources && message.sources.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Network size={16} className="text-black/70 dark:text-white/70" />
+                      <h3 className="text-sm font-medium text-black dark:text-white">Sources</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {message.sources.slice(0, 4).map((source, index) => (
+                        <a
+                          key={index}
+                          href={source.metadata?.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-start space-x-3 p-3 bg-light-secondary/50 dark:bg-dark-secondary/50 border border-light-secondary dark:border-dark-secondary rounded-lg hover:bg-light-secondary dark:hover:bg-dark-secondary transition-all duration-200"
+                        >
+                          <div className="w-8 h-8 rounded-md bg-light-secondary dark:bg-dark-secondary flex items-center justify-center border border-light-secondary dark:border-dark-secondary flex-shrink-0">
+                            <img
+                              src={`https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`}
+                              alt=""
+                              className="w-4 h-4 rounded-sm"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = '<div class="w-4 h-4 bg-gray-600/50 rounded-sm"></div>';
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-black dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {source.metadata?.title || 'Untitled'}
+                            </div>
+                            <div className="text-xs text-black/60 dark:text-white/60 truncate mt-1">
+                              {source.metadata?.url?.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+                            </div>
+                          </div>
+                          <ExternalLink size={14} className="text-black/40 dark:text-white/40 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex-shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                    {message.sources.length > 4 && (
+                      <button
+                        onClick={() => setActiveTab('sources')}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+                      >
+                        View all {message.sources.length} sources →
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
             {loading && isLast ? null : (
               <div className="flex flex-row items-center justify-between w-full text-black dark:text-white py-4 -mx-2">
@@ -402,6 +616,7 @@ const MessageBox = ({
                 query={message.role === 'user' ? message.content : (history[messageIndex - 1]?.content || '')}
                 currentStep={message.currentStep}
                 steps={message.steps}
+                progress={message.progress}
               />
             )}
           </div>
@@ -454,6 +669,7 @@ const MessageBox = ({
                   return (
                     <button
                       key={tab.id}
+                      data-tab={tab.id}
                       onClick={() => {
                         setActiveTab(tab.id);
                         setLoadedTabs(prev => new Set([...prev, tab.id]));

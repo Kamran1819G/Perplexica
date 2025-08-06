@@ -31,7 +31,7 @@ export interface MetaSearchAgentType {
     history: BaseMessage[],
     llm: BaseChatModel,
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+  
     fileIds: string[],
     systemInstructions: string,
   ) => Promise<eventEmitter>;
@@ -236,7 +236,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
     llm: BaseChatModel,
     fileIds: string[],
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+  
     systemInstructions: string,
   ) {
     return RunnableSequence.from([
@@ -271,7 +271,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
             docs ?? [],
             fileIds,
             embeddings,
-            optimizationMode,
+        
           );
 
           return sortedDocs;
@@ -298,7 +298,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
     docs: Document[],
     fileIds: string[],
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+  
   ) {
     if (docs.length === 0 && fileIds.length === 0) {
       return docs;
@@ -336,7 +336,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
 
-    if (optimizationMode === 'speed' || this.config.rerank === false) {
+    if (this.config.rerank === false) {
       if (filesData.length > 0) {
         const [queryEmbedding] = await Promise.all([
           embeddings.embedQuery(query),
@@ -379,7 +379,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
       } else {
         return docsWithContent.slice(0, 15);
       }
-    } else if (optimizationMode === 'balanced') {
+    } else {
       const [docEmbeddings, queryEmbedding] = await Promise.all([
         embeddings.embedDocuments(
           docsWithContent.map((doc) => doc.pageContent),
@@ -435,17 +435,95 @@ class MetaSearchAgent implements MetaSearchAgentType {
     stream: AsyncGenerator<StreamEvent, any, any>,
     emitter: eventEmitter,
   ) {
+    let searchStarted = false;
+    let sourcesFound = false;
+    let generationStarted = false;
+
     for await (const event of stream) {
+      // Emit search progress when chain starts
+      if (
+        event.event === 'on_chain_start' &&
+        !searchStarted
+      ) {
+        searchStarted = true;
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'progress',
+            data: {
+              step: 'searching',
+              message: 'Searching the web',
+              details: 'Finding relevant information',
+              progress: 25
+            }
+          }),
+        );
+      }
+
+      // Emit sources progress when sources are retrieved
+      if (
+        event.event === 'on_chain_start' &&
+        event.name === 'FinalSourceRetriever' &&
+        !sourcesFound
+      ) {
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'progress',
+            data: {
+              step: 'processing',
+              message: 'Reading sources',
+              details: 'Analyzing search results',
+              progress: 50
+            }
+          }),
+        );
+      }
+
       if (
         event.event === 'on_chain_end' &&
         event.name === 'FinalSourceRetriever'
       ) {
-        ``;
+        sourcesFound = true;
         emitter.emit(
           'data',
           JSON.stringify({ type: 'sources', data: event.data.output }),
         );
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'progress',
+            data: {
+              step: 'sources_found',
+              message: 'Sources found',
+              details: `Found ${event.data.output?.length || 0} relevant sources`,
+              progress: 75
+            }
+          }),
+        );
       }
+
+      // Emit generation progress when response generation starts
+      if (
+        event.event === 'on_chain_start' &&
+        event.name === 'FinalResponseGenerator' &&
+        !generationStarted
+      ) {
+        generationStarted = true;
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'progress',
+            data: {
+              step: 'generating',
+              message: 'Generating answer',
+              details: 'Creating comprehensive response',
+              progress: 85
+            }
+          }),
+        );
+      }
+
       if (
         event.event === 'on_chain_stream' &&
         event.name === 'FinalResponseGenerator'
@@ -459,6 +537,18 @@ class MetaSearchAgent implements MetaSearchAgentType {
         event.event === 'on_chain_end' &&
         event.name === 'FinalResponseGenerator'
       ) {
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'progress',
+            data: {
+              step: 'complete',
+              message: 'Search completed',
+              details: 'Ready for your next question',
+              progress: 100
+            }
+          }),
+        );
         emitter.emit('end');
       }
     }
@@ -469,7 +559,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
     history: BaseMessage[],
     llm: BaseChatModel,
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+  
     fileIds: string[],
     systemInstructions: string,
   ) {
@@ -479,7 +569,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
       llm,
       fileIds,
       embeddings,
-      optimizationMode,
+  
       systemInstructions,
     );
 

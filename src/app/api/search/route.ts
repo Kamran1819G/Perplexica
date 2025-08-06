@@ -27,7 +27,6 @@ interface embeddingModel {
 }
 
 interface ChatRequestBody {
-  optimizationMode: 'speed' | 'balanced';
   chatModel?: chatModel;
   embeddingModel?: embeddingModel;
   query: string;
@@ -48,7 +47,7 @@ export const POST = async (req: Request) => {
     }
 
     body.history = body.history || [];
-    body.optimizationMode = body.optimizationMode || 'balanced';
+
     body.stream = body.stream || false;
 
     const history: BaseMessage[] = body.history.map((msg) => {
@@ -119,7 +118,7 @@ export const POST = async (req: Request) => {
       history,
       llm,
       embeddings,
-      body.optimizationMode,
+
       [],
       body.systemInstructions || '',
     );

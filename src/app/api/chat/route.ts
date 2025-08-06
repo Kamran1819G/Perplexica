@@ -20,7 +20,7 @@ import {
   getCustomOpenaiApiUrl,
   getCustomOpenaiModelName,
 } from '@/lib/config';
-import { searchHandlers } from '@/lib/search';
+import { searchHandlers, orchestratorHandlers } from '@/lib/search';
 import { containsYouTubeLink, extractYouTubeLinks } from '@/lib/utils/youtube';
 
 export const runtime = 'nodejs';
@@ -44,7 +44,8 @@ type EmbeddingModel = {
 
 type Body = {
   message: Message;
-  optimizationMode: 'speed' | 'balanced' | 'quality';
+  searchMode?: string;
+
   history: Array<[string, string]>;
   files: Array<string>;
   chatModel: ChatModel;
@@ -61,70 +62,132 @@ const handleEmitterEvents = async (
 ) => {
   let recievedMessage = '';
   let sources: any[] = [];
+  let isStreamClosed = false;
+
+  // Helper function to safely write to stream
+  const safeWrite = async (data: string) => {
+    try {
+      if (!isStreamClosed) {
+        await writer.ready;
+        if (!isStreamClosed) {
+          await writer.write(encoder.encode(data));
+        }
+      }
+    } catch (error) {
+      console.error('Error writing to stream:', error);
+      isStreamClosed = true;
+    }
+  };
+
+  // Helper function to safely close stream
+  const safeClose = () => {
+    try {
+      if (!isStreamClosed) {
+        isStreamClosed = true;
+        writer.close();
+      }
+    } catch (error) {
+      console.error('Error closing stream:', error);
+    }
+  };
 
   stream.on('data', (data) => {
-    const parsedData = JSON.parse(data);
-    if (parsedData.type === 'response') {
-      writer.write(
-        encoder.encode(
+    try {
+      const parsedData = JSON.parse(data);
+      console.log('📨 API: Received event type:', parsedData.type);
+      
+      if (parsedData.type === 'response') {
+        console.log('💬 API: Forwarding response, length:', parsedData.data.length);
+        safeWrite(
           JSON.stringify({
             type: 'message',
             data: parsedData.data,
             messageId: aiMessageId,
           }) + '\n',
-        ),
-      );
+        ).catch(err => console.error('Write error:', err));
 
-      recievedMessage += parsedData.data;
-    } else if (parsedData.type === 'sources') {
-      writer.write(
-        encoder.encode(
+        recievedMessage += parsedData.data;
+      } else if (parsedData.type === 'sources') {
+        console.log('📚 API: Forwarding sources, count:', parsedData.data.length);
+        safeWrite(
           JSON.stringify({
             type: 'sources',
             data: parsedData.data,
             messageId: aiMessageId,
           }) + '\n',
-        ),
-      );
+        ).catch(err => console.error('Write error:', err));
 
-      sources = parsedData.data;
+        sources = parsedData.data;
+      } else {
+        console.log('🔄 API: Forwarding event type:', parsedData.type);
+        // Forward all other events (progress, followUps, plan, etc.) directly to the frontend
+        safeWrite(
+          JSON.stringify({
+            type: parsedData.type,
+            data: parsedData.data,
+            messageId: aiMessageId,
+          }) + '\n',
+        ).catch(err => console.error('Write error:', err));
+      }
+    } catch (error) {
+      console.error('Error handling stream data:', error);
     }
   });
+
   stream.on('end', () => {
-    writer.write(
-      encoder.encode(
+    console.log('🔚 API: Stream ended, saving to database...');
+    try {
+      safeWrite(
         JSON.stringify({
           type: 'messageEnd',
           messageId: aiMessageId,
         }) + '\n',
-      ),
-    );
-    writer.close();
+      ).then(() => {
+        safeClose();
+      }).catch(err => {
+        console.error('Write error on end:', err);
+        safeClose();
+      });
 
-    db.insert(messagesSchema)
-      .values({
-        content: recievedMessage,
-        chatId: chatId,
-        messageId: aiMessageId,
-        role: 'assistant',
-        metadata: JSON.stringify({
-          createdAt: new Date(),
-          ...(sources && sources.length > 0 && { sources }),
-        }),
-      })
-      .execute();
+      // Save to database (even if stream failed)
+      db.insert(messagesSchema)
+        .values({
+          content: recievedMessage,
+          chatId: chatId,
+          messageId: aiMessageId,
+          role: 'assistant',
+          metadata: JSON.stringify({
+            createdAt: new Date(),
+            ...(sources && sources.length > 0 && { sources }),
+          }),
+        })
+        .execute()
+        .catch((dbError) => {
+          console.error('Error saving message to database:', dbError);
+        });
+    } catch (error) {
+      console.error('Error handling stream end:', error);
+    }
   });
+
   stream.on('error', (data) => {
-    const parsedData = JSON.parse(data);
-    writer.write(
-      encoder.encode(
+    try {
+      const parsedData = JSON.parse(data);
+      safeWrite(
         JSON.stringify({
           type: 'error',
           data: parsedData.data,
-        }),
-      ),
-    );
-    writer.close();
+        }) + '\n',
+      ).then(() => {
+        safeClose();
+      }).catch(err => {
+        console.error('Write error on error:', err);
+        safeClose();
+      });
+    } catch (error) {
+      console.error('Error handling stream error:', error);
+      safeClose();
+    }
   });
 };
 
@@ -354,24 +417,68 @@ export const POST = async (req: Request) => {
       }
     }
 
-    const handler = searchHandlers['webSearch'];
-
-    const stream = await handler.searchAndAnswer(
-      message.content,
-      history,
-      llm,
-      embedding,
-      body.optimizationMode,
-      body.files,
-      body.systemInstructions,
-    );
+    // Use new orchestrator handlers if search mode is specified, fallback to old handlers
+    const searchMode = body.searchMode || 'webSearch';
+    
+    console.log('🔍 Search mode:', searchMode);
+    console.log('🗂️ Available orchestrator handlers:', Object.keys(orchestratorHandlers));
+    console.log('🗂️ Available search handlers:', Object.keys(searchHandlers));
+    
+    let stream;
+    
+    // TEMPORARY: Force use old handler for debugging
+    if (searchMode === 'webSearch') {
+      console.log('🔄 Using old MetaSearchAgent for debugging...');
+      const handler = searchHandlers['webSearch'];
+      stream = await handler.searchAndAnswer(
+        message.content,
+        history,
+        llm,
+        embedding,
+        body.files,
+        body.systemInstructions,
+      );
+    } else if (orchestratorHandlers[searchMode]) {
+      // Use new orchestrator (ProSearch, etc.)
+      console.log('🚀 Using orchestrator:', searchMode);
+      const orchestrator = orchestratorHandlers[searchMode];
+      stream = await orchestrator.planAndExecute(
+        message.content,
+        history,
+        llm,
+        embedding,
+        body.files,
+        body.systemInstructions,
+      );
+    } else {
+      // Fallback to old search handlers
+      console.log('🔄 Fallback to old search handler');
+      const handler = searchHandlers['webSearch'];
+      stream = await handler.searchAndAnswer(
+        message.content,
+        history,
+        llm,
+        embedding,
+        body.files,
+        body.systemInstructions,
+      );
+    }
 
     const responseStream = new TransformStream();
     const writer = responseStream.writable.getWriter();
     const encoder = new TextEncoder();
 
+    // Set up abort controller for cleanup
+    const controller = new AbortController();
+    
+    // Handle client disconnect
+    req.signal?.addEventListener('abort', () => {
+      console.log('Client disconnected, cleaning up...');
+      controller.abort();
+    });
+
     handleEmitterEvents(stream, writer, encoder, aiMessageId, message.chatId);
-            handleHistorySave(message, humanMessageId, body.files);
+    handleHistorySave(message, humanMessageId, body.files);
 
     return new Response(responseStream.readable, {
       headers: {

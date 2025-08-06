@@ -24,6 +24,7 @@ import computeSimilarity from '../utils/computeSimilarity';
 import formatChatHistoryAsString from '../utils/formatHistory';
 import eventEmitter from 'events';
 import { StreamEvent } from '@langchain/core/tracers/log_stream';
+import FollowUpGenerator, { FollowUpResult } from '../chains/followUpGenerator';
 
 export interface SearchStep {
   id: string;
@@ -49,7 +50,7 @@ export interface SearchOrchestratorType {
     history: BaseMessage[],
     llm: BaseChatModel,
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+
     fileIds: string[],
     systemInstructions: string,
   ) => Promise<eventEmitter>;
@@ -72,13 +73,15 @@ type BasicChainInput = {
 };
 
 class SearchOrchestrator implements SearchOrchestratorType {
-  private config: OrchestratorConfig;
+  protected config: OrchestratorConfig;
   private strParser = new StringOutputParser();
-  private emitter: eventEmitter;
+  protected emitter: eventEmitter;
+  protected followUpGenerator: FollowUpGenerator;
 
   constructor(config: OrchestratorConfig) {
     this.config = config;
     this.emitter = new eventEmitter();
+    this.followUpGenerator = new FollowUpGenerator();
   }
 
   private createPlanningChain(llm: BaseChatModel) {
@@ -118,7 +121,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
     query: string,
     history: BaseMessage[],
     fileIds: string[],
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+
     systemInstructions: string,
   ): Promise<any> {
     // Update step status to running
@@ -141,7 +144,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
       } else if (step.name.toLowerCase().includes('document retrieval')) {
         result = await this.executeDocumentRetrieval(query, llm);
       } else if (step.name.toLowerCase().includes('reranking')) {
-        result = await this.executeReranking(query, [], fileIds, embeddings, optimizationMode);
+        result = await this.executeReranking(query, [], fileIds, embeddings);
       } else if (step.name.toLowerCase().includes('content generation')) {
         result = await this.executeContentGeneration(query, history, llm, systemInstructions);
       } else {
@@ -268,7 +271,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
     docs: Document[],
     fileIds: string[],
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+
   ): Promise<any> {
     if (!this.config.rerank) {
       return { docs: docs };
@@ -279,7 +282,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
       docs,
       fileIds,
       embeddings,
-      optimizationMode,
+  
     );
 
     return { docs: sortedDocs };
@@ -326,14 +329,17 @@ class SearchOrchestrator implements SearchOrchestratorType {
     });
   }
 
-  private async rerankDocs(
+  protected async rerankDocs(
     query: string,
     docs: Document[],
     fileIds: string[],
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+
   ) {
+    console.log('🔧 rerankDocs called with:', docs.length, 'docs and', fileIds.length, 'files');
+    
     if (docs.length === 0 && fileIds.length === 0) {
+      console.log('⚠️ rerankDocs: No docs or files, returning empty array');
       return docs;
     }
 
@@ -368,8 +374,11 @@ class SearchOrchestrator implements SearchOrchestratorType {
     const docsWithContent = docs.filter(
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
+    
+    console.log('📊 rerankDocs: Filtered to', docsWithContent.length, 'docs with content');
 
-    if (optimizationMode === 'speed' || this.config.rerank === false) {
+          if (this.config.rerank === false) {
+      console.log('⚠️ rerankDocs: Rerank disabled, using simple filtering');
       if (filesData.length > 0) {
         const [queryEmbedding] = await Promise.all([
           embeddings.embedQuery(query),
@@ -412,13 +421,21 @@ class SearchOrchestrator implements SearchOrchestratorType {
       } else {
         return docsWithContent.slice(0, 15);
       }
-    } else if (optimizationMode === 'balanced') {
-      const [docEmbeddings, queryEmbedding] = await Promise.all([
-        embeddings.embedDocuments(
-          docsWithContent.map((doc) => doc.pageContent),
-        ),
-        embeddings.embedQuery(query),
-      ]);
+          } else {
+      console.log('🧮 rerankDocs: Computing embeddings for', docsWithContent.length, 'documents...');
+      let docEmbeddings, queryEmbedding;
+      try {
+        [docEmbeddings, queryEmbedding] = await Promise.all([
+          embeddings.embedDocuments(
+            docsWithContent.map((doc) => doc.pageContent),
+          ),
+          embeddings.embedQuery(query),
+        ]);
+        console.log('✅ rerankDocs: Embeddings computed successfully');
+      } catch (embeddingError) {
+        console.error('❌ rerankDocs: Error computing embeddings:', embeddingError);
+        throw embeddingError;
+      }
 
       docsWithContent.push(
         ...filesData.map((fileData) => {
@@ -492,23 +509,50 @@ class SearchOrchestrator implements SearchOrchestratorType {
     history: BaseMessage[],
     llm: BaseChatModel,
     embeddings: Embeddings,
-    optimizationMode: 'speed' | 'balanced' | 'quality',
+
     fileIds: string[],
     systemInstructions: string,
   ): Promise<eventEmitter> {
+    console.log('🚀 SearchOrchestrator.planAndExecute started for query:', message);
+    
     // Phase 1: Planning
+    console.log('📋 Emitting planning progress...');
     this.emitter.emit('data', JSON.stringify({
-      type: 'planning',
-      data: 'Starting search planning phase...',
+      type: 'progress',
+      data: {
+        step: 'planning',
+        message: 'Analyzing your question...',
+        details: 'Understanding the search requirements',
+        progress: 10
+      }
     }));
 
+    console.log('🔧 Creating planning chain...');
+
     const planningChain = this.createPlanningChain(llm);
-    const searchPlan = await planningChain.invoke({
-      query: message,
-      
-      optimizationMode: optimizationMode,
-      systemInstructions: systemInstructions,
-    });
+    console.log('⏳ Invoking planning chain...');
+    
+    let searchPlan;
+    try {
+      searchPlan = await planningChain.invoke({
+        query: message,
+        systemInstructions: systemInstructions,
+      });
+      console.log('✅ Planning completed, steps:', searchPlan.steps?.length || 0);
+    } catch (planError) {
+      console.error('❌ Planning failed:', planError);
+      throw planError;
+    }
+
+    this.emitter.emit('data', JSON.stringify({
+      type: 'progress',
+      data: {
+        step: 'planning_complete',
+        message: 'Search plan created',
+        details: `Planning ${searchPlan.steps.length} search steps`,
+        progress: 20
+      }
+    }));
 
     this.emitter.emit('data', JSON.stringify({
       type: 'plan',
@@ -517,8 +561,13 @@ class SearchOrchestrator implements SearchOrchestratorType {
 
     // Phase 2: Execution
     this.emitter.emit('data', JSON.stringify({
-      type: 'execution',
-      data: 'Starting search execution phase...',
+      type: 'progress',
+      data: {
+        step: 'searching',
+        message: 'Searching the web...',
+        details: 'Finding relevant information sources',
+        progress: 30
+      }
     }));
 
     let finalResult = '';
@@ -526,17 +575,41 @@ class SearchOrchestrator implements SearchOrchestratorType {
 
     try {
       // Execute each step in the plan
-      for (const step of searchPlan.steps) {
-        const stepResult = await this.executeStep(
-          step,
-          llm,
-          embeddings,
-          message,
-          history,
-          fileIds,
-          optimizationMode,
-          systemInstructions,
-        );
+      const totalSteps = searchPlan.steps.length;
+      console.log(`🔄 Starting execution of ${totalSteps} steps...`);
+      
+      for (let i = 0; i < searchPlan.steps.length; i++) {
+        const step = searchPlan.steps[i];
+        const progressPercent = 30 + ((i / totalSteps) * 40); // 30-70% for execution
+        
+        console.log(`⚡ Executing step ${i + 1}/${totalSteps}: ${step.name}`);
+        
+        this.emitter.emit('data', JSON.stringify({
+          type: 'progress',
+          data: {
+            step: 'executing',
+            message: `Executing: ${step.name}`,
+            details: `Step ${i + 1} of ${totalSteps}`,
+            progress: Math.round(progressPercent)
+          }
+        }));
+
+        let stepResult;
+        try {
+          stepResult = await this.executeStep(
+            step,
+            llm,
+            embeddings,
+            message,
+            history,
+            fileIds,
+            systemInstructions,
+          );
+          console.log(`✅ Step ${i + 1} completed:`, step.name);
+        } catch (stepError) {
+          console.error(`❌ Step ${i + 1} failed:`, step.name, stepError);
+          throw stepError;
+        }
 
         // Handle different types of step results
         if (step.name.toLowerCase().includes('content generation')) {
@@ -545,9 +618,40 @@ class SearchOrchestrator implements SearchOrchestratorType {
                    step.name.toLowerCase().includes('document retrieval')) {
           if (stepResult.docs) {
             sources = stepResult.docs;
+            this.emitter.emit('data', JSON.stringify({
+              type: 'progress',
+              data: {
+                step: 'sources_found',
+                message: 'Found relevant sources',
+                details: `Collected ${stepResult.docs.length} sources`,
+                progress: Math.round(progressPercent + 5)
+              }
+            }));
           }
         }
       }
+
+      // Processing phase
+      this.emitter.emit('data', JSON.stringify({
+        type: 'progress',
+        data: {
+          step: 'processing',
+          message: 'Processing information...',
+          details: 'Analyzing and ranking sources',
+          progress: 75
+        }
+      }));
+
+      // Generating response
+      this.emitter.emit('data', JSON.stringify({
+        type: 'progress',
+        data: {
+          step: 'generating',
+          message: 'Generating response...',
+          details: 'Creating comprehensive answer',
+          progress: 85
+        }
+      }));
 
       // Emit final results
       this.emitter.emit('data', JSON.stringify({
@@ -558,6 +662,45 @@ class SearchOrchestrator implements SearchOrchestratorType {
       this.emitter.emit('data', JSON.stringify({
         type: 'response',
         data: finalResult,
+      }));
+
+      this.emitter.emit('data', JSON.stringify({
+        type: 'progress',
+        data: {
+          step: 'completing',
+          message: 'Finalizing response...',
+          details: 'Adding follow-up suggestions',
+          progress: 95
+        }
+      }));
+
+      // Generate follow-up questions and related queries
+      try {
+        const contextText = sources.map(doc => doc.pageContent).join(' ').substring(0, 2000);
+        const followUps = await this.followUpGenerator.generateFollowUps(
+          message,
+          finalResult,
+          history,
+          contextText,
+          llm,
+        );
+
+        this.emitter.emit('data', JSON.stringify({
+          type: 'followUps',
+          data: followUps,
+        }));
+      } catch (error) {
+        console.error('Error generating follow-ups:', error);
+      }
+
+      this.emitter.emit('data', JSON.stringify({
+        type: 'progress',
+        data: {
+          step: 'complete',
+          message: 'Search completed successfully',
+          details: 'Ready for your next question',
+          progress: 100
+        }
       }));
 
       this.emitter.emit('data', JSON.stringify({
@@ -577,4 +720,5 @@ class SearchOrchestrator implements SearchOrchestratorType {
   }
 }
 
-export default SearchOrchestrator; 
+export default SearchOrchestrator;
+export { SearchOrchestrator }; 

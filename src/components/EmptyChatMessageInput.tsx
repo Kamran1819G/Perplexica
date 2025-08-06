@@ -3,7 +3,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 
 
-import Optimization from './MessageInputActions/Optimization';
+
+import SearchMode from './MessageInputActions/SearchMode';
 import Attach from './MessageInputActions/Attach';
 import Microphone from './MessageInputActions/Microphone';
 import { File } from './ChatWindow';
@@ -12,16 +13,18 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const EmptyChatMessageInput = ({
   sendMessage,
-  optimizationMode,
-  setOptimizationMode,
+
+  searchMode,
+  setSearchMode,
   fileIds,
   setFileIds,
   files,
   setFiles,
 }: {
   sendMessage: (message: string) => void;
-  optimizationMode: string;
-  setOptimizationMode: (mode: string) => void;
+
+  searchMode: string;
+  setSearchMode: (mode: string) => void;
   fileIds: string[];
   setFileIds: (fileIds: string[]) => void;
   files: File[];
@@ -141,10 +144,11 @@ const EmptyChatMessageInput = ({
             />
           </div>
           <div className="flex flex-row items-center space-x-1 sm:space-x-4">
-            <Optimization
-              optimizationMode={optimizationMode}
-              setOptimizationMode={setOptimizationMode}
+            <SearchMode
+              searchMode={searchMode}
+              setSearchMode={setSearchMode}
             />
+            
             <Microphone
               onDictate={(text) => setMessage((prev) => prev + (prev ? ' ' : '') + text)}
             />

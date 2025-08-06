@@ -8,21 +8,23 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const EmptyChat = ({
   sendMessage,
-  optimizationMode,
-  setOptimizationMode,
+
+  searchMode,
+  setSearchMode,
   fileIds,
   setFileIds,
   files,
   setFiles,
 }: {
   sendMessage: (message: string) => void;
-  optimizationMode: string;
-  setOptimizationMode: (mode: string) => void;
+
+  searchMode: string;
+  setSearchMode: (mode: string) => void;
   fileIds: string[];
   setFileIds: (fileIds: string[]) => void;
   files: File[];
   setFiles: (files: File[]) => void;
-  }) => {
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -39,8 +41,9 @@ const EmptyChat = ({
           </h2>
           <EmptyChatMessageInput
             sendMessage={sendMessage}
-            optimizationMode={optimizationMode}
-            setOptimizationMode={setOptimizationMode}
+            
+            searchMode={searchMode}
+            setSearchMode={setSearchMode}
             fileIds={fileIds}
             setFileIds={setFileIds}
             files={files}

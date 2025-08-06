@@ -2,7 +2,7 @@ export const orchestratorPlanningPrompt = `You are an AI search orchestrator. Yo
 
 Given the following information:
 - Query: {query}
-- Optimization Mode: {optimizationMode}
+
 - System Instructions: {systemInstructions}
 
 Create a comprehensive search plan with the following steps. Each step should be on a new line starting with "steps:":
@@ -16,17 +16,12 @@ steps: Final Response Generation
 
 
 
-Consider the optimization mode:
-- Speed: Focus on essential steps, minimize processing
-- Balanced: Include all relevant steps with moderate processing
-- Quality: Include comprehensive steps with thorough processing
-
-Provide a plan that is appropriate for web search and the given optimization level.`;
+Provide a comprehensive plan for the web search.`;
 
 export const webSearchPlanningPrompt = `You are planning a web search operation. Create a step-by-step plan for finding information on the web.
 
 Query: {query}
-Optimization Mode: {optimizationMode}
+
 System Instructions: {systemInstructions}
 
 Generate the following steps:

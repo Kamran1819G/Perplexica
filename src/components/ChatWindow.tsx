@@ -27,6 +27,17 @@ export type Message = {
   orchestratorSteps?: any[];
   orchestratorPlan?: any;
   isOrchestrator?: boolean;
+  // Follow-up questions and related queries
+  followUpQuestions?: string[];
+  relatedQueries?: string[];
+  
+  // Real-time progress tracking
+  progress?: {
+    step: string;
+    message: string;
+    details: string;
+    progress: number;
+  };
 };
 
 export interface File {
@@ -285,7 +296,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [fileIds, setFileIds] = useState<string[]>([]);
 
-  const [optimizationMode, setOptimizationMode] = useState('speed');
+
+  const [searchMode, setSearchMode] = useState('webSearch');
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -430,6 +442,37 @@ const ChatWindow = ({ id }: { id?: string }) => {
         return;
       }
 
+              if (data.type === 'followUps') {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => {
+              if (msg.messageId === messageId) {
+                return {
+                  ...msg,
+                  followUpQuestions: data.data.followUpQuestions,
+                  relatedQueries: data.data.relatedQueries,
+                };
+              }
+              return msg;
+            })
+          );
+          return;
+        }
+
+        if (data.type === 'progress') {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => {
+              if (msg.messageId === messageId) {
+                return {
+                  ...msg,
+                  progress: data.data,
+                };
+              }
+              return msg;
+            })
+          );
+          return;
+        }
+
       if (data.type === 'sources') {
         sources = data.data;
         completedSteps.push('search');
@@ -562,8 +605,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
         },
         chatId: chatId!,
         files: fileIds,
+        searchMode: searchMode,
 
-        optimizationMode: optimizationMode,
         history: chatHistory,
         chatModel: {
           name: chatModelProvider.name,
@@ -668,8 +711,9 @@ const ChatWindow = ({ id }: { id?: string }) => {
         ) : (
           <EmptyChat
             sendMessage={sendMessage}
-            optimizationMode={optimizationMode}
-            setOptimizationMode={setOptimizationMode}
+
+            searchMode={searchMode}
+            setSearchMode={setSearchMode}
             fileIds={fileIds}
             setFileIds={setFileIds}
             files={files}

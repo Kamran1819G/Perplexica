@@ -90,5 +90,10 @@
   "emptyChat": {
     "title": "Perplexica AI",
     "askAnything": "Ask anything..."
+  },
+  "sources": {
+    "title": "Sources",
+    "showMore": "Show more",
+    "showLess": "Show less"
   }
 } 
