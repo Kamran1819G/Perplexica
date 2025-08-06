@@ -84,7 +84,7 @@ const EmptyChatMessageInput = ({
     suggestionTimeout.current = setTimeout(() => {
       fetchSuggestions(value);
       setShowSuggestions(!!value);
-    }, 250);
+    }, 100);
   };
 
   return (
