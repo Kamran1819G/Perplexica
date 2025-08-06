@@ -18,7 +18,7 @@ Perplexica's codebase is organized as follows:
     - Other endpoints for models, files, and suggestions.
 - **Backend Logic (`src/lib`)**: Contains all the backend functionality including search, database, and API logic.
   - The search functionality is present inside `src/lib/search` directory.
-  - All of the focus modes are implemented using the Meta Search Agent class in `src/lib/search/metaSearchAgent.ts`.
+  - The search functionality is implemented using the Meta Search Agent class in `src/lib/search/metaSearchAgent.ts`.
   - Database functionality is in `src/lib/db`.
   - Chat model and embedding model providers are managed in `src/lib/providers`.
   - Prompt templates and LLM chain definitions are in `src/lib/prompts` and `src/lib/chains` respectively.

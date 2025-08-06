@@ -190,7 +190,6 @@ const loadMessages = async (
   setMessages: (messages: Message[]) => void,
   setIsMessagesLoaded: (loaded: boolean) => void,
   setChatHistory: (history: [string, string][]) => void,
-  setFocusMode: (mode: string) => void,
   setNotFound: (notFound: boolean) => void,
   setFiles: (files: File[]) => void,
   setFileIds: (fileIds: string[]) => void,
@@ -239,7 +238,7 @@ const loadMessages = async (
   setFileIds(files.map((file: File) => file.fileId));
 
   setChatHistory(history);
-  setFocusMode(data.chat.focusMode);
+  
   setIsMessagesLoaded(true);
 };
 
@@ -286,7 +285,6 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [fileIds, setFileIds] = useState<string[]>([]);
 
-  const [focusMode, setFocusMode] = useState('webSearch');
   const [optimizationMode, setOptimizationMode] = useState('speed');
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
@@ -305,7 +303,6 @@ const ChatWindow = ({ id }: { id?: string }) => {
         setMessages,
         setIsMessagesLoaded,
         setChatHistory,
-        setFocusMode,
         setNotFound,
         setFiles,
         setFileIds,
@@ -565,7 +562,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
         },
         chatId: chatId!,
         files: fileIds,
-        focusMode: focusMode,
+
         optimizationMode: optimizationMode,
         history: chatHistory,
         chatModel: {
@@ -671,8 +668,6 @@ const ChatWindow = ({ id }: { id?: string }) => {
         ) : (
           <EmptyChat
             sendMessage={sendMessage}
-            focusMode={focusMode}
-            setFocusMode={setFocusMode}
             optimizationMode={optimizationMode}
             setOptimizationMode={setOptimizationMode}
             fileIds={fileIds}

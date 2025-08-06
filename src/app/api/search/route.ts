@@ -28,7 +28,6 @@ interface embeddingModel {
 
 interface ChatRequestBody {
   optimizationMode: 'speed' | 'balanced';
-  focusMode: string;
   chatModel?: chatModel;
   embeddingModel?: embeddingModel;
   query: string;
@@ -41,9 +40,9 @@ export const POST = async (req: Request) => {
   try {
     const body: ChatRequestBody = await req.json();
 
-    if (!body.focusMode || !body.query) {
+    if (!body.query) {
       return Response.json(
-        { message: 'Missing focus mode or query' },
+        { message: 'Missing query' },
         { status: 400 },
       );
     }
@@ -113,11 +112,7 @@ export const POST = async (req: Request) => {
       );
     }
 
-    const searchHandler: SearchOrchestratorType = orchestratorHandlers[body.focusMode];
-
-    if (!searchHandler) {
-      return Response.json({ message: 'Invalid focus mode' }, { status: 400 });
-    }
+    const searchHandler: SearchOrchestratorType = orchestratorHandlers['webSearch'];
 
     const emitter = await searchHandler.planAndExecute(
       body.query,
@@ -127,7 +122,6 @@ export const POST = async (req: Request) => {
       body.optimizationMode,
       [],
       body.systemInstructions || '',
-      body.focusMode,
     );
 
     if (!body.stream) {

@@ -8,8 +8,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const EmptyChat = ({
   sendMessage,
-  focusMode,
-  setFocusMode,
   optimizationMode,
   setOptimizationMode,
   fileIds,
@@ -18,8 +16,6 @@ const EmptyChat = ({
   setFiles,
 }: {
   sendMessage: (message: string) => void;
-  focusMode: string;
-  setFocusMode: (mode: string) => void;
   optimizationMode: string;
   setOptimizationMode: (mode: string) => void;
   fileIds: string[];
@@ -43,8 +39,6 @@ const EmptyChat = ({
           </h2>
           <EmptyChatMessageInput
             sendMessage={sendMessage}
-            focusMode={focusMode}
-            setFocusMode={setFocusMode}
             optimizationMode={optimizationMode}
             setOptimizationMode={setOptimizationMode}
             fileIds={fileIds}

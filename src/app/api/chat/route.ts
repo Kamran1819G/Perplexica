@@ -45,7 +45,6 @@ type EmbeddingModel = {
 type Body = {
   message: Message;
   optimizationMode: 'speed' | 'balanced' | 'quality';
-  focusMode: string;
   history: Array<[string, string]>;
   files: Array<string>;
   chatModel: ChatModel;
@@ -132,7 +131,6 @@ const handleEmitterEvents = async (
 const handleHistorySave = async (
   message: Message,
   humanMessageId: string,
-  focusMode: string,
   files: string[],
 ) => {
   const chat = await db.query.chats.findFirst({
@@ -146,7 +144,7 @@ const handleHistorySave = async (
         id: message.chatId,
         title: message.content,
         createdAt: new Date().toString(),
-        focusMode: focusMode,
+
         files: files.map(getFileDetails),
       })
       .execute();
@@ -336,7 +334,7 @@ export const POST = async (req: Request) => {
         writer.close();
         
         // Save to history
-        handleHistorySave(message, humanMessageId, body.focusMode, body.files);
+        handleHistorySave(message, humanMessageId, body.files);
         
         console.log(`YouTube processing completed successfully, returning response (ID: ${requestId})`);
         
@@ -356,16 +354,7 @@ export const POST = async (req: Request) => {
       }
     }
 
-    const handler = searchHandlers[body.focusMode];
-
-    if (!handler) {
-      return Response.json(
-        {
-          message: 'Invalid focus mode',
-        },
-        { status: 400 },
-      );
-    }
+    const handler = searchHandlers['webSearch'];
 
     const stream = await handler.searchAndAnswer(
       message.content,
@@ -382,7 +371,7 @@ export const POST = async (req: Request) => {
     const encoder = new TextEncoder();
 
     handleEmitterEvents(stream, writer, encoder, aiMessageId, message.chatId);
-    handleHistorySave(message, humanMessageId, body.focusMode, body.files);
+            handleHistorySave(message, humanMessageId, body.files);
 
     return new Response(responseStream.readable, {
       headers: {

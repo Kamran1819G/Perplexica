@@ -7,7 +7,7 @@ The Search Orchestrator is a new implementation that replaces the previous MetaS
 ## Features
 
 ### 1. Planning Phase
-- Analyzes the user query and focus mode
+- Analyzes the user query
 - Creates a detailed step-by-step search plan
 - Estimates execution time and priority
 - Shows planning progress in the UI
@@ -39,7 +39,7 @@ The Search Orchestrator is a new implementation that replaces the previous MetaS
 
 3. **Planning Prompts** (`src/lib/prompts/orchestratorPlanning.ts`)
    - Specialized prompts for different search types
-   - Step generation based on focus mode
+   - Step generation based on query type
 
 4. **SearchSteps Component** (`src/components/SearchSteps.tsx`)
    - UI component for displaying steps
@@ -102,7 +102,7 @@ The search API now returns additional orchestrator data:
   "sources": [...],
   "plan": {
     "query": "user query",
-    "focusMode": "webSearch",
+
     "steps": [...],
     "estimatedDuration": 10,
     "priority": "medium"

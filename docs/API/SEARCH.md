@@ -12,7 +12,7 @@ Perplexica’s Search API makes it easy to use our AI-powered search engine. You
 
 ### Request
 
-The API accepts a JSON object in the request body, where you define the focus mode, chat models, embedding models, and your query.
+The API accepts a JSON object in the request body, where you define the chat models, embedding models, and your query.
 
 #### Request Body Structure
 
@@ -27,7 +27,6 @@ The API accepts a JSON object in the request body, where you define the focus mo
     "name": "text-embedding-3-large"
   },
   "optimizationMode": "speed",
-  "focusMode": "webSearch",
   "query": "What is Perplexica",
   "history": [
     ["human", "Hi, how are you?"],
@@ -53,9 +52,7 @@ The API accepts a JSON object in the request body, where you define the focus mo
   - `provider`: The provider for the embedding model (e.g., `openai`).
   - `name`: The specific embedding model (e.g., `text-embedding-3-large`).
 
-- **`focusMode`** (string, required): Specifies which focus mode to use. Available modes:
 
-  - `webSearch`, `academicSearch`, `writingAssistant`, `wolframAlphaSearch`, `youtubeSearch`, `redditSearch`.
 
 - **`optimizationMode`** (string, optional): Specifies the optimization mode to control the balance between performance and quality. Available modes:
 
@@ -130,7 +127,7 @@ Clients should process each line as a separate JSON object. The different messag
 
 ### Fields in the Response
 
-- **`message`** (string): The search result, generated based on the query and focus mode.
+- **`message`** (string): The search result, generated based on the query.
 - **`sources`** (array): A list of sources that were used to generate the search result. Each source includes:
   - `pageContent`: A snippet of the relevant content from the source.
   - `metadata`: Metadata about the source, including:
@@ -141,5 +138,5 @@ Clients should process each line as a separate JSON object. The different messag
 
 If an error occurs during the search process, the API will return an appropriate error message with an HTTP status code.
 
-- **400**: If the request is malformed or missing required fields (e.g., no focus mode or query).
+- **400**: If the request is malformed or missing required fields (e.g., no query).
 - **500**: If an internal server error occurs during the search.

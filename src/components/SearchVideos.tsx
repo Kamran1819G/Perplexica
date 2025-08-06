@@ -296,7 +296,7 @@ const SearchVideos = ({
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <VideoIcon className="text-black/30 dark:text-white/30 mb-2" size={48} />
           <p className="text-black/50 dark:text-white/50 text-sm">
-            No videos found for "{query}"
+            No videos found for &quot;{query}&quot;
           </p>
           <button
             onClick={handleRetry}

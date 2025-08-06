@@ -105,7 +105,7 @@ export class MarketDataService {
             // Check if we have valid data
             if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
               console.warn(`No chart data available for ${symbol}`);
-              return;
+              continue;
             }
             
             const result = data.chart.result[0];

@@ -38,7 +38,6 @@ export interface SearchStep {
 
 export interface SearchPlan {
   query: string;
-  focusMode: string;
   steps: SearchStep[];
   estimatedDuration: number;
   priority: 'high' | 'medium' | 'low';
@@ -53,7 +52,6 @@ export interface SearchOrchestratorType {
     optimizationMode: 'speed' | 'balanced' | 'quality',
     fileIds: string[],
     systemInstructions: string,
-    focusMode: string,
   ) => Promise<eventEmitter>;
 }
 
@@ -98,7 +96,6 @@ class SearchOrchestrator implements SearchOrchestratorType {
         
         const searchPlan: SearchPlan = {
           query: '',
-          focusMode: this.config.activeEngines.length > 0 ? 'specialized' : 'general',
           steps: steps.map((step: string, index: number) => ({
             id: `step-${index + 1}`,
             name: step.trim(),
@@ -498,7 +495,6 @@ class SearchOrchestrator implements SearchOrchestratorType {
     optimizationMode: 'speed' | 'balanced' | 'quality',
     fileIds: string[],
     systemInstructions: string,
-    focusMode: string,
   ): Promise<eventEmitter> {
     // Phase 1: Planning
     this.emitter.emit('data', JSON.stringify({
@@ -509,7 +505,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
     const planningChain = this.createPlanningChain(llm);
     const searchPlan = await planningChain.invoke({
       query: message,
-      focusMode: focusMode,
+      
       optimizationMode: optimizationMode,
       systemInstructions: systemInstructions,
     });
