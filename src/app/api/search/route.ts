@@ -6,13 +6,13 @@ import {
   getAvailableEmbeddingModelProviders,
 } from '@/lib/providers';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
-import { MetaSearchAgentType } from '@/lib/search/metaSearchAgent';
+import { SearchOrchestratorType } from '@/lib/search/orchestrator';
 import {
   getCustomOpenaiApiKey,
   getCustomOpenaiApiUrl,
   getCustomOpenaiModelName,
 } from '@/lib/config';
-import { searchHandlers } from '@/lib/search';
+import { orchestratorHandlers } from '@/lib/search';
 
 interface chatModel {
   provider: string;
@@ -113,13 +113,13 @@ export const POST = async (req: Request) => {
       );
     }
 
-    const searchHandler: MetaSearchAgentType = searchHandlers[body.focusMode];
+    const searchHandler: SearchOrchestratorType = orchestratorHandlers[body.focusMode];
 
     if (!searchHandler) {
       return Response.json({ message: 'Invalid focus mode' }, { status: 400 });
     }
 
-    const emitter = await searchHandler.searchAndAnswer(
+    const emitter = await searchHandler.planAndExecute(
       body.query,
       history,
       llm,
@@ -127,6 +127,7 @@ export const POST = async (req: Request) => {
       body.optimizationMode,
       [],
       body.systemInstructions || '',
+      body.focusMode,
     );
 
     if (!body.stream) {
@@ -137,6 +138,8 @@ export const POST = async (req: Request) => {
         ) => {
           let message = '';
           let sources: any[] = [];
+          let plan: any = null;
+          let steps: any[] = [];
 
           emitter.on('data', (data: string) => {
             try {
@@ -145,6 +148,14 @@ export const POST = async (req: Request) => {
                 message += parsedData.data;
               } else if (parsedData.type === 'sources') {
                 sources = parsedData.data;
+              } else if (parsedData.type === 'plan') {
+                plan = parsedData.data;
+              } else if (parsedData.type === 'stepUpdate') {
+                steps.push(parsedData.step);
+              } else if (parsedData.type === 'planning') {
+                // Planning phase started
+              } else if (parsedData.type === 'execution') {
+                // Execution phase started
               }
             } catch (error) {
               reject(
@@ -157,7 +168,13 @@ export const POST = async (req: Request) => {
           });
 
           emitter.on('end', () => {
-            resolve(Response.json({ message, sources }, { status: 200 }));
+            resolve(Response.json({ 
+              message, 
+              sources, 
+              plan, 
+              steps,
+              orchestrator: true 
+            }, { status: 200 }));
           });
 
           emitter.on('error', (error: any) => {
@@ -180,6 +197,8 @@ export const POST = async (req: Request) => {
     const stream = new ReadableStream({
       start(controller) {
         let sources: any[] = [];
+        let plan: any = null;
+        let steps: any[] = [];
 
         controller.enqueue(
           encoder.encode(
@@ -223,6 +242,53 @@ export const POST = async (req: Request) => {
                   }) + '\n',
                 ),
               );
+            } else if (parsedData.type === 'plan') {
+              plan = parsedData.data;
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: 'plan',
+                    data: plan,
+                  }) + '\n',
+                ),
+              );
+            } else if (parsedData.type === 'stepUpdate') {
+              steps.push(parsedData.step);
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: 'stepUpdate',
+                    step: parsedData.step,
+                  }) + '\n',
+                ),
+              );
+            } else if (parsedData.type === 'planning') {
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: 'planning',
+                    data: parsedData.data,
+                  }) + '\n',
+                ),
+              );
+            } else if (parsedData.type === 'execution') {
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: 'execution',
+                    data: parsedData.data,
+                  }) + '\n',
+                ),
+              );
+            } else if (parsedData.type === 'error') {
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: 'error',
+                    data: parsedData.data,
+                  }) + '\n',
+                ),
+              );
             }
           } catch (error) {
             controller.error(error);
@@ -236,6 +302,12 @@ export const POST = async (req: Request) => {
             encoder.encode(
               JSON.stringify({
                 type: 'done',
+                data: {
+                  sources,
+                  plan,
+                  steps,
+                  orchestrator: true,
+                },
               }) + '\n',
             ),
           );

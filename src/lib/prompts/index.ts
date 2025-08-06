@@ -16,6 +16,15 @@ import {
   youtubeSearchResponsePrompt,
   youtubeSearchRetrieverPrompt,
 } from './youtubeSearch';
+import {
+  orchestratorPlanningPrompt,
+  webSearchPlanningPrompt,
+  academicSearchPlanningPrompt,
+  youtubeSearchPlanningPrompt,
+  redditSearchPlanningPrompt,
+  wolframAlphaSearchPlanningPrompt,
+  writingAssistantPlanningPrompt,
+} from './orchestratorPlanning';
 
 export default {
   webSearchResponsePrompt,
@@ -29,4 +38,12 @@ export default {
   writingAssistantPrompt,
   youtubeSearchResponsePrompt,
   youtubeSearchRetrieverPrompt,
+  // Orchestrator planning prompts
+  orchestratorPlanningPrompt,
+  webSearchPlanningPrompt,
+  academicSearchPlanningPrompt,
+  youtubeSearchPlanningPrompt,
+  redditSearchPlanningPrompt,
+  wolframAlphaSearchPlanningPrompt,
+  writingAssistantPlanningPrompt,
 };

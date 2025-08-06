@@ -23,6 +23,10 @@ export type Message = {
   sources?: Document[];
   currentStep?: string;
   steps?: string[];
+  // Orchestrator data
+  orchestratorSteps?: any[];
+  orchestratorPlan?: any;
+  isOrchestrator?: boolean;
 };
 
 export interface File {
@@ -362,6 +366,49 @@ const ChatWindow = ({ id }: { id?: string }) => {
       if (data.type === 'error') {
         toast.error(data.data);
         setLoading(false);
+        return;
+      }
+
+      // Handle orchestrator data
+      if (data.type === 'plan') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              return {
+                ...msg,
+                orchestratorPlan: data.data,
+                isOrchestrator: true,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
+
+      if (data.type === 'stepUpdate') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              const existingSteps = msg.orchestratorSteps || [];
+              const updatedSteps = existingSteps.map((step: any) => 
+                step.id === data.step.id ? data.step : step
+              );
+              
+              // Add new step if it doesn't exist
+              if (!existingSteps.find((step: any) => step.id === data.step.id)) {
+                updatedSteps.push(data.step);
+              }
+              
+              return {
+                ...msg,
+                orchestratorSteps: updatedSteps,
+                isOrchestrator: true,
+              };
+            }
+            return msg;
+          })
+        );
         return;
       }
 

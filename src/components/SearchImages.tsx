@@ -35,22 +35,23 @@ const SearchImages = ({
   const loadingRef = useRef<HTMLDivElement>(null);
   const searchCache = useRef<Map<string, { images: Image[], timestamp: number, total: number }>>(new Map());
 
-  // Auto-search images when component mounts
+  // Auto-search images when component mounts or query changes
   useEffect(() => {
     if (query && !images && !loading) {
       searchImages();
     }
   }, [query]);
 
-  // Immediate search when component becomes visible (tab is clicked)
+  // Prevent multiple searches on component mount
+  const hasSearched = useRef(false);
+  
   useEffect(() => {
-    if (query && !images && !loading) {
-      // Show loading immediately when tab is clicked
+    if (query && !hasSearched.current && !images && !loading) {
+      hasSearched.current = true;
       setIsInitialLoad(true);
-      // Start loading immediately when component is rendered
       searchImages();
     }
-  }, []); // Empty dependency array to run once when component mounts
+  }, [query, images, loading]);
 
   // Check cache before searching
   const getCachedResults = useCallback((queryKey: string) => {
@@ -75,6 +76,11 @@ const SearchImages = ({
     
     const currentQuery = query.trim();
     if (!currentQuery) return;
+
+    // Prevent duplicate searches for the same query
+    if (!isLoadMore && images && images.length > 0) {
+      return;
+    }
 
     if (isLoadMore) {
       setLoadingMore(true);
@@ -179,6 +185,15 @@ const SearchImages = ({
       }
     };
   }, [hasMore, loadingMore, page]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   // Transform images to Masonry format with optimized heights and virtual scrolling
   const masonryItems = images?.slice(0, 100).map((image, index) => ({

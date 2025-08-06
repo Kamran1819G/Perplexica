@@ -30,23 +30,14 @@ import SearchImages from './SearchImages';
 import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 import ThinkBox from './ThinkBox';
+import SearchSteps from './SearchSteps';
+import CustomStepper, { SearchStep, SourcesStep, SimpleStep } from './ui/Stepper/Stepper';
 
 const ThinkTagProcessor = ({ children }: { children: React.ReactNode }) => {
   return <ThinkBox content={children as string} />;
 };
 
 type TabType = 'answer' | 'images' | 'videos' | 'sources' | 'steps';
-
-type StepStatus = 'pending' | 'active' | 'completed';
-
-interface Step {
-  id: string;
-  title: string;
-  description?: string;
-  status: StepStatus;
-  icon?: React.ReactNode;
-  details?: string[];
-}
 
 const StepsComponent = ({ 
   loading, 
@@ -61,179 +52,33 @@ const StepsComponent = ({
   currentStep?: string;
   steps?: string[];
 }) => {
-  // Dynamic step generation based on current state
-  const generateSteps = (): Step[] => {
-    const baseSteps = [
-      {
-        id: 'search',
-        title: 'Searching the web',
-        status: 'pending' as StepStatus,
-      },
-      {
-        id: 'refine',
-        title: 'Refining search',
-        description: query,
-        status: 'pending' as StepStatus,
-      },
-      {
-        id: 'read',
-        title: `Reading sources${sources && sources.length > 0 ? ` - ${sources.length}` : ''}`,
-        status: 'pending' as StepStatus,
-      },
-      {
-        id: 'generate',
-        title: 'Generating answer',
-        status: 'pending' as StepStatus,
-      },
-      {
-        id: 'complete',
-        title: 'Finished',
-        status: 'pending' as StepStatus,
-      },
-    ];
+  // Convert sources to the format expected by SourcesStep
+  const formattedSources = sources?.map(source => ({
+    title: source.metadata?.title || 'Untitled',
+    url: source.metadata?.url || '',
+    icon: `https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`
+  })) || [];
 
-    // Update step statuses based on current state
-    return baseSteps.map(step => {
-      if (currentStep && steps) {
-        if (steps.includes(step.id)) {
-          return { ...step, status: 'completed' as StepStatus };
-        } else if (step.id === currentStep) {
-          return { ...step, status: 'active' as StepStatus };
-        }
-      }
-      return step;
-    });
-  };
-
-  const [stepStates, setStepStates] = useState<Step[]>(generateSteps());
-  const [visibleSteps, setVisibleSteps] = useState<number>(1);
-
-  // Update steps when props change
-  useEffect(() => {
-    const newSteps = generateSteps();
-    setStepStates(newSteps);
+  // Determine current step number for progressive loading
+  const getCurrentStepNumber = () => {
+    if (!loading) return 3; // Show all steps when complete
     
-    // Update visible steps
-    if (loading) {
-      if (currentStep && steps) {
-        const stepIndex = newSteps.findIndex(step => step.id === currentStep);
-        setVisibleSteps(Math.max(stepIndex + 1, visibleSteps));
-      } else {
-        // Simulate progression if no real data
-        setVisibleSteps(1);
-        const timers = [
-          setTimeout(() => setVisibleSteps(2), 1000),
-          setTimeout(() => setVisibleSteps(3), 2000),
-          setTimeout(() => setVisibleSteps(4), 3000),
-        ];
-        return () => timers.forEach(timer => clearTimeout(timer));
-      }
-    } else {
-      setVisibleSteps(newSteps.length);
-    }
-  }, [loading, currentStep, steps, query]);
-
-  const getStepIcon = (step: Step) => {
-    switch (step.status) {
-      case 'completed':
-        return <CheckCircle size={14} className="text-white" />;
-      case 'active':
-        return <Clock size={14} className="text-white animate-pulse" />;
-      default:
-        return step.icon || <div className="w-4 h-4 rounded-full bg-gray-400" />;
-    }
+    if (!currentStep || !steps) return 1; // Start with first step
+    
+    const stepOrder = ['search', 'refine', 'read', 'generate', 'complete'];
+    const currentIndex = stepOrder.indexOf(currentStep);
+    return currentIndex >= 0 ? currentIndex + 1 : 1;
   };
 
-  const getStepColor = (step: Step) => {
-    switch (step.status) {
-      case 'completed':
-        return 'text-gray-300';
-      case 'active':
-        return 'text-gray-300';
-      default:
-        return 'text-gray-400';
-    }
-  };
+  const currentStepNumber = getCurrentStepNumber();
 
-  const getStepBackground = (step: Step) => {
-    switch (step.status) {
-      case 'completed':
-        return 'bg-gray-800 border-gray-700';
-      case 'active':
-        return 'bg-gray-800 border-gray-700';
-      default:
-        return 'bg-gray-800 border-gray-700';
-    }
-  };
-
-    return (
-    <div className="flex flex-col space-y-4">
-      {/* Timeline Steps */}
-      <div className="relative">
-        {stepStates.slice(0, visibleSteps).map((step, index) => (
-          <div key={step.id} className="relative mb-6">
-            {/* Step Icon - Simple dot for all steps */}
-            <div className="absolute left-3 top-2 w-3 h-3 rounded-full bg-gray-600"></div>
-            
-            {/* Step Content */}
-            <div className="ml-8">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="text-sm text-gray-300">
-                  {step.title}
-                </span>
-              </div>
-              
-              {/* Search Query Box */}
-              {step.id === 'refine' && step.description && (
-                <div className="ml-4 mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <Search size={14} className="text-gray-400" />
-                    <span className="text-sm text-gray-400 font-mono">{step.description}</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Sources Reading Section */}
-              {step.id === 'read' && sources && sources.length > 0 && (
-                <div className="ml-4 mt-3 max-h-48 overflow-y-auto">
-                  <div className="space-y-2">
-                    {sources.slice(0, 8).map((source, i) => (
-                      <div key={i} className="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg border border-gray-600">
-                        <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center">
-                          <img
-                            src={`https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`}
-                            alt="favicon"
-                            className="w-4 h-4 rounded"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-300 truncate">
-                            {source.metadata?.title || 'Untitled'}
-                          </div>
-                          <div className="text-xs text-gray-500 truncate">
-                            {source.metadata?.url?.replace(/.+\/\/|www.|\..+/g, '')}
-                          </div>
-                        </div>
-                        <ExternalLink size={12} className="text-gray-500 flex-shrink-0" />
-                      </div>
-                    ))}
-                    {sources.length > 8 && (
-                      <div className="text-center py-1">
-                        <span className="text-xs text-gray-500">
-                          ... and {sources.length - 8} more sources
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+  return (
+    <div className="w-full">
+      <CustomStepper currentStep={currentStepNumber}>
+        <SearchStep query={query} />
+        <SourcesStep sources={formattedSources} />
+        <SimpleStep>Finished</SimpleStep>
+      </CustomStepper>
     </div>
   );
 };
@@ -487,6 +332,7 @@ const MessageBox = ({
           <div className="flex flex-col space-y-4">
             {loadedTabs.has('images') && (
               <SearchImages
+                key={`images-${message.messageId}`}
                 query={history[messageIndex - 1]?.content || ''}
                 chatHistory={history.slice(0, messageIndex - 1)}
                 messageId={message.messageId}
@@ -499,6 +345,7 @@ const MessageBox = ({
           <div className="flex flex-col space-y-4">
             {loadedTabs.has('videos') && (
               <SearchVideos
+                key={`videos-${message.messageId}`}
                 chatHistory={history.slice(0, messageIndex - 1)}
                 query={history[messageIndex - 1]?.content || ''}
                 messageId={message.messageId}
@@ -519,13 +366,20 @@ const MessageBox = ({
       case 'steps':
         return (
           <div className="flex flex-col space-y-4">
-            <StepsComponent 
-              loading={loading && isLast}
-              sources={message.sources}
-              query={message.role === 'user' ? message.content : (history[messageIndex - 1]?.content || '')}
-              currentStep={message.currentStep}
-              steps={message.steps}
-            />
+            {message.isOrchestrator && message.orchestratorSteps ? (
+              <SearchSteps 
+                steps={message.orchestratorSteps}
+                isVisible={true}
+              />
+            ) : (
+              <StepsComponent 
+                loading={loading && isLast}
+                sources={message.sources}
+                query={message.role === 'user' ? message.content : (history[messageIndex - 1]?.content || '')}
+                currentStep={message.currentStep}
+                steps={message.steps}
+              />
+            )}
           </div>
         );
       default:

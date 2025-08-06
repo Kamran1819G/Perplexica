@@ -2,6 +2,15 @@
 
 > **Note:** This is a fork of the original [Perplexica project](https://github.com/ItzCrazyKns/Perplexica) by [@ItzCrazyKns](https://github.com/ItzCrazyKns). This fork is maintained separately with additional features, improvements, and independent installation using local build for complete independence from external registries.
 
+## ✨ New Features
+
+### 🔄 Search Orchestrator
+- **Planning & Execution**: Step-by-step search planning and execution
+- **Real-time Progress**: See exactly what steps are being executed in real-time
+- **Enhanced UI**: Beautiful step-by-step interface in the Steps tab
+- **Better Debugging**: Clear error messages and execution tracking
+- **Multiple Search Modes**: Web, Academic, YouTube, Reddit, Wolfram Alpha, and Writing Assistant
+
 ---
 
 ## 🚀 How to Run Perplexica

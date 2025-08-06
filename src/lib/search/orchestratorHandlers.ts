@@ -1,14 +1,8 @@
-import { orchestratorHandlers } from './orchestratorHandlers';
-
-// Export the new orchestrator handlers
-export { orchestratorHandlers };
-
-// Keep the old handlers for backward compatibility during transition
-import MetaSearchAgent from '@/lib/search/metaSearchAgent';
+import SearchOrchestrator from './orchestrator';
 import prompts from '../prompts';
 
-export const searchHandlers: Record<string, MetaSearchAgent> = {
-  webSearch: new MetaSearchAgent({
+export const orchestratorHandlers: Record<string, SearchOrchestrator> = {
+  webSearch: new SearchOrchestrator({
     activeEngines: [],
     queryGeneratorPrompt: prompts.webSearchRetrieverPrompt,
     responsePrompt: prompts.webSearchResponsePrompt,
@@ -16,8 +10,9 @@ export const searchHandlers: Record<string, MetaSearchAgent> = {
     rerankThreshold: 0.3,
     searchWeb: true,
     summarizer: true,
+    planningPrompt: prompts.webSearchPlanningPrompt,
   }),
-  academicSearch: new MetaSearchAgent({
+  academicSearch: new SearchOrchestrator({
     activeEngines: ['arxiv', 'google scholar', 'pubmed'],
     queryGeneratorPrompt: prompts.academicSearchRetrieverPrompt,
     responsePrompt: prompts.academicSearchResponsePrompt,
@@ -25,8 +20,9 @@ export const searchHandlers: Record<string, MetaSearchAgent> = {
     rerankThreshold: 0,
     searchWeb: true,
     summarizer: false,
+    planningPrompt: prompts.academicSearchPlanningPrompt,
   }),
-  writingAssistant: new MetaSearchAgent({
+  writingAssistant: new SearchOrchestrator({
     activeEngines: [],
     queryGeneratorPrompt: '',
     responsePrompt: prompts.writingAssistantPrompt,
@@ -34,8 +30,9 @@ export const searchHandlers: Record<string, MetaSearchAgent> = {
     rerankThreshold: 0,
     searchWeb: false,
     summarizer: false,
+    planningPrompt: prompts.writingAssistantPlanningPrompt,
   }),
-  wolframAlphaSearch: new MetaSearchAgent({
+  wolframAlphaSearch: new SearchOrchestrator({
     activeEngines: ['wolframalpha'],
     queryGeneratorPrompt: prompts.wolframAlphaSearchRetrieverPrompt,
     responsePrompt: prompts.wolframAlphaSearchResponsePrompt,
@@ -43,8 +40,9 @@ export const searchHandlers: Record<string, MetaSearchAgent> = {
     rerankThreshold: 0,
     searchWeb: true,
     summarizer: false,
+    planningPrompt: prompts.wolframAlphaSearchPlanningPrompt,
   }),
-  youtubeSearch: new MetaSearchAgent({
+  youtubeSearch: new SearchOrchestrator({
     activeEngines: ['youtube'],
     queryGeneratorPrompt: prompts.youtubeSearchRetrieverPrompt,
     responsePrompt: prompts.youtubeSearchResponsePrompt,
@@ -52,8 +50,9 @@ export const searchHandlers: Record<string, MetaSearchAgent> = {
     rerankThreshold: 0.3,
     searchWeb: true,
     summarizer: false,
+    planningPrompt: prompts.youtubeSearchPlanningPrompt,
   }),
-  redditSearch: new MetaSearchAgent({
+  redditSearch: new SearchOrchestrator({
     activeEngines: ['reddit'],
     queryGeneratorPrompt: prompts.redditSearchRetrieverPrompt,
     responsePrompt: prompts.redditSearchResponsePrompt,
@@ -61,5 +60,6 @@ export const searchHandlers: Record<string, MetaSearchAgent> = {
     rerankThreshold: 0.3,
     searchWeb: true,
     summarizer: false,
+    planningPrompt: prompts.redditSearchPlanningPrompt,
   }),
-};
+}; 
