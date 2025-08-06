@@ -9,20 +9,20 @@ import {
 import { Fragment } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const SearchModes = [
+const SearchModes = (t: any) => [
   {
     key: 'webSearch',
-    title: 'Quick Search',
-    description: 'Fast web search with immediate results',
-    icon: <Zap size={20} className="text-[#4CAF50]" />,
+    title: t('searchMode.quickSearch'),
+    description: t('searchMode.quickSearchDescription'),
+    icon: <Zap size={18} className="text-[#4CAF50]" />,
     badge: null,
   },
   {
     key: 'proSearch',
-    title: 'Pro Search',
-    description: 'Deep research with comprehensive analysis',
-    icon: <Sparkles size={20} className="text-[#2196F3]" />,
-    badge: 'PRO',
+    title: t('searchMode.proSearch'),
+    description: t('searchMode.proSearchDescription'),
+    icon: <Sparkles size={18} className="text-[#2196F3]" />,
+    badge: t('searchMode.proBadge'),
   },
 ];
 
@@ -39,7 +39,8 @@ const SearchMode = ({
 }: SearchModeProps) => {
   const { t } = useTranslation();
 
-  const currentMode = SearchModes.find((mode) => mode.key === searchMode) || SearchModes[0];
+  const searchModes = SearchModes(t);
+  const currentMode = searchModes.find((mode) => mode.key === searchMode) || searchModes[0];
 
   return (
     <Popover className="relative">
@@ -47,21 +48,21 @@ const SearchMode = ({
         type="button"
         disabled={disabled}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 text-sm",
-          "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200",
-          "hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+          "flex items-center gap-2 px-3 py-2 text-xs",
+          "text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white",
+          "hover:bg-light-secondary dark:hover:bg-dark-secondary rounded-xl transition duration-200",
+          "focus:outline-none",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
         {currentMode.icon}
         <span className="font-medium">{currentMode.title}</span>
         {currentMode.badge && (
-          <span className="px-1.5 py-0.5 text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+          <span className="px-1.5 py-0.5 text-xs font-bold bg-[#24A0ED]/20 dark:bg-[#24A0ED]/30 text-[#24A0ED] dark:text-[#24A0ED] rounded">
             {currentMode.badge}
           </span>
         )}
-        <ChevronDown className="h-4 w-4" />
+        <ChevronDown size={18} />
       </PopoverButton>
 
       <Transition
@@ -74,17 +75,17 @@ const SearchMode = ({
         leaveTo="opacity-0 translate-y-1"
       >
         <PopoverPanel className="absolute z-10 mt-2 w-80 right-0">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
+          <div className="bg-light-primary dark:bg-dark-primary border border-light-200 dark:border-dark-200 rounded-lg shadow-lg p-2">
             <div className="space-y-1">
-              {SearchModes.map((mode) => (
+              {searchModes.map((mode) => (
                 <PopoverButton
                   key={mode.key}
                   onClick={() => setSearchMode(mode.key)}
                   className={cn(
-                    "w-full p-3 rounded-lg text-left transition-colors duration-200",
-                    "hover:bg-gray-50 dark:hover:bg-gray-800",
+                    "w-full p-3 rounded-lg text-left transition duration-200",
+                    "hover:bg-light-secondary dark:hover:bg-dark-secondary",
                     searchMode === mode.key
-                      ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                      ? "bg-[#24A0ED]/10 dark:bg-[#24A0ED]/20 border border-[#24A0ED]/30 dark:border-[#24A0ED]/40"
                       : "border border-transparent"
                   )}
                 >
@@ -95,23 +96,23 @@ const SearchMode = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          <h3 className="text-sm font-medium text-black dark:text-white">
                             {mode.title}
                           </h3>
                           {mode.badge && (
-                            <span className="px-1.5 py-0.5 text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                            <span className="px-1.5 py-0.5 text-xs font-bold bg-[#24A0ED]/20 dark:bg-[#24A0ED]/30 text-[#24A0ED] dark:text-[#24A0ED] rounded">
                               {mode.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                        <p className="text-xs text-black/70 dark:text-white/70 leading-relaxed">
                           {mode.description}
                         </p>
                       </div>
                     </div>
                     {searchMode === mode.key && (
                       <div className="flex-shrink-0 ml-2">
-                        <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-[#24A0ED] dark:bg-[#24A0ED] rounded-full"></div>
                       </div>
                     )}
                   </div>
@@ -119,8 +120,8 @@ const SearchMode = ({
               ))}
             </div>
             
-            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="mt-3 pt-3 border-t border-light-200 dark:border-dark-200">
+              <div className="flex items-center gap-2 text-xs text-black/50 dark:text-white/50">
                 <Globe className="h-3 w-3" />
                 <span>{t('searchMode.powered') || 'Powered by multiple search engines'}</span>
               </div>

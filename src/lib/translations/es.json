@@ -90,5 +90,18 @@
   "emptyChat": {
     "title": "Perplexica AI",
     "askAnything": "Pregunta cualquier cosa..."
+  },
+  "sources": {
+    "title": "Fuentes",
+    "showMore": "Mostrar más",
+    "showLess": "Mostrar menos"
+  },
+  "searchMode": {
+    "quickSearch": "Búsqueda Rápida",
+    "proSearch": "Búsqueda Pro",
+    "quickSearchDescription": "Búsqueda web rápida con resultados inmediatos",
+    "proSearchDescription": "Investigación profunda con análisis completo",
+    "proBadge": "PRO",
+    "powered": "Impulsado por múltiples motores de búsqueda"
   }
 } 

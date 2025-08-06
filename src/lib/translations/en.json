@@ -95,5 +95,13 @@
     "title": "Sources",
     "showMore": "Show more",
     "showLess": "Show less"
+  },
+  "searchMode": {
+    "quickSearch": "Quick Search",
+    "proSearch": "Pro Search",
+    "quickSearchDescription": "Fast web search with immediate results",
+    "proSearchDescription": "Deep research with comprehensive analysis",
+    "proBadge": "PRO",
+    "powered": "Powered by multiple search engines"
   }
 } 

@@ -90,5 +90,18 @@
   "emptyChat": {
     "title": "Perplexica AI",
     "askAnything": "问任何问题..."
+  },
+  "sources": {
+    "title": "来源",
+    "showMore": "显示更多",
+    "showLess": "显示更少"
+  },
+  "searchMode": {
+    "quickSearch": "快速搜索",
+    "proSearch": "专业搜索",
+    "quickSearchDescription": "快速网络搜索，提供即时结果",
+    "proSearchDescription": "深度研究，提供全面分析",
+    "proBadge": "专业",
+    "powered": "由多个搜索引擎提供支持"
   }
 }

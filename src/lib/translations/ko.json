@@ -90,5 +90,18 @@
   "emptyChat": {
     "title": "Perplexica AI",
     "askAnything": "무엇이든 물어보세요..."
+  },
+  "sources": {
+    "title": "소스",
+    "showMore": "더 보기",
+    "showLess": "적게 보기"
+  },
+  "searchMode": {
+    "quickSearch": "빠른 검색",
+    "proSearch": "프로 검색",
+    "quickSearchDescription": "즉시 결과를 제공하는 빠른 웹 검색",
+    "proSearchDescription": "포괄적인 분석을 통한 심층 연구",
+    "proBadge": "프로",
+    "powered": "여러 검색 엔진으로 구동"
   }
 }
