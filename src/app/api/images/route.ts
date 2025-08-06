@@ -17,6 +17,7 @@ interface ChatModel {
 interface ImageSearchBody {
   query: string;
   chatHistory: any[];
+  page?: number;
   chatModel?: ChatModel;
 }
 
@@ -64,15 +65,20 @@ export const POST = async (req: Request) => {
       return Response.json({ error: 'Invalid chat model' }, { status: 400 });
     }
 
-    const images = await handleImageSearch(
+    const result = await handleImageSearch(
       {
         chat_history: chatHistory,
         query: body.query,
+        page: body.page,
       },
       llm,
     );
 
-    return Response.json({ images }, { status: 200 });
+    // Handle both old format (array) and new format (object with images and total)
+    const images = Array.isArray(result) ? result : (result.images || []);
+    const total = Array.isArray(result) ? result.length : (result.total || images.length);
+
+    return Response.json({ images, total }, { status: 200 });
   } catch (err) {
     console.error(`An error occurred while searching images: ${err}`);
     return Response.json(

@@ -261,6 +261,7 @@ const MessageBox = ({
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [activeTab, setActiveTab] = useState<TabType>('answer');
   const [showSteps, setShowSteps] = useState(false);
+  const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set(['answer']));
 
   // Show steps when loading starts, hide when complete
   useEffect(() => {
@@ -275,6 +276,14 @@ const MessageBox = ({
       }, 1000);
     }
   }, [loading, isLast, showSteps]);
+
+  // Preload search components when message is rendered
+  useEffect(() => {
+    if (message.role === 'assistant' && !loading) {
+      // Preload images and videos tabs to reduce delay when clicked
+      setLoadedTabs(prev => new Set([...prev, 'images', 'videos']));
+    }
+  }, [message.role, loading]);
 
   // Show timeline steps for the last user message when loading
   const shouldShowSteps = (loading && isLast && message.role === 'user') || 
@@ -476,21 +485,25 @@ const MessageBox = ({
       case 'images':
         return (
           <div className="flex flex-col space-y-4">
-            <SearchImages
-              query={history[messageIndex - 1]?.content || ''}
-              chatHistory={history.slice(0, messageIndex - 1)}
-              messageId={message.messageId}
-            />
+            {loadedTabs.has('images') && (
+              <SearchImages
+                query={history[messageIndex - 1]?.content || ''}
+                chatHistory={history.slice(0, messageIndex - 1)}
+                messageId={message.messageId}
+              />
+            )}
           </div>
         );
       case 'videos':
         return (
           <div className="flex flex-col space-y-4">
-            <SearchVideos
-              chatHistory={history.slice(0, messageIndex - 1)}
-              query={history[messageIndex - 1]?.content || ''}
-              messageId={message.messageId}
-            />
+            {loadedTabs.has('videos') && (
+              <SearchVideos
+                chatHistory={history.slice(0, messageIndex - 1)}
+                query={history[messageIndex - 1]?.content || ''}
+                messageId={message.messageId}
+              />
+            )}
           </div>
         );
       case 'sources':
@@ -521,7 +534,9 @@ const MessageBox = ({
   };
 
   return (
-    <div>
+    <div className={cn(
+      (activeTab === 'images' || activeTab === 'videos') && "-mx-4 md:-mx-8"
+    )}>
       {message.role === 'user' && (
         <div
           className={cn(
@@ -537,10 +552,16 @@ const MessageBox = ({
       )}
 
       {(message.role === 'assistant' || shouldShowSteps) && (
-        <div className="flex flex-col space-y-9 lg:space-y-0 lg:flex-row lg:justify-between lg:space-x-9">
+        <div className={cn(
+          "flex flex-col space-y-9 lg:space-y-0 lg:flex-row lg:justify-between lg:space-x-9",
+          (activeTab === 'images' || activeTab === 'videos') && "lg:flex-col lg:space-x-0"
+        )}>
           <div
             ref={dividerRef}
-            className="flex flex-col space-y-6 w-full lg:w-9/12"
+            className={cn(
+              "flex flex-col space-y-6 w-full",
+              (activeTab === 'images' || activeTab === 'videos') ? "lg:w-full" : "lg:w-9/12"
+            )}
           >
             {/* Tabbed Interface */}
             <div className="flex flex-col space-y-4">
@@ -556,7 +577,10 @@ const MessageBox = ({
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setLoadedTabs(prev => new Set([...prev, tab.id]));
+                      }}
                       className={cn(
                         'flex flex-row items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors duration-200',
                         activeTab === tab.id
@@ -577,7 +601,10 @@ const MessageBox = ({
               </div>
 
               {/* Tab Content */}
-              <div className="min-h-[200px]">
+              <div className={cn(
+                "min-h-[200px]",
+                (activeTab === 'images' || activeTab === 'videos') && "w-full"
+              )}>
                 {renderTabContent()}
               </div>
             </div>

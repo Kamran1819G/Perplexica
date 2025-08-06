@@ -17,6 +17,7 @@ interface ChatModel {
 interface VideoSearchBody {
   query: string;
   chatHistory: any[];
+  page?: number;
   chatModel?: ChatModel;
 }
 
@@ -65,21 +66,28 @@ export const POST = async (req: Request) => {
       return Response.json({ error: 'Invalid chat model' }, { status: 400 });
     }
 
-    const videos = await handleVideoSearch(
+    const result = await handleVideoSearch(
       {
         chat_history: chatHistory,
         query: body.query,
+        page: body.page,
       },
       llm,
     );
 
+    // Handle both old format (array) and new format (object with videos and total)
+    const videos = Array.isArray(result) ? result : (result.videos || []);
+    const total = Array.isArray(result) ? result.length : (result.total || videos.length);
+
     if (!videos || videos.length === 0) {
       return Response.json({
-        message: 'No real-time video results found. SearxNG may be rate-limited, blocked, or the query returned no results.'
+        message: 'No real-time video results found. SearxNG may be rate-limited, blocked, or the query returned no results.',
+        videos: [],
+        total: 0
       }, { status: 200 });
     }
 
-    return Response.json({ videos }, { status: 200 });
+    return Response.json({ videos, total }, { status: 200 });
   } catch (err) {
     console.error(`An error occurred while searching videos: ${err}`);
     return Response.json(

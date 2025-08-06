@@ -34,6 +34,7 @@ const VideoSearchChainPrompt = `
 type VideoSearchChainInput = {
   chat_history: BaseMessage[];
   query: string;
+  page?: number;
 };
 
 interface VideoSearchResult {
@@ -62,7 +63,8 @@ const createVideoSearchChain = (llm: BaseChatModel) => {
       input = input.replace(/<think>.*?<\/think>/g, '');
 
       const res = await searchSearxng(input, {
-        engines: ['youtube'],
+        engines: ['youtube', 'peertube', 'vimeo'],
+        pageno: 1, // Default to page 1 for now
       });
 
       const videos: VideoSearchResult[] = [];
@@ -83,7 +85,11 @@ const createVideoSearchChain = (llm: BaseChatModel) => {
         }
       });
 
-      return videos.slice(0, 10);
+      // Return more results for pagination (25 per page)
+      return {
+        videos: videos.slice(0, 25),
+        total: res.results.length
+      };
     }),
   ]);
 };
@@ -93,6 +99,37 @@ const handleVideoSearch = (
   llm: BaseChatModel,
 ) => {
   const VideoSearchChain = createVideoSearchChain(llm);
+  
+  // If we have a page parameter, we can optimize the search
+  if (input.page && input.page > 1) {
+    // For pagination, we can skip the LLM processing and search directly
+    return searchSearxng(input.query, {
+      engines: ['youtube', 'peertube', 'vimeo'],
+      pageno: input.page,
+    }).then(res => {
+      const videos: VideoSearchResult[] = [];
+      res.results.forEach((result) => {
+        if (
+          result.thumbnail &&
+          result.url &&
+          result.title &&
+          result.iframe_src
+        ) {
+          videos.push({
+            img_src: result.thumbnail,
+            url: result.url,
+            title: result.title,
+            iframe_src: result.iframe_src,
+          });
+        }
+      });
+      return {
+        videos: videos.slice(0, 25),
+        total: res.results.length
+      };
+    });
+  }
+  
   return VideoSearchChain.invoke(input);
 };
 

@@ -34,6 +34,7 @@ Rephrased question:
 type ImageSearchChainInput = {
   chat_history: BaseMessage[];
   query: string;
+  page?: number;
 };
 
 interface ImageSearchResult {
@@ -61,7 +62,8 @@ const createImageSearchChain = (llm: BaseChatModel) => {
       input = input.replace(/<think>.*?<\/think>/g, '');
 
       const res = await searchSearxng(input, {
-        engines: ['bing images', 'google images'],
+        engines: ['bing images', 'google images', 'duckduckgo images', 'qwant images'],
+        pageno: 1,
       });
 
       const images: ImageSearchResult[] = [];
@@ -76,7 +78,11 @@ const createImageSearchChain = (llm: BaseChatModel) => {
         }
       });
 
-      return images.slice(0, 10);
+      // Return more results for pagination (25 per page)
+      return {
+        images: images.slice(0, 25),
+        total: res.results.length
+      };
     }),
   ]);
 };
@@ -86,6 +92,31 @@ const handleImageSearch = (
   llm: BaseChatModel,
 ) => {
   const imageSearchChain = createImageSearchChain(llm);
+  
+  // If we have a page parameter, we can optimize the search
+  if (input.page && input.page > 1) {
+    // For pagination, we can skip the LLM processing and search directly
+    return searchSearxng(input.query, {
+      engines: ['bing images', 'google images', 'qwant images'],
+      pageno: input.page,
+    }).then(res => {
+      const images: ImageSearchResult[] = [];
+      res.results.forEach((result) => {
+        if (result.img_src && result.url && result.title) {
+          images.push({
+            img_src: result.img_src,
+            url: result.url,
+            title: result.title,
+          });
+        }
+      });
+      return {
+        images: images.slice(0, 25),
+        total: res.results.length
+      };
+    });
+  }
+  
   return imageSearchChain.invoke(input);
 };
 
