@@ -7,7 +7,7 @@ import Chat from './Chat';
 import EmptyChat from './EmptyChat';
 import crypto from 'crypto';
 import { toast } from 'sonner';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import { Settings } from 'lucide-react';
 import Link from 'next/link';
@@ -260,6 +260,7 @@ const loadMessages = async (
 
 const ChatWindow = ({ id }: { id?: string }) => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialMessage = searchParams.get('q');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
@@ -325,9 +326,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
         setFileIds,
       );
     } else if (!chatId) {
+      const newChatId = crypto.randomBytes(20).toString('hex');
       setNewChatCreated(true);
       setIsMessagesLoaded(true);
-      setChatId(crypto.randomBytes(20).toString('hex'));
+      setChatId(newChatId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -352,6 +354,12 @@ const ChatWindow = ({ id }: { id?: string }) => {
     if (!isConfigReady) {
       toast.error('Cannot send message before the configuration is ready');
       return;
+    }
+
+    // Update URL with chat ID if this is the first message in an empty chat
+    if (messages.length === 0 && chatId) {
+      // Update URL without triggering router change to avoid refresh
+      window.history.pushState({}, '', `/c/${chatId}`);
     }
 
     setLoading(true);
