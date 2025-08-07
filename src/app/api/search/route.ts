@@ -13,6 +13,7 @@ import {
   getCustomOpenaiModelName,
 } from '@/lib/config';
 import { orchestratorHandlers } from '@/lib/search';
+import { enhanceSystemInstructions } from '@/lib/utils/personalization';
 
 interface chatModel {
   provider: string;
@@ -34,6 +35,8 @@ interface ChatRequestBody {
   stream?: boolean;
   systemInstructions?: string;
   searchMode?: string;
+  introduceYourself?: string;
+  userLocation?: string;
 }
 
 export const POST = async (req: Request) => {
@@ -123,6 +126,15 @@ export const POST = async (req: Request) => {
       );
     }
 
+    // Combine system instructions with personalization data
+    const enhancedSystemInstructions = enhanceSystemInstructions(
+      body.systemInstructions || '',
+      {
+        introduceYourself: body.introduceYourself,
+        userLocation: body.userLocation,
+      }
+    );
+
     const emitter = await searchHandler.planAndExecute(
       body.query,
       history,
@@ -130,7 +142,7 @@ export const POST = async (req: Request) => {
       embeddings,
 
       [],
-      body.systemInstructions || '',
+      enhancedSystemInstructions,
     );
 
     if (!body.stream) {

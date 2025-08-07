@@ -24,6 +24,7 @@ import { searchHandlers, orchestratorHandlers } from '@/lib/search';
 import { containsYouTubeLink, extractYouTubeLinks } from '@/lib/utils/youtube';
 import { trackAsync } from '@/lib/performance';
 import { withErrorHandling, circuitBreakers } from '@/lib/errorHandling';
+import { enhanceSystemInstructions } from '@/lib/utils/personalization';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -53,6 +54,8 @@ type Body = {
   chatModel: ChatModel;
   embeddingModel: EmbeddingModel;
   systemInstructions: string;
+  introduceYourself?: string;
+  userLocation?: string;
 };
 
 const handleEmitterEvents = async (
@@ -430,6 +433,17 @@ export const POST = async (req: Request) => {
     console.log('🗂️ Available orchestrator handlers:', Object.keys(orchestratorHandlers));
     console.log('🗂️ Available search handlers:', Object.keys(searchHandlers));
     
+    // Combine system instructions with personalization data
+    const enhancedSystemInstructions = enhanceSystemInstructions(
+      body.systemInstructions || '',
+      {
+        introduceYourself: body.introduceYourself,
+        userLocation: body.userLocation,
+      }
+    );
+    
+    console.log('🎯 Enhanced system instructions with personalization data');
+    
     let stream;
     
     // TEMPORARY: Force use old handler for debugging
@@ -442,7 +456,7 @@ export const POST = async (req: Request) => {
         llm,
         embedding,
         body.files,
-        body.systemInstructions,
+        enhancedSystemInstructions,
       );
     } else if (orchestratorHandlers[searchMode]) {
       // Use new orchestrator (ProSearch, etc.)
@@ -454,7 +468,7 @@ export const POST = async (req: Request) => {
         llm,
         embedding,
         body.files,
-        body.systemInstructions,
+        enhancedSystemInstructions,
       );
     } else {
       // Fallback to old search handlers
@@ -466,7 +480,7 @@ export const POST = async (req: Request) => {
         llm,
         embedding,
         body.files,
-        body.systemInstructions,
+        enhancedSystemInstructions,
       );
     }
 
