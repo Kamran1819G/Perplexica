@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { text, integer, sqliteTable } from 'drizzle-orm/sqlite-core';
+import { text, integer, sqliteTable, index } from 'drizzle-orm/sqlite-core';
 
 export const messages = sqliteTable('messages', {
   id: integer('id').primaryKey(),
@@ -10,7 +10,14 @@ export const messages = sqliteTable('messages', {
   metadata: text('metadata', {
     mode: 'json',
   }),
-});
+}, (table) => ({
+  // Add indexes for better query performance
+  chatIdIdx: index('chat_id_idx').on(table.chatId),
+  messageIdIdx: index('message_id_idx').on(table.messageId),
+  roleIdx: index('role_idx').on(table.role),
+  // Composite index for common queries
+  chatRoleIdx: index('chat_role_idx').on(table.chatId, table.role),
+}));
 
 interface File {
   name: string;
@@ -24,4 +31,7 @@ export const chats = sqliteTable('chats', {
   files: text('files', { mode: 'json' })
     .$type<File[]>()
     .default(sql`'[]'`),
-});
+}, (table) => ({
+  // Add index for sorting by creation date
+  createdAtIdx: index('created_at_idx').on(table.createdAt),
+}));

@@ -10,6 +10,9 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { searchSearxng } from '../searxng';
 import { Document } from 'langchain/document';
 import { getDocumentsFromLinks } from '../utils/documents';
+import CacheManager, { CacheKeys } from '../cache';
+import { withErrorHandling, retryHandlers } from '../errorHandling';
+import { trackAsync } from '../performance';
 
 const ultraSearchPlanningPrompt = `
 You are an expert research strategist designing a comprehensive ultra-deep research plan for complex queries.

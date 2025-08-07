@@ -22,6 +22,8 @@ import {
 } from '@/lib/config';
 import { searchHandlers, orchestratorHandlers } from '@/lib/search';
 import { containsYouTubeLink, extractYouTubeLinks } from '@/lib/utils/youtube';
+import { trackAsync } from '@/lib/performance';
+import { withErrorHandling, circuitBreakers } from '@/lib/errorHandling';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -244,10 +246,14 @@ const handleHistorySave = async (
 };
 
 export const POST = async (req: Request) => {
-  const requestId = Date.now().toString(36);
-  console.log(`=== Chat API route called (ID: ${requestId}) ===`);
-  try {
-    const body = (await req.json()) as Body;
+  return await trackAsync(
+    'chat_api_request',
+    async () => {
+      return await withErrorHandling(
+        async () => {
+          const requestId = Date.now().toString(36);
+          console.log(`=== Chat API route called (ID: ${requestId}) ===`);
+          const body = (await req.json()) as Body;
     const { message } = body;
 
     if (message.content === '') {
@@ -480,18 +486,26 @@ export const POST = async (req: Request) => {
     handleEmitterEvents(stream, writer, encoder, aiMessageId, message.chatId);
     handleHistorySave(message, humanMessageId, body.files);
 
-    return new Response(responseStream.readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        Connection: 'keep-alive',
-        'Cache-Control': 'no-cache, no-transform',
-      },
-    });
-  } catch (err) {
-    console.error('An error occurred while processing chat request:', err);
-    return Response.json(
-      { message: 'An error occurred while processing chat request' },
-      { status: 500 },
-    );
-  }
+          return new Response(responseStream.readable, {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              Connection: 'keep-alive',
+              'Cache-Control': 'no-cache, no-transform',
+            },
+          });
+        },
+        'chat_api',
+        {
+          circuitBreaker: circuitBreakers.llm,
+          fallback: () => {
+            return Response.json(
+              { message: 'Service temporarily unavailable, please try again later' },
+              { status: 503 },
+            );
+          },
+        }
+      );
+    },
+    { requestId: Date.now().toString(36) }
+  );
 };

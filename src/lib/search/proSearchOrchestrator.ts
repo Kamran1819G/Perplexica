@@ -9,6 +9,9 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { searchSearxng } from '../searxng';
 import { Document } from 'langchain/document';
 import { getDocumentsFromLinks } from '../utils/documents';
+import CacheManager, { CacheKeys } from '../cache';
+import { withErrorHandling, retryHandlers } from '../errorHandling';
+import { trackAsync } from '../performance';
 
 const proSearchPlanningPrompt = `
 You are an expert research assistant planning a comprehensive search strategy for a complex query. 
@@ -83,6 +86,21 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
       }
 
       try {
+        // Check cache first
+        const cacheKey = CacheKeys.search(query, 'pro');
+        const cached = CacheManager.get(cacheKey, 'search');
+        
+        if (cached) {
+          if (emitter) {
+            emitter.emit('data', JSON.stringify({
+              type: 'cache_hit',
+              message: `Using cached results for query ${i + 1}`,
+            }));
+          }
+          allDocuments.push(...cached.documents);
+          continue;
+        }
+
         // Search with multiple engines for comprehensive results
         const searchResults = await searchSearxng(query, {
           language: 'en',
@@ -102,6 +120,9 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
               },
             }),
         );
+
+        // Cache the results
+        CacheManager.set(cacheKey, { documents }, 'search', 5 * 60 * 1000); // 5 minutes
 
         allDocuments.push(...documents);
 

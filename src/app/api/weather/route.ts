@@ -1,6 +1,6 @@
-// Simple in-memory cache for weather data
-const weatherCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+import CacheManager, { CacheKeys } from '@/lib/cache';
+import { withErrorHandling, retryHandlers } from '@/lib/errorHandling';
+import { trackAsync } from '@/lib/performance';
 
 export const POST = async (req: Request) => {
   try {
@@ -16,47 +16,62 @@ export const POST = async (req: Request) => {
     }
 
     // Create cache key based on rounded coordinates (to group nearby locations)
-    const cacheKey = `${Math.round(body.lat * 100) / 100},${Math.round(body.lng * 100) / 100}`;
-    const now = Date.now();
+    const cacheKey = CacheKeys.weather(body.lat, body.lng);
     
     // Check if we have valid cached data
-    const cached = weatherCache.get(cacheKey);
-    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-      return Response.json(cached.data);
+    const cached = CacheManager.get(cacheKey, 'api');
+    if (cached) {
+      return Response.json(cached);
     }
 
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${body.lat}&longitude=${body.lng}&current=weather_code,temperature_2m,apparent_temperature,is_day,relative_humidity_2m,wind_speed_10m,wind_direction_10m,pressure_msl&timezone=auto`,
-      {
-        headers: {
-          'User-Agent': 'Perplexica Weather Widget',
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(10000), // 10 seconds timeout
-      }
+    const data = await trackAsync(
+      'weather_api_fetch',
+      async () => {
+        return await withErrorHandling(
+          async () => {
+            const res = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${body.lat}&longitude=${body.lng}&current=weather_code,temperature_2m,apparent_temperature,is_day,relative_humidity_2m,wind_speed_10m,wind_direction_10m,pressure_msl&timezone=auto`,
+              {
+                headers: {
+                  'User-Agent': 'Perplexica Weather Widget',
+                },
+                signal: AbortSignal.timeout(10000), // 10 seconds timeout
+              }
+            );
+
+            if (!res.ok) {
+              throw new Error(`Weather API responded with status: ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            if (data.error) {
+              throw new Error(`Weather API error: ${data.reason}`);
+            }
+
+            return data;
+          },
+          'weather_api',
+          {
+            retryHandler: retryHandlers.api,
+            fallback: () => ({
+              current: {
+                weather_code: 0,
+                temperature_2m: 20,
+                apparent_temperature: 20,
+                is_day: 1,
+                relative_humidity_2m: 50,
+                wind_speed_10m: 5,
+                wind_direction_10m: 180,
+                pressure_msl: 1013,
+              },
+              _fallback: true,
+            }),
+          }
+        );
+      },
+      { lat: body.lat, lng: body.lng }
     );
-
-    if (!res.ok) {
-      console.error(`Weather API responded with status: ${res.status}`);
-      return Response.json(
-        {
-          message: 'Weather service temporarily unavailable.',
-        },
-        { status: 503 },
-      );
-    }
-
-    const data = await res.json();
-
-    if (data.error) {
-      console.error(`Error fetching weather data: ${data.reason}`);
-      return Response.json(
-        {
-          message: 'Weather data temporarily unavailable.',
-        },
-        { status: 503 },
-      );
-    }
 
     // Validate required data fields
     if (!data.current || typeof data.current.temperature_2m !== 'number') {
@@ -230,17 +245,7 @@ export const POST = async (req: Request) => {
     }
 
     // Cache the result
-    weatherCache.set(cacheKey, { data: weather, timestamp: now });
-    
-    // Clean up old cache entries periodically
-    if (weatherCache.size > 100) {
-      const cutoff = now - CACHE_DURATION;
-      for (const [key, value] of weatherCache.entries()) {
-        if (value.timestamp < cutoff) {
-          weatherCache.delete(key);
-        }
-      }
-    }
+    CacheManager.set(cacheKey, weather, 'api', 10 * 60 * 1000); // 10 minutes
 
     return Response.json(weather);
   } catch (err) {

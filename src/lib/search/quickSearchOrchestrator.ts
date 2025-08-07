@@ -25,6 +25,9 @@ import formatChatHistoryAsString from '../utils/formatHistory';
 import eventEmitter from 'events';
 import { StreamEvent } from '@langchain/core/tracers/log_stream';
 import FollowUpGenerator, { FollowUpResult } from '../chains/followUpGenerator';
+import CacheManager, { CacheKeys } from '../cache';
+import { withErrorHandling, retryHandlers } from '../errorHandling';
+import { trackAsync } from '../performance';
 
 export interface SearchStep {
   id: string;
@@ -203,63 +206,99 @@ class QuickSearchOrchestrator implements SearchOrchestratorType {
       return { results: [], message: 'Web search disabled for this mode' };
     }
 
-    const searchChain = RunnableSequence.from([
-      PromptTemplate.fromTemplate(this.config.queryGeneratorPrompt),
-      llm,
-      this.strParser,
-      RunnableLambda.from(async (input: string) => {
-        const linksOutputParser = new LineListOutputParser({
-          key: 'links',
-        });
+    return await trackAsync(
+      'quick_search_execution',
+      async () => {
+        return await withErrorHandling(
+          async () => {
+            // Check cache first
+            const cacheKey = CacheKeys.search(query, 'quick');
+            const cached = CacheManager.get(cacheKey, 'search');
+            
+            if (cached) {
+              this.emitter.emit('data', JSON.stringify({
+                type: 'cache_hit',
+                message: 'Using cached search results',
+              }));
+              return cached;
+            }
 
-        const questionOutputParser = new LineOutputParser({
-          key: 'question',
-        });
+            const searchChain = RunnableSequence.from([
+              PromptTemplate.fromTemplate(this.config.queryGeneratorPrompt),
+              llm,
+              this.strParser,
+              RunnableLambda.from(async (input: string) => {
+                const linksOutputParser = new LineListOutputParser({
+                  key: 'links',
+                });
 
-        const links = await linksOutputParser.parse(input);
-        let question = this.config.summarizer
-          ? await questionOutputParser.parse(input)
-          : input;
+                const questionOutputParser = new LineOutputParser({
+                  key: 'question',
+                });
 
-        if (question === 'not_needed') {
-          return { query: '', docs: [] };
-        }
+                const links = await linksOutputParser.parse(input);
+                let question = this.config.summarizer
+                  ? await questionOutputParser.parse(input)
+                  : input;
 
-        if (links.length > 0) {
-          // Handle direct links
-          const linkDocs = await getDocumentsFromLinks({ links });
-          return { query: question, docs: linkDocs };
-        } else {
-          // Perform web search
-          question = question.replace(/<think>.*?<\/think>/g, '');
-          
-          const res = await searchSearxng(question, {
-            language: 'en',
-            engines: this.config.activeEngines,
-          });
+                if (question === 'not_needed') {
+                  return { query: '', docs: [] };
+                }
 
-          const documents = res.results.map(
-            (result) =>
-              new Document({
-                pageContent:
-                  result.content ||
-                  (this.config.activeEngines.includes('youtube')
-                    ? result.title
-                    : ''),
-                metadata: {
-                  title: result.title,
-                  url: result.url,
-                  ...(result.img_src && { img_src: result.img_src }),
-                },
+                if (links.length > 0) {
+                  // Handle direct links
+                  const linkDocs = await getDocumentsFromLinks({ links });
+                  return { query: question, docs: linkDocs };
+                } else {
+                  // Perform web search
+                  question = question.replace(/<think>.*?<\/think>/g, '');
+                  
+                  const res = await searchSearxng(question, {
+                    language: 'en',
+                    engines: this.config.activeEngines,
+                  });
+
+                  const documents = res.results.map(
+                    (result) =>
+                      new Document({
+                        pageContent:
+                          result.content ||
+                          (this.config.activeEngines.includes('youtube')
+                            ? result.title
+                            : ''),
+                        metadata: {
+                          title: result.title,
+                          url: result.url,
+                          ...(result.img_src && { img_src: result.img_src }),
+                        },
+                      }),
+                  );
+
+                  const result = { query: question, docs: documents };
+                  
+                  // Cache the results
+                  CacheManager.set(cacheKey, result, 'search', 5 * 60 * 1000); // 5 minutes
+                  
+                  return result;
+                }
               }),
-          );
+            ]);
 
-          return { query: question, docs: documents };
-        }
-      }),
-    ]);
-
-    return await searchChain.invoke({ query });
+            return await searchChain.invoke({ query });
+          },
+          'quick_search',
+          {
+            retryHandler: retryHandlers.search,
+            fallback: () => ({
+              query: '',
+              docs: [],
+              _fallback: true,
+            }),
+          }
+        );
+      },
+      { query }
+    );
   }
 
   private async executeDocumentRetrieval(query: string, llm: BaseChatModel): Promise<any> {
@@ -337,152 +376,187 @@ class QuickSearchOrchestrator implements SearchOrchestratorType {
     embeddings: Embeddings,
 
   ) {
-    const maxSources = this.config.maxSources || 15;
-    console.log('🔧 rerankDocs called with:', docs.length, 'docs and', fileIds.length, 'files');
-    console.log('📊 rerankDocs: Max sources configured:', maxSources);
-    
-    if (docs.length === 0 && fileIds.length === 0) {
-      console.log('⚠️ rerankDocs: No docs or files, returning empty array');
-      return docs;
-    }
+    return await trackAsync(
+      'rerank_documents',
+      async () => {
+        return await withErrorHandling(
+          async () => {
+            const maxSources = this.config.maxSources || 15;
+            console.log('🔧 rerankDocs called with:', docs.length, 'docs and', fileIds.length, 'files');
+            console.log('📊 rerankDocs: Max sources configured:', maxSources);
+            
+            if (docs.length === 0 && fileIds.length === 0) {
+              console.log('⚠️ rerankDocs: No docs or files, returning empty array');
+              return docs;
+            }
 
-    const filesData = fileIds
-      .map((file) => {
-        const filePath = path.join(process.cwd(), 'uploads', file);
+            // Check cache for query embedding
+            const queryEmbeddingKey = CacheKeys.embedding(query);
+            let queryEmbedding = CacheManager.get(queryEmbeddingKey, 'embedding');
+            
+            if (!queryEmbedding) {
+              queryEmbedding = await embeddings.embedQuery(query);
+              CacheManager.set(queryEmbeddingKey, queryEmbedding, 'embedding', 60 * 60 * 1000); // 1 hour
+            }
 
-        const contentPath = filePath + '-extracted.json';
-        const embeddingsPath = filePath + '-embeddings.json';
+            const filesData = fileIds
+              .map((file) => {
+                const filePath = path.join(process.cwd(), 'uploads', file);
 
-        const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
-        const embeddings = JSON.parse(fs.readFileSync(embeddingsPath, 'utf8'));
+                const contentPath = filePath + '-extracted.json';
+                const embeddingsPath = filePath + '-embeddings.json';
 
-        const fileSimilaritySearchObject = content.contents.map(
-          (c: string, i: number) => {
-            return {
-              fileName: content.title,
-              content: c,
-              embeddings: embeddings.embeddings[i],
-            };
-          },
-        );
+                const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
+                const embeddings = JSON.parse(fs.readFileSync(embeddingsPath, 'utf8'));
 
-        return fileSimilaritySearchObject;
-      })
-      .flat();
+                const fileSimilaritySearchObject = content.contents.map(
+                  (c: string, i: number) => {
+                    return {
+                      fileName: content.title,
+                      content: c,
+                      embeddings: embeddings.embeddings[i],
+                    };
+                  },
+                );
 
-    if (query.toLocaleLowerCase() === 'summarize') {
-      console.log('📝 rerankDocs: Summarize mode, returning first', maxSources, 'docs');
-      return docs.slice(0, maxSources);
-    }
+                return fileSimilaritySearchObject;
+              })
+              .flat();
 
-    const docsWithContent = docs.filter(
-      (doc) => doc.pageContent && doc.pageContent.length > 0,
-    );
-    
-    console.log('📊 rerankDocs: Filtered to', docsWithContent.length, 'docs with content');
+            if (query.toLocaleLowerCase() === 'summarize') {
+              console.log('📝 rerankDocs: Summarize mode, returning first', maxSources, 'docs');
+              return docs.slice(0, maxSources);
+            }
 
-          if (this.config.rerank === false) {
-      console.log('⚠️ rerankDocs: Rerank disabled, using simple filtering');
-      if (filesData.length > 0) {
-        const [queryEmbedding] = await Promise.all([
-          embeddings.embedQuery(query),
-        ]);
+            const docsWithContent = docs.filter(
+              (doc) => doc.pageContent && doc.pageContent.length > 0,
+            );
+            
+            console.log('📊 rerankDocs: Filtered to', docsWithContent.length, 'docs with content');
 
-        const fileDocs = filesData.map((fileData) => {
-          return new Document({
-            pageContent: fileData.content,
-            metadata: {
-              title: fileData.fileName,
-              url: `File`,
-            },
-          });
-        });
+            if (this.config.rerank === false) {
+              console.log('⚠️ rerankDocs: Rerank disabled, using simple filtering');
+              if (filesData.length > 0) {
+                // Use cached query embedding (already computed above)
 
-        const similarity = filesData.map((fileData, i) => {
-          const sim = computeSimilarity(queryEmbedding, fileData.embeddings);
+            const fileDocs = filesData.map((fileData) => {
+              return new Document({
+                pageContent: fileData.content,
+                metadata: {
+                  title: fileData.fileName,
+                  url: `File`,
+                },
+              });
+            });
 
-          return {
-            index: i,
-            similarity: sim,
-          };
-        });
+            const similarity = filesData.map((fileData, i) => {
+              const sim = computeSimilarity(queryEmbedding, fileData.embeddings);
 
-        const fileSourcesLimit = Math.floor(maxSources * 0.4); // 40% for file sources
-        const webSourcesLimit = maxSources - fileSourcesLimit; // 60% for web sources
-        
-        let sortedDocs = similarity
-          .filter(
-            (sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3),
-          )
-          .sort((a, b) => b.similarity - a.similarity)
-          .slice(0, fileSourcesLimit)
-          .map((sim) => fileDocs[sim.index]);
+              return {
+                index: i,
+                similarity: sim,
+              };
+            });
 
-        console.log('📁 rerankDocs: Selected', sortedDocs.length, 'file sources out of', filesData.length, 'available');
+            const fileSourcesLimit = Math.floor(maxSources * 0.4); // 40% for file sources
+            const webSourcesLimit = maxSources - fileSourcesLimit; // 60% for web sources
+            
+            let sortedDocs = similarity
+              .filter(
+                (sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3),
+              )
+              .sort((a, b) => b.similarity - a.similarity)
+              .slice(0, fileSourcesLimit)
+              .map((sim) => fileDocs[sim.index]);
 
-        const finalSources = [
-          ...sortedDocs,
-          ...docsWithContent.slice(0, webSourcesLimit),
-        ];
+            console.log('📁 rerankDocs: Selected', sortedDocs.length, 'file sources out of', filesData.length, 'available');
 
-        console.log('📊 rerankDocs: Final mix -', sortedDocs.length, 'file sources +', Math.min(webSourcesLimit, docsWithContent.length), 'web sources =', finalSources.length, 'total');
-        return finalSources;
-      } else {
-        console.log('🌐 rerankDocs: No files, returning top', maxSources, 'web sources out of', docsWithContent.length, 'available');
-        return docsWithContent.slice(0, maxSources);
-      }
+            const finalSources = [
+              ...sortedDocs,
+              ...docsWithContent.slice(0, webSourcesLimit),
+            ];
+
+            console.log('📊 rerankDocs: Final mix -', sortedDocs.length, 'file sources +', Math.min(webSourcesLimit, docsWithContent.length), 'web sources =', finalSources.length, 'total');
+            return finalSources;
           } else {
-      console.log('🧮 rerankDocs: Computing embeddings for', docsWithContent.length, 'documents...');
-      let docEmbeddings, queryEmbedding;
-      try {
-        [docEmbeddings, queryEmbedding] = await Promise.all([
-          embeddings.embedDocuments(
-            docsWithContent.map((doc) => doc.pageContent),
-          ),
-          embeddings.embedQuery(query),
-        ]);
-        console.log('✅ rerankDocs: Embeddings computed successfully');
-      } catch (embeddingError) {
-        console.error('❌ rerankDocs: Error computing embeddings:', embeddingError);
-        throw embeddingError;
-      }
+            console.log('🌐 rerankDocs: No files, returning top', maxSources, 'web sources out of', docsWithContent.length, 'available');
+            return docsWithContent.slice(0, maxSources);
+          }
+        } else {
+          console.log('🧮 rerankDocs: Computing embeddings for', docsWithContent.length, 'documents...');
+          
+          // Check cache for document embeddings
+          const docContents = docsWithContent.map((doc) => doc.pageContent);
+          const docEmbeddingKeys = docContents.map(content => CacheKeys.embedding(content));
+          
+          let docEmbeddings = [];
+          const uncachedContents = [];
+          const uncachedIndices = [];
+          
+          for (let i = 0; i < docContents.length; i++) {
+            const cached = CacheManager.get(docEmbeddingKeys[i], 'embedding');
+            if (cached) {
+              docEmbeddings[i] = cached;
+            } else {
+              uncachedContents.push(docContents[i]);
+              uncachedIndices.push(i);
+            }
+          }
+          
+          // Compute embeddings for uncached documents
+          if (uncachedContents.length > 0) {
+            const newEmbeddings = await embeddings.embedDocuments(uncachedContents);
+            for (let i = 0; i < newEmbeddings.length; i++) {
+              const index = uncachedIndices[i];
+              docEmbeddings[index] = newEmbeddings[i];
+              CacheManager.set(docEmbeddingKeys[index], newEmbeddings[i], 'embedding', 60 * 60 * 1000); // 1 hour
+            }
+          }
 
-      docsWithContent.push(
-        ...filesData.map((fileData) => {
-          return new Document({
-            pageContent: fileData.content,
-            metadata: {
-              title: fileData.fileName,
-              url: `File`,
-            },
+          docsWithContent.push(
+            ...filesData.map((fileData) => {
+              return new Document({
+                pageContent: fileData.content,
+                metadata: {
+                  title: fileData.fileName,
+                  url: `File`,
+                },
+              });
+            }),
+          );
+
+          docEmbeddings.push(...filesData.map((fileData) => fileData.embeddings));
+
+          const similarity = docEmbeddings.map((docEmbedding, i) => {
+            const sim = computeSimilarity(queryEmbedding, docEmbedding);
+
+            return {
+              index: i,
+              similarity: sim,
+            };
           });
-        }),
-      );
 
-      docEmbeddings.push(...filesData.map((fileData) => fileData.embeddings));
+          const filteredByThreshold = similarity.filter((sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3));
+          console.log('🎯 rerankDocs: Filtered', filteredByThreshold.length, 'sources above threshold', this.config.rerankThreshold, 'out of', similarity.length, 'total');
+          
+          const sortedDocs = filteredByThreshold
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, maxSources)
+            .map((sim) => docsWithContent[sim.index]);
 
-      const similarity = docEmbeddings.map((docEmbedding, i) => {
-        const sim = computeSimilarity(queryEmbedding, docEmbedding);
-
-        return {
-          index: i,
-          similarity: sim,
-        };
-      });
-
-      const filteredByThreshold = similarity.filter((sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3));
-      console.log('🎯 rerankDocs: Filtered', filteredByThreshold.length, 'sources above threshold', this.config.rerankThreshold, 'out of', similarity.length, 'total');
-      
-      const sortedDocs = filteredByThreshold
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, maxSources)
-        .map((sim) => docsWithContent[sim.index]);
-
-      console.log('✅ rerankDocs: Returning top', sortedDocs.length, 'sources after reranking');
-      return sortedDocs;
-    }
-
-    return [];
+          console.log('✅ rerankDocs: Returning top', sortedDocs.length, 'sources after reranking');
+          return sortedDocs;
+        }
+          },
+          'rerank_documents',
+          {
+            retryHandler: retryHandlers.search,
+            fallback: () => docs.slice(0, this.config.maxSources || docs.length),
+          }
+        );
+      },
+      { query, docCount: docs.length }
+    );
   }
 
   private async handleStream(
