@@ -4,27 +4,29 @@ import {
 } from '@langchain/google-genai';
 import { getGeminiApiKey } from '../config';
 import { ChatModel, EmbeddingModel } from '.';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { Embeddings } from '@langchain/core/embeddings';
 
 export const PROVIDER_INFO = {
   key: 'gemini',
   displayName: 'Google Gemini',
 };
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { Embeddings } from '@langchain/core/embeddings';
 
 const geminiChatModels: Record<string, string>[] = [
+  // Latest Gemini 2.5 models - Pure text generation
   {
-    displayName: 'Gemini 2.5 Flash Preview 05-20',
-    key: 'gemini-2.5-flash-preview-05-20',
+    displayName: 'Gemini 2.5 Pro',
+    key: 'gemini-2.5-pro',
   },
   {
-    displayName: 'Gemini 2.5 Pro Preview',
-    key: 'gemini-2.5-pro-preview-05-06',
+    displayName: 'Gemini 2.5 Flash',
+    key: 'gemini-2.5-flash',
   },
   {
-    displayName: 'Gemini 2.5 Pro Experimental',
-    key: 'gemini-2.5-pro-preview-05-06',
+    displayName: 'Gemini 2.5 Flash-Lite',
+    key: 'gemini-2.5-flash-lite',
   },
+  // Gemini 2.0 models - Pure text generation
   {
     displayName: 'Gemini 2.0 Flash',
     key: 'gemini-2.0-flash',
@@ -32,6 +34,15 @@ const geminiChatModels: Record<string, string>[] = [
   {
     displayName: 'Gemini 2.0 Flash-Lite',
     key: 'gemini-2.0-flash-lite',
+  },
+  // Legacy models for backward compatibility
+  {
+    displayName: 'Gemini 2.5 Flash Preview 05-20',
+    key: 'gemini-2.5-flash-preview-05-20',
+  },
+  {
+    displayName: 'Gemini 2.5 Pro Preview',
+    key: 'gemini-2.5-pro-preview-05-06',
   },
   {
     displayName: 'Gemini 2.0 Flash Thinking Experimental',

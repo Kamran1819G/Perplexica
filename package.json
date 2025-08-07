@@ -14,7 +14,6 @@
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@iarna/toml": "^2.2.5",
-    "@icons-pack/react-simple-icons": "^12.3.0",
     "@langchain/anthropic": "^0.3.15",
     "@langchain/community": "^0.3.36",
     "@langchain/core": "^0.3.42",
@@ -36,7 +35,6 @@
     "langchain": "^0.1.30",
     "lucide-react": "^0.363.0",
     "lru-cache": "^10.2.0",
-    "mammoth": "^1.9.1",
     "markdown-to-jsx": "^7.7.2",
     "next": "^15.2.2",
     "next-themes": "^0.3.0",
@@ -47,7 +45,6 @@
     "react-textarea-autosize": "^8.5.3",
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.2.2",
-    "winston": "^3.17.0",
     "yet-another-react-lightbox": "^3.17.2",
     "zod": "^3.22.4"
   },

@@ -200,6 +200,36 @@ Want to know more about its architecture and how it works? You can read it [here
 
 It has many more features like image and video search. Some of the planned features are mentioned in [upcoming features](#upcoming-features).
 
+## 🤖 Supported AI Models
+
+Perplexica supports a wide range of AI models and providers, giving you flexibility to choose the best model for your needs:
+
+### 🧠 **Large Language Models (LLMs)**
+- **OpenAI**: GPT-4, GPT-3.5-turbo, and more
+- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Haiku, Claude 3 Opus
+- **Google Gemini**: Latest Gemini 2.5 Pro, 2.5 Flash, 2.5 Flash-Lite, and more
+- **Groq**: Ultra-fast inference with various models
+- **DeepSeek**: Advanced reasoning models
+- **LM Studio**: Local model hosting
+- **Ollama**: Local models like Llama3, Mixtral, and more
+- **OpenRouter**: Access to multiple model providers
+- **Custom OpenAI**: Self-hosted or custom OpenAI-compatible endpoints
+
+### 🔤 **Embedding Models**
+- **OpenAI**: text-embedding-ada-002, text-embedding-3-small, text-embedding-3-large
+- **Google Gemini**: Text Embedding 004, Embedding 001
+- **Transformers**: Local embedding models
+- **LM Studio**: Local embedding models
+
+### 🆕 **Latest Gemini 2.5 Models**
+Perplexica now supports the latest Gemini 2.5 models from Google:
+
+- **Gemini 2.5 Pro**: Most powerful thinking model for complex reasoning
+- **Gemini 2.5 Flash**: Best price-performance balance
+- **Gemini 2.5 Flash-Lite**: Most cost-efficient for high-volume tasks
+
+For detailed information about Gemini models, see [Gemini Models Documentation](docs/GEMINI_MODELS.md).
+
 ## Installation
 
 There are **3 different installation methods** for Perplexica. Choose the one that best fits your needs:
