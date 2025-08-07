@@ -418,7 +418,7 @@ export const POST = async (req: Request) => {
     }
 
     // Use new orchestrator handlers if search mode is specified, fallback to old handlers
-    const searchMode = body.searchMode || 'webSearch';
+    const searchMode = body.searchMode || 'quickSearch';
     
     console.log('🔍 Search mode:', searchMode);
     console.log('🗂️ Available orchestrator handlers:', Object.keys(orchestratorHandlers));
@@ -427,9 +427,9 @@ export const POST = async (req: Request) => {
     let stream;
     
     // TEMPORARY: Force use old handler for debugging
-    if (searchMode === 'webSearch') {
+    if (searchMode === 'quickSearch') {
       console.log('🔄 Using old MetaSearchAgent for debugging...');
-      const handler = searchHandlers['webSearch'];
+      const handler = searchHandlers['quickSearch'];
       stream = await handler.searchAndAnswer(
         message.content,
         history,
@@ -453,7 +453,7 @@ export const POST = async (req: Request) => {
     } else {
       // Fallback to old search handlers
       console.log('🔄 Fallback to old search handler');
-      const handler = searchHandlers['webSearch'];
+      const handler = searchHandlers['quickSearch'];
       stream = await handler.searchAndAnswer(
         message.content,
         history,

@@ -31,6 +31,11 @@ export type Message = {
   followUpQuestions?: string[];
   relatedQueries?: string[];
   
+  // Pro and Ultra search specific data
+  proQueries?: string[];
+  ultraQueries?: string[];
+  ultraAgents?: any[];
+  
   // Real-time progress tracking
   progress?: {
     step: string;
@@ -297,7 +302,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [fileIds, setFileIds] = useState<string[]>([]);
 
 
-  const [searchMode, setSearchMode] = useState('webSearch');
+  const [searchMode, setSearchMode] = useState('quickSearch');
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -472,6 +477,54 @@ const ChatWindow = ({ id }: { id?: string }) => {
           );
           return;
         }
+
+      // Handle ultra search queries display
+      if (data.type === 'ultraQueries') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              return {
+                ...msg,
+                ultraQueries: data.data,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
+
+      // Handle ultra search agents display
+      if (data.type === 'ultraAgents') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              return {
+                ...msg,
+                ultraAgents: data.data,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
+
+      // Handle pro search queries display
+      if (data.type === 'proQueries') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              return {
+                ...msg,
+                proQueries: data.data,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
 
       if (data.type === 'sources') {
         sources = data.data;

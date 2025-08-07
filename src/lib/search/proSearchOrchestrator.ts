@@ -1,4 +1,4 @@
-import SearchOrchestratorBase, { SearchOrchestratorType } from './orchestrator';
+import QuickSearchOrchestratorBase, { SearchOrchestratorType } from './quickSearchOrchestrator';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import { BaseMessage } from '@langchain/core/messages';
@@ -48,9 +48,10 @@ interface ProSearchConfig {
   planningPrompt: string;
   maxSearchSteps: number;
   deepAnalysis: boolean;
+  maxSources?: number; // Maximum sources to return after ranking
 }
 
-export class ProSearchOrchestrator extends SearchOrchestratorBase implements SearchOrchestratorType {
+export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implements SearchOrchestratorType {
   private proConfig: ProSearchConfig;
 
   constructor(config: ProSearchConfig) {
@@ -58,7 +59,7 @@ export class ProSearchOrchestrator extends SearchOrchestratorBase implements Sea
     this.proConfig = config;
   }
 
-  private async executeAdvancedWebSearch(
+  private async executeAdvancedQuickSearch(
     queries: string[],
     llm: BaseChatModel,
     emitter?: any
@@ -265,8 +266,8 @@ export class ProSearchOrchestrator extends SearchOrchestratorBase implements Sea
         }
       }));
 
-      console.log('⏳ ProSearch: Calling executeAdvancedWebSearch...');
-      const allDocuments = await this.executeAdvancedWebSearch(searchQueries, llm, this.emitter);
+      console.log('⏳ ProSearch: Calling executeAdvancedQuickSearch...');
+      const allDocuments = await this.executeAdvancedQuickSearch(searchQueries, llm, this.emitter);
       console.log('✅ ProSearch: Web search completed, found documents:', allDocuments.length);
 
       // Phase 3: Advanced Document Processing and Ranking
@@ -372,11 +373,17 @@ export class ProSearchOrchestrator extends SearchOrchestratorBase implements Sea
         throw responseError;
       }
 
-      // Emit results
+      // Emit results with transparency about source count
       console.log('📤 ProSearch: Emitting sources...');
+      const maxSources = this.proConfig.maxSources || 25;
       this.emitter.emit('data', JSON.stringify({
         type: 'sources',
         data: rankedDocuments,
+        metadata: {
+          totalFound: rankedDocuments.length,
+          maxDisplayed: maxSources,
+          mode: 'pro'
+        }
       }));
 
       console.log('📤 ProSearch: Emitting response...');

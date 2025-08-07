@@ -1,4 +1,4 @@
-import { ChevronDown, Search, Sparkles, Globe, Zap } from 'lucide-react';
+import { ChevronDown, Search, Sparkles, Globe, Zap, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Popover,
@@ -11,7 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const SearchModes = (t: any) => [
   {
-    key: 'webSearch',
+    key: 'quickSearch',
     title: t('searchMode.quickSearch'),
     description: t('searchMode.quickSearchDescription'),
     icon: <Zap size={18} className="text-[#4CAF50]" />,
@@ -23,6 +23,13 @@ const SearchModes = (t: any) => [
     description: t('searchMode.proSearchDescription'),
     icon: <Sparkles size={18} className="text-[#2196F3]" />,
     badge: t('searchMode.proBadge'),
+  },
+  {
+    key: 'ultraSearch',
+    title: t('searchMode.ultraSearch'),
+    description: t('searchMode.ultraSearchDescription'),
+    icon: <Brain size={18} className="text-[#9C27B0]" />,
+    badge: t('searchMode.ultraBadge'),
   },
 ];
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SearchStep } from '@/lib/search/orchestrator';
+import { SearchStep } from '@/lib/search/quickSearchOrchestrator';
 
 interface SearchStepsProps {
   steps: SearchStep[];

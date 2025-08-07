@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Search Orchestrator is a new implementation that replaces the previous MetaSearchAgent with a planning and execution approach. It provides better visibility into the search process by showing step-by-step execution in the UI.
+The Search Orchestrator system provides two modes: Quick Search and Pro Search, both implementing a planning and execution approach. It replaces the previous MetaSearchAgent with better visibility into the search process by showing step-by-step execution in the UI.
 
 ## Features
 
@@ -28,62 +28,74 @@ The Search Orchestrator is a new implementation that replaces the previous MetaS
 
 ### Core Components
 
-1. **SearchOrchestrator** (`src/lib/search/orchestrator.ts`)
-   - Main orchestrator class
-   - Handles planning and execution
-   - Manages step lifecycle
+1. **QuickSearchOrchestrator** (`src/lib/search/quickSearchOrchestrator.ts`)
+   - Quick search mode orchestrator class
+   - Handles basic planning and execution
+   - Manages step lifecycle for quick searches
 
-2. **Orchestrator Handlers** (`src/lib/search/orchestratorHandlers.ts`)
-   - Configuration for different search modes
+2. **ProSearchOrchestrator** (`src/lib/search/proSearchOrchestrator.ts`)
+   - Pro search mode orchestrator class
+   - Advanced multi-query search with comprehensive analysis
+   - Extended planning and deep research capabilities
+
+3. **Orchestrator Handlers** (`src/lib/search/orchestratorHandlers.ts`)
+   - Configuration for different search modes (quickSearch uses Quick, proSearch uses Pro)
    - Specialized planning prompts for each mode
 
-3. **Planning Prompts** (`src/lib/prompts/orchestratorPlanning.ts`)
+4. **Planning Prompts** (`src/lib/prompts/orchestratorPlanning.ts`)
    - Specialized prompts for different search types
    - Step generation based on query type
 
-4. **SearchSteps Component** (`src/components/SearchSteps.tsx`)
+5. **SearchSteps Component** (`src/components/SearchSteps.tsx`)
    - UI component for displaying steps
    - Real-time status updates
    - Progress tracking
 
 ### Search Modes
 
-1. **Web Search**
+1. **Quick Search (quickSearch)**
    - Query Analysis and Intent Understanding
    - Web Search Execution
    - Document Retrieval and Processing
    - Content Relevance Reranking
    - Final Response Generation
 
-2. **Academic Search**
+2. **Pro Search (proSearch)**
+   - Advanced query breakdown into multiple targeted searches
+   - Multi-angle research with 4-6 specialized queries
+   - Comprehensive source collection and analysis
+   - Enhanced response generation with deep insights
+   - Advanced follow-up question generation
+
+3. **Academic Search**
    - Academic Query Analysis
    - Academic Database Search
    - Research Paper Retrieval
    - Academic Content Reranking
    - Academic Response Generation
 
-3. **YouTube Search**
+4. **YouTube Search**
    - Video Search Query Analysis
    - YouTube Platform Search
    - Video Content Collection
    - Video Relevance Assessment
    - Video Summary Generation
 
-4. **Reddit Search**
+5. **Reddit Search**
    - Reddit Query Analysis
    - Reddit Community Search
    - Discussion Thread Collection
    - Community Response Evaluation
    - Reddit Discussion Summary
 
-5. **Wolfram Alpha Search**
+6. **Wolfram Alpha Search**
    - Computational Query Analysis
    - Wolfram Alpha Computation
    - Mathematical Result Processing
    - Computational Accuracy Verification
    - Mathematical Response Generation
 
-6. **Writing Assistant**
+7. **Writing Assistant**
    - Writing Task Analysis
    - Content Research and Gathering
    - Writing Structure Planning

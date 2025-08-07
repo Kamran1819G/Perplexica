@@ -99,9 +99,12 @@
   "searchMode": {
     "quickSearch": "Quick Search",
     "proSearch": "Pro Search",
+    "ultraSearch": "Ultra Search",
     "quickSearchDescription": "Fast web search with immediate results",
     "proSearchDescription": "Deep research with comprehensive analysis",
+    "ultraSearchDescription": "PhD-level research with parallel agents and cross-validation",
     "proBadge": "PRO",
+    "ultraBadge": "ULTRA",
     "powered": "Powered by multiple search engines"
   }
 } 

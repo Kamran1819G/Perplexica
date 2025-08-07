@@ -32,7 +32,7 @@ import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 import ThinkBox from './ThinkBox';
 import SearchSteps from './SearchSteps';
-import ProgressStepper, { SearchProgressStep, SourcesProgressStep, BasicProgressStep } from './Stepper';
+import SearchStepper, { SearchProgressStep, SourcesProgressStep, BasicProgressStep } from './SearchStepper';
 
 const ThinkTagProcessor = ({ children }: { children: React.ReactNode }) => {
   return <ThinkBox content={children as string} />;
@@ -74,23 +74,32 @@ const StepsComponent = ({
     // Search phase steps
     'planning': 'search',
     'pro_planning': 'search', 
+    'ultra_planning': 'search',
     'query_generation': 'search',
+    'ultra_query_generation': 'search',
     'queries_ready': 'search',
+    'ultra_agents_init': 'search',
     'searching': 'search',
     'multi_search': 'search',
+    'ultra_batch_search': 'search',
     'searching_query': 'search',
+    'cross_validation': 'search',
+    'dynamic_replan': 'search',
     
     // Sources phase steps
     'sources_found': 'sources',
     'query_results': 'sources', 
     'processing': 'sources',
+    'ultra_processing': 'sources',
     
     // Generation phase steps
     'generating': 'generating',
+    'ultra_generating': 'generating',
     'completing': 'generating',
     
     // Complete phase
-    'complete': 'finished'
+    'complete': 'finished',
+    'ultra_complete': 'finished'
   }), []);
 
   // Calculate current phase and steps
@@ -195,7 +204,7 @@ const StepsComponent = ({
 
   return (
     <div className="w-full">
-      <ProgressStepper currentStep={currentStepNumber}>
+      <SearchStepper currentStep={currentStepNumber}>
         {visibleSteps.includes('search') && (
           <SearchProgressStep 
             query={query} 
@@ -225,7 +234,7 @@ const StepsComponent = ({
             Finished
           </BasicProgressStep>
         )}
-      </ProgressStepper>
+      </SearchStepper>
     </div>
   );
 };

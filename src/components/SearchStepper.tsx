@@ -1,6 +1,6 @@
 import React, { ReactNode, useRef, useEffect, useState } from "react";
 
-interface StepperProps {
+interface SearchStepperProps {
   children: ReactNode;
   className?: string;
   currentStep?: number;
@@ -46,7 +46,7 @@ interface SourcesStepProps {
   };
 }
 
-export default function ProgressStepper({ children, className = "", currentStep = 1 }: StepperProps) {
+export default function SearchStepper({ children, className = "", currentStep = 1 }: SearchStepperProps) {
   const [stepHeights, setStepHeights] = useState<number[]>([]);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -129,7 +129,7 @@ export default function ProgressStepper({ children, className = "", currentStep 
   );
 }
 
-export function StepItem({ children, className = "" }: StepProps) {
+export function SearchStepItem({ children, className = "" }: StepProps) {
   return (
     <div className={className}>
       {children}
@@ -162,7 +162,7 @@ export function SearchProgressStep({ query, onQueryChange, placeholder = "Enter 
   };
 
   return (
-    <StepItem>
+    <SearchStepItem>
       <div className="space-y-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export function SearchProgressStep({ query, onQueryChange, placeholder = "Enter 
           />
         </div>
       </div>
-    </StepItem>
+    </SearchStepItem>
   );
 }
 
@@ -213,7 +213,7 @@ export function SourcesProgressStep({ sources, maxVisible = 8, progress }: Sourc
   const hasMore = sources.length > maxVisible;
 
   return (
-    <StepItem>
+    <SearchStepItem>
       <div className="space-y-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export function SourcesProgressStep({ sources, maxVisible = 8, progress }: Sourc
           )}
         </div>
       </div>
-    </StepItem>
+    </SearchStepItem>
   );
 }
 
@@ -342,7 +342,7 @@ export function BasicProgressStep({
   };
 
   return (
-    <StepItem>
+    <SearchStepItem>
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           {getStatusIcon()}
@@ -369,6 +369,6 @@ export function BasicProgressStep({
           </div>
         )}
       </div>
-    </StepItem>
+    </SearchStepItem>
   );
 }

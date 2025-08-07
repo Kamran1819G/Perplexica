@@ -1,15 +1,15 @@
-import { webSearchResponsePrompt, webSearchRetrieverPrompt } from './webSearch';
+import { quickSearchResponsePrompt, quickSearchRetrieverPrompt } from './quickSearch';
 import {
   orchestratorPlanningPrompt,
-  webSearchPlanningPrompt,
+  quickSearchPlanningPrompt,
 } from './orchestratorPlanning';
 
 const prompts = {
-  webSearchResponsePrompt,
-  webSearchRetrieverPrompt,
+  quickSearchResponsePrompt,
+  quickSearchRetrieverPrompt,
   // Orchestrator planning prompts
   orchestratorPlanningPrompt,
-  webSearchPlanningPrompt,
+  quickSearchPlanningPrompt,
 };
 
 export default prompts;

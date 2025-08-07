@@ -6,7 +6,7 @@ import {
   getAvailableEmbeddingModelProviders,
 } from '@/lib/providers';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
-import { SearchOrchestratorType } from '@/lib/search/orchestrator';
+import { SearchOrchestratorType } from '@/lib/search/quickSearchOrchestrator';
 import {
   getCustomOpenaiApiKey,
   getCustomOpenaiApiUrl,
@@ -33,6 +33,7 @@ interface ChatRequestBody {
   history: Array<[string, string]>;
   stream?: boolean;
   systemInstructions?: string;
+  searchMode?: string;
 }
 
 export const POST = async (req: Request) => {
@@ -111,7 +112,16 @@ export const POST = async (req: Request) => {
       );
     }
 
-    const searchHandler: SearchOrchestratorType = orchestratorHandlers['webSearch'];
+    // Determine search mode - default to quickSearch if not specified
+    const searchMode = body.searchMode || 'quickSearch';
+    const searchHandler: SearchOrchestratorType = orchestratorHandlers[searchMode];
+
+    if (!searchHandler) {
+      return Response.json(
+        { message: `Invalid search mode: ${searchMode}` },
+        { status: 400 },
+      );
+    }
 
     const emitter = await searchHandler.planAndExecute(
       body.query,

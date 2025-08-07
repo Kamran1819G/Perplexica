@@ -18,7 +18,7 @@ steps: Final Response Generation
 
 Provide a comprehensive plan for the web search.`;
 
-export const webSearchPlanningPrompt = `You are planning a web search operation. Create a step-by-step plan for finding information on the web.
+export const quickSearchPlanningPrompt = `You are planning a web search operation. Create a step-by-step plan for finding information on the web.
 
 Query: {query}
 

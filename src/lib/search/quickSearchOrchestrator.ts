@@ -65,6 +65,7 @@ interface OrchestratorConfig {
   responsePrompt: string;
   activeEngines: string[];
   planningPrompt: string;
+  maxSources?: number; // Maximum sources to return after ranking
 }
 
 type BasicChainInput = {
@@ -72,7 +73,7 @@ type BasicChainInput = {
   query: string;
 };
 
-class SearchOrchestrator implements SearchOrchestratorType {
+class QuickSearchOrchestrator implements SearchOrchestratorType {
   protected config: OrchestratorConfig;
   private strParser = new StringOutputParser();
   protected emitter: eventEmitter;
@@ -140,7 +141,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
       if (step.name.toLowerCase().includes('query analysis')) {
         result = await this.executeQueryAnalysis(query, llm);
       } else if (step.name.toLowerCase().includes('web search')) {
-        result = await this.executeWebSearch(query, llm);
+        result = await this.executeQuickSearch(query, llm);
       } else if (step.name.toLowerCase().includes('document retrieval')) {
         result = await this.executeDocumentRetrieval(query, llm);
       } else if (step.name.toLowerCase().includes('reranking')) {
@@ -197,7 +198,7 @@ class SearchOrchestrator implements SearchOrchestratorType {
     return await analysisChain.invoke({ query });
   }
 
-  private async executeWebSearch(query: string, llm: BaseChatModel): Promise<any> {
+  private async executeQuickSearch(query: string, llm: BaseChatModel): Promise<any> {
     if (!this.config.searchWeb) {
       return { results: [], message: 'Web search disabled for this mode' };
     }
@@ -336,7 +337,9 @@ class SearchOrchestrator implements SearchOrchestratorType {
     embeddings: Embeddings,
 
   ) {
+    const maxSources = this.config.maxSources || 15;
     console.log('🔧 rerankDocs called with:', docs.length, 'docs and', fileIds.length, 'files');
+    console.log('📊 rerankDocs: Max sources configured:', maxSources);
     
     if (docs.length === 0 && fileIds.length === 0) {
       console.log('⚠️ rerankDocs: No docs or files, returning empty array');
@@ -368,7 +371,8 @@ class SearchOrchestrator implements SearchOrchestratorType {
       .flat();
 
     if (query.toLocaleLowerCase() === 'summarize') {
-      return docs.slice(0, 15);
+      console.log('📝 rerankDocs: Summarize mode, returning first', maxSources, 'docs');
+      return docs.slice(0, maxSources);
     }
 
     const docsWithContent = docs.filter(
@@ -403,23 +407,29 @@ class SearchOrchestrator implements SearchOrchestratorType {
           };
         });
 
+        const fileSourcesLimit = Math.floor(maxSources * 0.4); // 40% for file sources
+        const webSourcesLimit = maxSources - fileSourcesLimit; // 60% for web sources
+        
         let sortedDocs = similarity
           .filter(
             (sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3),
           )
           .sort((a, b) => b.similarity - a.similarity)
-          .slice(0, 15)
+          .slice(0, fileSourcesLimit)
           .map((sim) => fileDocs[sim.index]);
 
-        sortedDocs =
-          docsWithContent.length > 0 ? sortedDocs.slice(0, 8) : sortedDocs;
+        console.log('📁 rerankDocs: Selected', sortedDocs.length, 'file sources out of', filesData.length, 'available');
 
-        return [
+        const finalSources = [
           ...sortedDocs,
-          ...docsWithContent.slice(0, 15 - sortedDocs.length),
+          ...docsWithContent.slice(0, webSourcesLimit),
         ];
+
+        console.log('📊 rerankDocs: Final mix -', sortedDocs.length, 'file sources +', Math.min(webSourcesLimit, docsWithContent.length), 'web sources =', finalSources.length, 'total');
+        return finalSources;
       } else {
-        return docsWithContent.slice(0, 15);
+        console.log('🌐 rerankDocs: No files, returning top', maxSources, 'web sources out of', docsWithContent.length, 'available');
+        return docsWithContent.slice(0, maxSources);
       }
           } else {
       console.log('🧮 rerankDocs: Computing embeddings for', docsWithContent.length, 'documents...');
@@ -460,12 +470,15 @@ class SearchOrchestrator implements SearchOrchestratorType {
         };
       });
 
-      const sortedDocs = similarity
-        .filter((sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3))
+      const filteredByThreshold = similarity.filter((sim) => sim.similarity > (this.config.rerankThreshold ?? 0.3));
+      console.log('🎯 rerankDocs: Filtered', filteredByThreshold.length, 'sources above threshold', this.config.rerankThreshold, 'out of', similarity.length, 'total');
+      
+      const sortedDocs = filteredByThreshold
         .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 15)
+        .slice(0, maxSources)
         .map((sim) => docsWithContent[sim.index]);
 
+      console.log('✅ rerankDocs: Returning top', sortedDocs.length, 'sources after reranking');
       return sortedDocs;
     }
 
@@ -653,10 +666,16 @@ class SearchOrchestrator implements SearchOrchestratorType {
         }
       }));
 
-      // Emit final results
+      // Emit final results with transparency about source count
+      const maxSources = this.config.maxSources || 15;
       this.emitter.emit('data', JSON.stringify({
         type: 'sources',
         data: sources,
+        metadata: {
+          totalFound: sources.length,
+          maxDisplayed: maxSources,
+          mode: 'quick'
+        }
       }));
 
       this.emitter.emit('data', JSON.stringify({
@@ -720,5 +739,5 @@ class SearchOrchestrator implements SearchOrchestratorType {
   }
 }
 
-export default SearchOrchestrator;
-export { SearchOrchestrator }; 
+export default QuickSearchOrchestrator;
+export { QuickSearchOrchestrator }; 

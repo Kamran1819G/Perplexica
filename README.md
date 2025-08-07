@@ -157,9 +157,43 @@ Want to know more about its architecture and how it works? You can read it [here
 ## Features
 
 - **Local LLMs**: You can make use local LLMs such as Llama3 and Mixtral using Ollama.
-- **Two Main Modes:**
-  - **Copilot Mode:** (In development) Boosts search by generating different queries to find more relevant internet sources. Like normal search instead of just using the context by SearxNG, it visits the top matches and tries to find relevant sources to the user's query directly from the page.
-  - **Normal Mode:** Processes your query and performs a web search.
+- **Advanced Search Modes:** Choose from three powerful search modes tailored to different needs:
+
+### 🔍 Search Modes Comparison
+
+| Feature | Quick Search ⚡ | Pro Search ✨ | **Ultra Search 🧠** |
+|---------|----------------|---------------|---------------------|
+| **Search Agents** | 1 | 4-6 | **12 Parallel** |
+| **Max Sources** | 15 | 25 | **50** |
+| **Research Depth** | Basic | Advanced | **PhD-Level** |
+| **Cross-Validation** | ❌ | Limited | **✅ Full Loops** |
+| **Dynamic Replanning** | ❌ | ❌ | **✅ Every 45s** |
+| **Expert Sourcing** | ❌ | ✅ | **✅ Enhanced** |
+| **Research Time** | ~10s | 2-4min | **2-4min+** |
+| **Context Analysis** | Basic | Good | **Comprehensive** |
+| **Best For** | Quick answers | In-depth research | Academic/Professional research |
+
+#### ⚡ **Quick Search**
+- Fast web search with immediate results
+- Perfect for simple queries and quick fact-checking
+- Single search agent for rapid response
+
+#### ✨ **Pro Search** 
+- Deep research with comprehensive analysis
+- Multiple search queries for thorough coverage
+- Enhanced source ranking and analysis
+
+#### 🧠 **Ultra Search** (New!)
+- PhD-level research with parallel agents and cross-validation
+- 12 parallel research agents working simultaneously
+- Cross-validation loops to verify information accuracy
+- Dynamic replanning every 45 seconds based on findings
+- Comprehensive research covering 8-12 specialized angles:
+  - Contextual Foundation & Historical Context
+  - Expert Perspectives & Comparative Analysis
+  - Technical Deep-Dive & Case Studies
+  - Future Implications & Critical Assessment
+
 - **Web Search:** Perplexica searches across the entire web to find the best and most relevant results for your queries.
 - **Current Information:** Some search tools might give you outdated info because they use data from crawling bots and convert them into embeddings and store them in a index. Unlike them, Perplexica uses SearxNG, a metasearch engine to get the results and rerank and get the most relevant source out of it, ensuring you always get the latest information without the overhead of daily data updates.
 - **API**: Integrate Perplexica into your existing applications and make use of its capibilities.
