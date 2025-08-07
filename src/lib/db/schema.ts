@@ -10,6 +10,7 @@ export const messages = sqliteTable('messages', {
   metadata: text('metadata', {
     mode: 'json',
   }),
+  createdAt: text('createdAt').notNull().default(sql`datetime('now')`),
 }, (table) => ({
   // Add indexes for better query performance
   chatIdIdx: index('chat_id_idx').on(table.chatId),
@@ -17,6 +18,9 @@ export const messages = sqliteTable('messages', {
   roleIdx: index('role_idx').on(table.role),
   // Composite index for common queries
   chatRoleIdx: index('chat_role_idx').on(table.chatId, table.role),
+  // Add index for sorting by creation date
+  createdAtIdx: index('created_at_idx').on(table.createdAt),
+
 }));
 
 interface File {

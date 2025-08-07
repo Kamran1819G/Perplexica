@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "235ee174-7e86-485c-979c-8a62b2c92604",
-  "prevId": "ef3a044b-0f34-40b5-babb-2bb3a909ba27",
+  "id": "3dd46272-aead-4f17-a313-c495dcb53167",
+  "prevId": "1bb630d4-28c6-4fff-85bf-c2090602d1cc",
   "tables": {
     "chats": {
       "name": "chats",
@@ -37,7 +37,15 @@
           "default": "'[]'"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "created_at_idx": {
+          "name": "created_at_idx",
+          "columns": [
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -87,9 +95,54 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "datetime('now')"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "chat_id_idx": {
+          "name": "chat_id_idx",
+          "columns": [
+            "chatId"
+          ],
+          "isUnique": false
+        },
+        "message_id_idx": {
+          "name": "message_id_idx",
+          "columns": [
+            "messageId"
+          ],
+          "isUnique": false
+        },
+        "role_idx": {
+          "name": "role_idx",
+          "columns": [
+            "type"
+          ],
+          "isUnique": false
+        },
+        "chat_role_idx": {
+          "name": "chat_role_idx",
+          "columns": [
+            "chatId",
+            "type"
+          ],
+          "isUnique": false
+        },
+        "created_at_idx": {
+          "name": "created_at_idx",
+          "columns": [
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

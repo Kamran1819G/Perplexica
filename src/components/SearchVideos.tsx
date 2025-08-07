@@ -1,8 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-import { PlayCircle, PlayIcon, PlusIcon, VideoIcon, Loader2 } from 'lucide-react';
+import { PlayCircle, PlayIcon, PlusIcon, VideoIcon, Loader2, X } from 'lucide-react';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import Lightbox, { GenericSlide, VideoSlide } from 'yet-another-react-lightbox';
-import 'yet-another-react-lightbox/styles.css';
 import { Message } from './ChatWindow';
 import Masonry from './ui/Masonry/Masonry';
 
@@ -13,17 +11,64 @@ type Video = {
   iframe_src: string;
 };
 
-declare module 'yet-another-react-lightbox' {
-  export interface VideoSlide extends GenericSlide {
-    type: 'video-slide';
-    src: string;
-    iframe_src: string;
-  }
+// Custom Video Modal Component
+const VideoModal = ({ 
+  isOpen, 
+  onClose, 
+  video 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  video: Video | null; 
+}) => {
+  if (!isOpen || !video) return null;
 
-  interface SlideTypes {
-    'video-slide': VideoSlide;
-  }
-}
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="relative w-full max-w-4xl mx-4 bg-light-secondary dark:bg-dark-secondary rounded-2xl shadow-xl border border-light-200 dark:border-dark-200">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-light-200 dark:border-dark-200">
+          <h3 className="text-lg font-semibold text-black dark:text-white truncate pr-4">
+            {video.title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-2 text-black/70 dark:text-white/70 rounded-xl hover:bg-light-100 dark:hover:bg-dark-100 transition duration-200 hover:text-black dark:hover:text-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        {/* Video Player */}
+        <div className="relative w-full aspect-video">
+          <iframe
+            src={video.iframe_src}
+            className="w-full h-full rounded-b-2xl"
+            title={video.title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        
+        {/* Footer */}
+        <div className="p-6 border-t border-light-200 dark:border-dark-200">
+          <a
+            href={video.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-2 text-[#24A0ED] hover:text-[#1e8bd8] text-sm font-medium transition-colors duration-200"
+          >
+            <span>Watch on original site</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SearchVideos = ({
   query,
@@ -37,9 +82,8 @@ const SearchVideos = ({
   const [videos, setVideos] = useState<Video[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [slides, setSlides] = useState<VideoSlide[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
@@ -110,11 +154,6 @@ const SearchVideos = ({
         const cachedResults = getCachedResults(currentQuery);
         if (cachedResults) {
           setVideos(cachedResults.videos);
-          setSlides(cachedResults.videos.map((video: Video) => ({
-            type: 'video-slide',
-            iframe_src: video.iframe_src,
-            src: video.img_src,
-          })));
           setLoading(false);
           return;
         }
@@ -157,14 +196,6 @@ const SearchVideos = ({
         setCachedResults(currentQuery, newVideos, total);
         setTotalResults(total);
       }
-
-      // Update slides for lightbox
-      const allVideos = isLoadMore ? [...(videos || []), ...newVideos] : newVideos;
-      setSlides(allVideos.map((video: Video) => ({
-        type: 'video-slide',
-        iframe_src: video.iframe_src,
-        src: video.img_src,
-      })));
       
     } catch (error) {
       console.error('Error searching videos:', error);
@@ -211,13 +242,21 @@ const SearchVideos = ({
 
   const handleVideoClick = (itemId: string) => {
     const index = parseInt(itemId);
-    setOpen(true);
-    setCurrentIndex(index);
+    const video = videos?.[index];
+    if (video) {
+      setSelectedVideo(video);
+      setIsModalOpen(true);
+    }
   };
 
   const handleRetry = () => {
     searchCache.current.delete(query.trim());
     searchVideos();
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedVideo(null);
   };
 
   return (
@@ -283,11 +322,11 @@ const SearchVideos = ({
             </div>
           )}
           
-          <Lightbox 
-            open={open} 
-            close={() => setOpen(false)} 
-            slides={slides}
-            index={currentIndex}
+          {/* Custom Video Modal */}
+          <VideoModal 
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            video={selectedVideo}
           />
         </>
       )}

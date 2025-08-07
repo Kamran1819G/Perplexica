@@ -12,7 +12,7 @@ import { getSuggestions } from '@/lib/actions';
 import { Settings } from 'lucide-react';
 import Link from 'next/link';
 import NextError from 'next/error';
-import PersonalizationStatus from './PersonalizationStatus';
+
 
 export type Message = {
   messageId: string;
@@ -771,7 +771,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
               files={files}
               setFiles={setFiles}
             />
-            <PersonalizationStatus className="absolute bottom-4 left-4" />
+
           </>
         ) : (
           <EmptyChat

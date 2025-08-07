@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "ef3a044b-0f34-40b5-babb-2bb3a909ba27",
+  "id": "1bb630d4-28c6-4fff-85bf-c2090602d1cc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chats": {
@@ -28,13 +28,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "focusMode": {
-          "name": "focusMode",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "files": {
           "name": "files",
           "type": "text",
@@ -44,7 +37,15 @@
           "default": "'[]'"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "created_at_idx": {
+          "name": "created_at_idx",
+          "columns": [
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -96,7 +97,37 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "chat_id_idx": {
+          "name": "chat_id_idx",
+          "columns": [
+            "chatId"
+          ],
+          "isUnique": false
+        },
+        "message_id_idx": {
+          "name": "message_id_idx",
+          "columns": [
+            "messageId"
+          ],
+          "isUnique": false
+        },
+        "role_idx": {
+          "name": "role_idx",
+          "columns": [
+            "type"
+          ],
+          "isUnique": false
+        },
+        "chat_role_idx": {
+          "name": "chat_role_idx",
+          "columns": [
+            "chatId",
+            "type"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
