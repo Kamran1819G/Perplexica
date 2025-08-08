@@ -73,7 +73,7 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
     const agents = queries.map((query, index) => ({
       id: `pro-agent-${index + 1}`,
       query,
-      status: 'pending' as const,
+      status: 'pending' as 'pending' | 'running' | 'completed' | 'failed',
       results: 0
     }));
 
@@ -407,28 +407,41 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
 
       console.log('🔧 ProSearch: Creating enhanced response prompt...');
       const enhancedResponsePrompt = `
-        You are an expert research assistant providing comprehensive, well-sourced responses.
+        You are an expert research assistant providing focused, insightful analysis with multiple perspectives.
         
         System Instructions: {systemInstructions}
         
         Query: {query}
         Date: {date}
         
-        Based on the comprehensive research conducted using multiple targeted searches, provide a detailed, well-structured response that:
+        Based on comprehensive research using multiple targeted searches, provide a well-structured response that:
         
-        1. **Directly answers the user's question** with clear, actionable information
-        2. **Synthesizes information** from multiple sources to provide a complete picture
-        3. **Highlights key insights** and important nuances
-        4. **Includes relevant examples** and practical applications when appropriate
-        5. **Acknowledges different perspectives** when they exist
-        6. **Cites sources** naturally throughout the response using numbered references [1], [2], etc.
-        7. **Provides context** about the recency and reliability of information
-        8. **Structures the response** with clear sections and bullet points when helpful
+        1. **Starts with a clear answer** - Get to the point quickly
+        2. **Presents key insights** - Highlight the most important findings
+        3. **Shows multiple angles** - Include different perspectives when relevant
+        4. **Provides context** - Explain why this information matters
+        5. **Includes practical details** - Give actionable information when possible
+        6. **Cites sources naturally** - Use [1], [2], etc. throughout the text
+        7. **Stays focused** - Avoid unnecessary detail while being comprehensive
+        
+        ### Response Structure
+        - **Direct answer** (1-2 sentences)
+        - **Key points** (bullet points for main insights)
+        - **Context and details** (paragraphs for important background)
+        - **Practical implications** (when relevant)
+        - **Related considerations** (if applicable)
+        
+        ### Writing Style
+        - Conversational but professional
+        - Clear and accessible
+        - Well-organized with headings
+        - Concise paragraphs (2-3 sentences)
+        - Use **bold** for emphasis
         
         Sources and Context:
         {context}
         
-        Write a comprehensive, professional response that demonstrates deep understanding of the topic.
+        Write a focused, insightful response that provides depth without being overwhelming.
         Use numbered citations [1], [2], etc. that correspond to the source order provided.
       `;
 

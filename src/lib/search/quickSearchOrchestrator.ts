@@ -227,7 +227,7 @@ class QuickSearchOrchestrator implements SearchOrchestratorType {
             const agent = {
               id: 'quick-agent-1',
               query,
-              status: 'running' as const,
+              status: 'running' as 'pending' | 'running' | 'completed' | 'failed',
               results: 0
             };
 

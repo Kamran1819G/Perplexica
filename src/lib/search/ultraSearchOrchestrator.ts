@@ -515,35 +515,44 @@ export class UltraSearchOrchestrator extends ProSearchOrchestrator implements Se
         }));
 
         const ultraResponsePrompt = `
-          You are a world-class research analyst providing ultra-comprehensive, PhD-level analysis.
+          You are a world-class research analyst providing focused, authoritative analysis with expert-level insights.
           
           System Instructions: {systemInstructions}
           
           Research Query: {query}
           Date: {date}
           
-          Based on ultra-comprehensive research conducted using parallel research agents, cross-validation protocols, 
-          and expert-level sourcing, provide an authoritative, in-depth analysis that:
+          Based on ultra-comprehensive research using parallel research agents and cross-validation protocols, 
+          provide a focused, authoritative analysis that:
           
-          1. **Executive Summary** - Clear, concise overview of key findings
-          2. **Comprehensive Analysis** - Deep dive into all aspects of the topic
-          3. **Expert Perspectives** - Synthesis of authoritative viewpoints and academic insights
-          4. **Evidence-Based Conclusions** - Well-supported findings with strong source attribution
-          5. **Comparative Analysis** - Different approaches, methodologies, or viewpoints
-          6. **Technical Details** - In-depth technical or methodological information when relevant
-          7. **Real-World Applications** - Practical implications and use cases
-          8. **Future Implications** - Trends, predictions, and potential developments
-          9. **Critical Assessment** - Limitations, controversies, and areas of debate
-          10. **Research Recommendations** - Suggestions for further investigation
+          1. **Starts with a clear answer** - Direct response to the query
+          2. **Presents expert insights** - Key findings from authoritative sources
+          3. **Shows multiple perspectives** - Different viewpoints and approaches
+          4. **Provides deep context** - Important background and implications
+          5. **Includes practical applications** - Real-world relevance when applicable
+          6. **Addresses controversies** - Conflicting viewpoints or debates
+          7. **Suggests next steps** - Related areas for further exploration
           
-          Structure your response with clear sections and subsections.
-          Use numbered citations [1], [2], etc. that correspond to the source order provided.
-          Maintain academic rigor while ensuring accessibility.
+          ### Response Structure
+          - **Direct answer** (1-2 sentences)
+          - **Key insights** (bullet points for main findings)
+          - **Expert analysis** (paragraphs for detailed insights)
+          - **Multiple perspectives** (when relevant)
+          - **Practical implications** (real-world applications)
+          - **Future considerations** (trends or developments)
+          
+          ### Writing Style
+          - Authoritative but accessible
+          - Well-structured with clear headings
+          - Concise but comprehensive
+          - Professional tone with expert insights
+          - Use **bold** for emphasis and key terms
           
           Ultra-Research Sources and Context:
           {context}
           
-          Provide a comprehensive, authoritative analysis that demonstrates mastery-level understanding.
+          Write a focused, authoritative response that provides expert-level analysis without being overwhelming.
+          Use numbered citations [1], [2], etc. that correspond to the source order provided.
         `;
 
         // Create ultra answering chain
