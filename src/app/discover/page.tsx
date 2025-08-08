@@ -6,10 +6,10 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/useTranslation';
-import WeatherWidget from '@/components/WeatherWidget';
-import MarketOutlookWidget from '@/components/MarketOutlookWidget';
-import TrendingCompaniesWidget from '@/components/TrendingCompaniesWidget';
-import MarketNewsWidget from '@/components/MarketNewsWidget';
+import WeatherWidget from '@/components/widgets/WeatherWidget';
+import MarketOutlookWidget from '@/components/widgets/MarketOutlookWidget';
+import TrendingCompaniesWidget from '@/components/widgets/TrendingCompaniesWidget';
+import MarketNewsWidget from '@/components/widgets/MarketNewsWidget';
 
 interface Discover {
   title: string;
@@ -27,7 +27,7 @@ interface Interest {
 // Utility function to extract source name from URL
 const getSourceName = (url: string): string => {
   try {
-    const domain = url.replace(/.+\/\/|www.|\..+/g, '');
+    const domain = url.replace(/.+\/\/|www\.|\..+/g, '');
     
     // Map common domains to more readable names
     const domainMap: { [key: string]: string } = {

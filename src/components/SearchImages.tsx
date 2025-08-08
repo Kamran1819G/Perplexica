@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { Message } from './ChatWindow';
-import Masonry from '@/blocks/Components/Masonry/Masonry';
+import Masonry from '@/components/ui/masonry/Masonry';
 
 type Image = {
   url: string;

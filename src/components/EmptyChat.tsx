@@ -2,8 +2,8 @@ import { Settings } from 'lucide-react';
 import EmptyChatMessageInput from './EmptyChatMessageInput';
 import { File } from './ChatWindow';
 import Link from 'next/link';
-import WeatherWidget from './WeatherWidget';
-import NewsArticleWidget from './NewsArticleWidget';
+import WeatherWidget from '@/components/widgets/WeatherWidget';
+import NewsArticleWidget from '@/components/widgets/NewsArticleWidget';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const EmptyChat = ({

@@ -134,7 +134,7 @@ export default function SearchStepper({
 }: SearchStepperProps) {
   const [stepHeights, setStepHeights] = useState<number[]>([]);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const modeConfig = getModeConfig(mode);
+  // Header removed: modeConfig not needed here
 
   // Measure step heights after render
   useEffect(() => {
@@ -146,19 +146,6 @@ export default function SearchStepper({
 
   return (
     <div className={`relative ${className}`}>
-      {/* Mode Header */}
-      <div className={`mb-6 p-4 rounded-lg ${modeConfig.bgColor} border ${modeConfig.borderColor}`}>
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-lg text-white" style={{ backgroundColor: modeConfig.accentColor }}>
-            <modeConfig.icon size={20} />
-          </div>
-          <div>
-            <h3 className={`font-semibold ${modeConfig.textColor}`}>{modeConfig.name}</h3>
-            <p className="text-sm text-black/70 dark:text-white/70">{modeConfig.description}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Steps container */}
       <div className="flex flex-col space-y-4">
         {React.Children.map(children, (child, index) => {

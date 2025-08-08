@@ -8,6 +8,6 @@
 	"watermark": true,
 	"configFiles": {},
 	"paths": {
-		"*": "./src/blocks"
+		"*": "./src/components/ui"
 	}
 }

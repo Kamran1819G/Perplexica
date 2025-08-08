@@ -208,4 +208,4 @@ const MarketOutlookWidget: React.FC = () => {
   );
 };
 
-export default MarketOutlookWidget; 
+export default MarketOutlookWidget;

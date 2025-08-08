@@ -185,4 +185,4 @@ const TrendingCompaniesWidget: React.FC = () => {
   );
 };
 
-export default TrendingCompaniesWidget; 
+export default TrendingCompaniesWidget;

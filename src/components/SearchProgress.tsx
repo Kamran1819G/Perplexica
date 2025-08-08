@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Search, 
   Brain, 
@@ -22,9 +22,6 @@ import {
   Lightbulb,
   Zap,
   ExternalLink,
-  Play,
-  Pause,
-  RotateCcw
 } from 'lucide-react';
 
 interface SearchProgressProps {
@@ -164,43 +161,8 @@ const SearchProgress: React.FC<SearchProgressProps> = ({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-light-secondary dark:border-dark-secondary overflow-hidden">
-      {/* Header */}
-      <div className={`p-6 ${modeConfig.bgColor} border-b ${modeConfig.borderColor}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg text-white" style={{ backgroundColor: modeConfig.accentColor }}>
-              <modeConfig.icon size={20} />
-            </div>
-            <div>
-              <h3 className={`font-semibold ${modeConfig.textColor}`}>{modeConfig.name}</h3>
-              <p className="text-sm text-black/70 dark:text-white/70">{modeConfig.description}</p>
-            </div>
-          </div>
-          
-          {/* Controls */}
-          <div className="flex items-center space-x-2">
-            {(onPause || onResume) && (
-              <button
-                onClick={handlePauseResume}
-                className={`p-2 rounded-lg ${modeConfig.accent} text-white hover:opacity-80 transition-opacity`}
-                title={isPaused ? 'Resume' : 'Pause'}
-              >
-                {isPaused ? <Play size={16} /> : <Pause size={16} />}
-              </button>
-            )}
-            {onCancel && (
-              <button
-                onClick={onCancel}
-                className="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-                title="Cancel"
-              >
-                <RotateCcw size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-        
-        {/* Progress Bar */}
+      {/* Progress Bar */}
+      <div className={`p-4 ${modeConfig.bgColor} border-b ${modeConfig.borderColor}`}>
         {progress?.progress && progress.progress > 0 && (
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between text-sm">

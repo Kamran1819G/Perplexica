@@ -32,4 +32,4 @@ API_KEY = ""
 API_URL = "" # LM Studio API URL - http://host.docker.internal:1234
 
 [API_ENDPOINTS]
-SEARXNG = "" # SearxNG API URL - http://localhost:32768
+SEARXNG = "http://localhost:4000" # SearxNG API URL - http://localhost:4000

@@ -195,4 +195,4 @@ const MarketNewsWidget: React.FC = () => {
   );
 };
 
-export default MarketNewsWidget; 
+export default MarketNewsWidget;
