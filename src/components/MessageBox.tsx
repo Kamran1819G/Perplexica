@@ -33,6 +33,7 @@ import { useSpeech } from 'react-text-to-speech';
 import ThinkBox from './ThinkBox';
 import SearchSteps from './SearchSteps';
 import SearchStepper, { SearchProgressStep, SourcesProgressStep, BasicProgressStep } from './SearchStepper';
+import SearchProgress from './SearchProgress';
 
 const ThinkTagProcessor = ({ children }: { children: React.ReactNode }) => {
   return <ThinkBox content={children as string} />;
@@ -48,7 +49,8 @@ const StepsComponent = ({
   query,
   currentStep,
   steps,
-  progress
+  progress,
+  mode = 'quick'
 }: { 
   loading: boolean;
   sources?: any[];
@@ -61,6 +63,7 @@ const StepsComponent = ({
     details: string;
     progress: number;
   };
+  mode?: 'quick' | 'pro' | 'ultra';
 }) => {
   // Convert sources to the format expected by SourcesStep
   const formattedSources = useMemo(() => sources?.map(source => ({
@@ -204,17 +207,19 @@ const StepsComponent = ({
 
   return (
     <div className="w-full">
-      <SearchStepper currentStep={currentStepNumber}>
+      <SearchStepper currentStep={currentStepNumber} mode={mode}>
         {visibleSteps.includes('search') && (
           <SearchProgressStep 
             query={query} 
             progress={getStepProgress('search')}
+            mode={mode}
           />
         )}
         {visibleSteps.includes('sources') && (
           <SourcesProgressStep 
             sources={formattedSources}
             progress={getStepProgress('sources')}
+            mode={mode}
           />
         )}
         {visibleSteps.includes('generating') && (
@@ -222,6 +227,7 @@ const StepsComponent = ({
             progress={getStepProgress('generating')}
             isActive={isStepActive('generating')}
             isComplete={isStepCompleted('generating')}
+            mode={mode}
           >
             Generating answer...
           </BasicProgressStep>
@@ -230,6 +236,7 @@ const StepsComponent = ({
           <BasicProgressStep 
             progress={getStepProgress('finished')}
             isComplete={!loading || isStepCompleted('finished')}
+            mode={mode}
           >
             Finished
           </BasicProgressStep>
@@ -266,6 +273,53 @@ const MessageBox = ({
   const [showSteps, setShowSteps] = useState(false);
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set(['answer']));
   const [availableTabs, setAvailableTabs] = useState<Set<TabType>>(new Set(['answer', 'steps']));
+
+  // Determine the search mode based on message properties
+  const getSearchMode = (): 'quick' | 'pro' | 'ultra' => {
+    if (message.isOrchestrator) {
+      // Check for ultra-specific properties
+      if (message.progress?.step?.includes('ultra_') || 
+          message.progress?.step?.includes('ultra_agents_init') ||
+          message.progress?.step?.includes('ultra_batch_search') ||
+          message.progress?.step?.includes('ultra_processing') ||
+          message.progress?.step?.includes('ultra_generating') ||
+          message.progress?.step?.includes('ultra_complete')) {
+        return 'ultra';
+      }
+      // Check for pro-specific properties
+      if (message.progress?.step?.includes('pro_') || 
+          message.progress?.step?.includes('multi_search') ||
+          message.progress?.step?.includes('query_generation') ||
+          message.progress?.step?.includes('queries_ready')) {
+        return 'pro';
+      }
+      // Default to quick for orchestrator messages
+      return 'quick';
+    }
+    return 'quick';
+  };
+
+  const searchMode = getSearchMode();
+
+  // Convert sources to the format expected by SearchProgress
+  const formattedSources = useMemo(() => message.sources?.map(source => ({
+    title: source.metadata?.title || 'Untitled',
+    url: source.metadata?.url || '',
+    icon: `https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`
+  })) || [], [message.sources]);
+
+  // Convert agents data if available
+  const agents = useMemo(() => {
+    if (message.agents) {
+      return message.agents.map((agent, index) => ({
+        id: agent.id || `agent-${index + 1}`,
+        status: agent.status || 'pending',
+        query: agent.query || '',
+        results: agent.results || 0
+      }));
+    }
+    return [];
+  }, [message.agents]);
 
   // Track content availability and manage tab visibility
   useEffect(() => {
@@ -423,7 +477,7 @@ const MessageBox = ({
             {loading && isLast ? (
               <div className="flex flex-row items-center space-x-2">
                 <Disc3
-                  className="text-black dark:text-white animate-spin"
+                  className="text-[#24A0ED] animate-spin"
                   size={20}
                 />
                 <span className="text-black dark:text-white">Generating answer...</span>
@@ -617,6 +671,16 @@ const MessageBox = ({
               <SearchSteps 
                 steps={message.orchestratorSteps}
                 isVisible={true}
+                mode={searchMode}
+                progress={message.progress}
+              />
+            ) : loading && isLast ? (
+              <SearchProgress
+                mode={searchMode}
+                progress={message.progress}
+                agents={agents}
+                sources={formattedSources}
+                isVisible={true}
               />
             ) : (
               <StepsComponent 
@@ -626,6 +690,7 @@ const MessageBox = ({
                 currentStep={message.currentStep}
                 steps={message.steps}
                 progress={message.progress}
+                mode={searchMode}
               />
             )}
           </div>

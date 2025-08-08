@@ -37,6 +37,14 @@ export type Message = {
   ultraQueries?: string[];
   ultraAgents?: any[];
   
+  // Search agents data
+  agents?: Array<{
+    id: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    query: string;
+    results: number;
+  }>;
+  
   // Real-time progress tracking
   progress?: {
     step: string;
@@ -527,6 +535,50 @@ const ChatWindow = ({ id }: { id?: string }) => {
               return {
                 ...msg,
                 proQueries: data.data,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
+
+      // Handle agents data
+      if (data.type === 'agents') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              return {
+                ...msg,
+                agents: data.data,
+                isOrchestrator: true,
+              };
+            }
+            return msg;
+          })
+        );
+        return;
+      }
+
+      // Handle agent updates
+      if (data.type === 'agentUpdate') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === messageId) {
+              const existingAgents = msg.agents || [];
+              const updatedAgents = existingAgents.map((agent) => 
+                agent.id === data.data.id ? { ...agent, ...data.data } : agent
+              );
+              
+              // Add new agent if it doesn't exist
+              if (!existingAgents.find((agent) => agent.id === data.data.id)) {
+                updatedAgents.push(data.data);
+              }
+              
+              return {
+                ...msg,
+                agents: updatedAgents,
+                isOrchestrator: true,
               };
             }
             return msg;

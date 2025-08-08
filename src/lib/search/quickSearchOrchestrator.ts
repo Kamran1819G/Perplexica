@@ -223,6 +223,20 @@ class QuickSearchOrchestrator implements SearchOrchestratorType {
               return cached;
             }
 
+            // Initialize single agent for Quick search
+            const agent = {
+              id: 'quick-agent-1',
+              query,
+              status: 'running' as const,
+              results: 0
+            };
+
+            // Emit agent data
+            this.emitter.emit('data', JSON.stringify({
+              type: 'agents',
+              data: [agent]
+            }));
+
             const searchChain = RunnableSequence.from([
               PromptTemplate.fromTemplate(this.config.queryGeneratorPrompt),
               llm,
@@ -284,7 +298,24 @@ class QuickSearchOrchestrator implements SearchOrchestratorType {
               }),
             ]);
 
-            return await searchChain.invoke({ query });
+            const searchResult = await searchChain.invoke({ query });
+
+            // Update agent status to completed
+            agent.status = 'completed';
+            agent.results = searchResult.docs?.length || 0;
+
+            // Emit agent completion update
+            this.emitter.emit('data', JSON.stringify({
+              type: 'agentUpdate',
+              data: {
+                id: agent.id,
+                status: agent.status,
+                query: agent.query,
+                results: agent.results
+              }
+            }));
+
+            return searchResult;
           },
           'quick_search',
           {

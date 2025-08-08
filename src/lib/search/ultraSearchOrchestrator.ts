@@ -117,6 +117,17 @@ export class UltraSearchOrchestrator extends ProSearchOrchestrator implements Se
           progress: 25
         }
       }));
+
+      // Emit initial agents data
+      emitter.emit('data', JSON.stringify({
+        type: 'agents',
+        data: this.searchAgents.map(agent => ({
+          id: agent.id,
+          status: agent.status,
+          query: agent.query,
+          results: 0
+        }))
+      }));
     }
 
     // Execute searches in parallel batches
@@ -149,6 +160,19 @@ export class UltraSearchOrchestrator extends ProSearchOrchestrator implements Se
         agent.status = 'running';
         agent.startTime = new Date();
 
+        // Emit agent status update
+        if (emitter) {
+          emitter.emit('data', JSON.stringify({
+            type: 'agentUpdate',
+            data: {
+              id: agent.id,
+              status: agent.status,
+              query: agent.query,
+              results: 0
+            }
+          }));
+        }
+
         try {
           // Use multiple search engines for comprehensive coverage
           const searchResults = await searchSearxng(query, {
@@ -178,11 +202,38 @@ export class UltraSearchOrchestrator extends ProSearchOrchestrator implements Se
           agent.status = 'completed';
           agent.endTime = new Date();
 
+          // Emit agent completion update
+          if (emitter) {
+            emitter.emit('data', JSON.stringify({
+              type: 'agentUpdate',
+              data: {
+                id: agent.id,
+                status: agent.status,
+                query: agent.query,
+                results: documents.length
+              }
+            }));
+          }
+
           return documents;
         } catch (error) {
           console.error(`Ultra Search Agent ${agent.id} failed:`, error);
           agent.status = 'failed';
           agent.endTime = new Date();
+
+          // Emit agent failure update
+          if (emitter) {
+            emitter.emit('data', JSON.stringify({
+              type: 'agentUpdate',
+              data: {
+                id: agent.id,
+                status: agent.status,
+                query: agent.query,
+                results: 0
+              }
+            }));
+          }
+
           return [];
         }
       });

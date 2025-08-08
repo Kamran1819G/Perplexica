@@ -69,9 +69,26 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
   ): Promise<Document[]> {
     const allDocuments: Document[] = [];
     
+    // Initialize agents for Pro search
+    const agents = queries.map((query, index) => ({
+      id: `pro-agent-${index + 1}`,
+      query,
+      status: 'pending' as const,
+      results: 0
+    }));
+
+    if (emitter) {
+      // Emit initial agents data
+      emitter.emit('data', JSON.stringify({
+        type: 'agents',
+        data: agents
+      }));
+    }
+    
     for (let i = 0; i < queries.length; i++) {
       const query = queries[i];
       const progressPercent = 30 + ((i / queries.length) * 35); // 30-65% for searches
+      const agent = agents[i];
       
       if (emitter) {
         emitter.emit('data', JSON.stringify({
@@ -81,6 +98,18 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
             message: `Searching: ${query.substring(0, 50)}${query.length > 50 ? '...' : ''}`,
             details: `Query ${i + 1} of ${queries.length}`,
             progress: Math.round(progressPercent)
+          }
+        }));
+
+        // Update agent status to running
+        agent.status = 'running';
+        emitter.emit('data', JSON.stringify({
+          type: 'agentUpdate',
+          data: {
+            id: agent.id,
+            status: agent.status,
+            query: agent.query,
+            results: 0
           }
         }));
       }
@@ -98,6 +127,21 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
             }));
           }
           allDocuments.push(...cached.documents);
+          
+          // Update agent status to completed
+          agent.status = 'completed';
+          agent.results = cached.documents.length;
+          if (emitter) {
+            emitter.emit('data', JSON.stringify({
+              type: 'agentUpdate',
+              data: {
+                id: agent.id,
+                status: agent.status,
+                query: agent.query,
+                results: agent.results
+              }
+            }));
+          }
           continue;
         }
 
@@ -126,6 +170,10 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
 
         allDocuments.push(...documents);
 
+        // Update agent status to completed
+        agent.status = 'completed';
+        agent.results = documents.length;
+
         if (emitter && documents.length > 0) {
           this.emitter.emit('data', JSON.stringify({
             type: 'progress',
@@ -136,12 +184,28 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
               progress: Math.round(progressPercent + 2)
             }
           }));
+
+          // Emit agent completion update
+          emitter.emit('data', JSON.stringify({
+            type: 'agentUpdate',
+            data: {
+              id: agent.id,
+              status: agent.status,
+              query: agent.query,
+              results: agent.results
+            }
+          }));
         }
         
         // Brief delay between searches to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`Pro search failed for query: ${query}`, error);
+        
+        // Update agent status to failed
+        agent.status = 'failed';
+        agent.results = 0;
+        
         if (emitter) {
           this.emitter.emit('data', JSON.stringify({
             type: 'progress',
@@ -150,6 +214,17 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
               message: 'Search query failed, continuing...',
               details: `Error with query ${i + 1}, trying next`,
               progress: Math.round(progressPercent)
+            }
+          }));
+
+          // Emit agent failure update
+          emitter.emit('data', JSON.stringify({
+            type: 'agentUpdate',
+            data: {
+              id: agent.id,
+              status: agent.status,
+              query: agent.query,
+              results: agent.results
             }
           }));
         }
