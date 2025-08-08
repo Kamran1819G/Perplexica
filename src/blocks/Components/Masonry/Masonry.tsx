@@ -1,3 +1,7 @@
+/*
+	Installed from https://reactbits.dev/ts/tailwind/
+*/
+
 import React, {
   useEffect,
   useLayoutEffect,
@@ -144,18 +148,7 @@ const Masonry: React.FC<MasonryProps> = ({
   };
 
   useEffect(() => {
-    // Reduce preloading delay for faster initial render
-    const preloadPromise = preloadImages(items.map((i) => i.img));
-    
-    // Show content immediately while preloading in background
-    setImagesReady(true);
-    
-    // Update when preloading is complete for better quality
-    preloadPromise.then(() => {
-      // Force a re-render to show high-quality images
-      setImagesReady(false);
-      setTimeout(() => setImagesReady(true), 50);
-    });
+    preloadImages(items.map((i) => i.img)).then(() => setImagesReady(true));
   }, [items]);
 
   const grid = useMemo<GridItem[]>(() => {
@@ -201,9 +194,9 @@ const Masonry: React.FC<MasonryProps> = ({
             opacity: 1,
             ...animProps,
             ...(blurToFocus && { filter: "blur(0px)" }),
-            duration: 0.4, // Reduced from 0.8 for faster animation
-            ease: "power2.out", // Changed to power2.out for snappier feel
-            delay: index * (stagger * 0.5), // Reduced stagger delay
+            duration: 0.8,
+            ease: "power3.out",
+            delay: index * stagger,
           }
         );
       } else {
@@ -248,14 +241,20 @@ const Masonry: React.FC<MasonryProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full min-h-[600px]">
+    <div ref={containerRef} className="relative w-full h-full">
       {grid.map((item) => (
         <div
           key={item.id}
           data-key={item.id}
           className="absolute box-content"
           style={{ willChange: "transform, width, height, opacity" }}
-          onClick={() => onItemClick ? onItemClick(item.id) : window.open(item.url, "_blank", "noopener")}
+          onClick={() => {
+            if (onItemClick) {
+              onItemClick(item.id);
+            } else {
+              window.open(item.url, "_blank", "noopener");
+            }
+          }}
           onMouseEnter={(e) => handleMouseEnter(item.id, e.currentTarget)}
           onMouseLeave={(e) => handleMouseLeave(item.id, e.currentTarget)}
         >

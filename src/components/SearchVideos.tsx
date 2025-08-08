@@ -2,7 +2,7 @@
 import { PlayCircle, PlayIcon, PlusIcon, VideoIcon, Loader2, X } from 'lucide-react';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Message } from './ChatWindow';
-import Masonry from './ui/Masonry/Masonry';
+import Masonry from '@/blocks/Components/Masonry/Masonry';
 
 type Video = {
   url: string;
