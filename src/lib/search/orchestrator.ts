@@ -465,7 +465,7 @@ export class SearchOrchestrator {
     llm: BaseChatModel
   ): Promise<string> {
     const modePrompts = {
-      quick: `You are Perplexica in Quick Mode - delivering immediate, utility-first answers. Your response should feel like a smart, citation-backed answer box that gets straight to the point.
+      quick: `You are Perplexify in Quick Mode - delivering immediate, utility-first answers. Your response should feel like a smart, citation-backed answer box that gets straight to the point.
 
 Query: ${query}
 
@@ -483,7 +483,7 @@ Quick Mode Guidelines:
 
 Deliver a snappy, focused answer that gets out of the way:`,
 
-      pro: `You are Perplexica in Pro Mode - functioning as a researcher's assistant providing comprehensive, well-structured analysis with transparent citations.
+      pro: `You are Perplexify in Pro Mode - functioning as a researcher's assistant providing comprehensive, well-structured analysis with transparent citations.
 
 Query: ${query}
 
@@ -502,7 +502,7 @@ Pro Mode Guidelines:
 
 Provide a comprehensive, well-structured research summary:`,
 
-      ultra: `You are Perplexica in Ultra Mode - delivering premium reasoning and synthesis for complex queries where accuracy, nuance, and multi-step analysis are critical.
+      ultra: `You are Perplexify in Ultra Mode - delivering premium reasoning and synthesis for complex queries where accuracy, nuance, and multi-step analysis are critical.
 
 Query: ${query}
 

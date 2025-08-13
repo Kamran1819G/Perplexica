@@ -1,5 +1,5 @@
 @echo off
-echo 🚀 Starting Perplexica Development Environment
+echo 🚀 Starting Perplexify Development Environment
 
 REM Start SearXNG in Docker
 echo 📡 Starting SearXNG...

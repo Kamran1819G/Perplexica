@@ -1,8 +1,8 @@
-# How does Perplexica work?
+# How does Perplexify work?
 
-Curious about how Perplexica works? Don't worry, we'll cover it here. Before we begin, make sure you've read about the architecture of Perplexica to ensure you understand what it's made up of. Haven't read it? You can read it [here](https://github.com/Kamran1819G/Perplexica/tree/master/docs/architecture/README.md).
+Curious about how Perplexify works? Don't worry, we'll cover it here. Before we begin, make sure you've read about the architecture of Perplexify to ensure you understand what it's made up of. Haven't read it? You can read it [here](https://github.com/Kamran1819G/Perplexify/tree/master/docs/architecture/README.md).
 
-We'll understand how Perplexica works by taking an example of a scenario where a user asks: "How does an A.C. work?". We'll break down the process into steps to make it easier to understand. The steps are as follows:
+We'll understand how Perplexify works by taking an example of a scenario where a user asks: "How does an A.C. work?". We'll break down the process into steps to make it easier to understand. The steps are as follows:
 
 1. The message is sent to the `/api/chat` route where it invokes the search chain.
 2. The chain is now invoked; first, the message is passed to another chain where it first predicts (using the chat history and the question) whether there is a need for sources and searching the web. If there is, it will generate a query (in accordance with the chat history) for searching the web that we'll take up later. If not, the chain will end there, and then the answer generator chain, also known as the response generator, will be started.

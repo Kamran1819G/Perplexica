@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🛑 Stopping Perplexica Development Environment"
+echo "🛑 Stopping Perplexify Development Environment"
 
 # Stop SearXNG Docker container
 echo "📡 Stopping SearXNG..."

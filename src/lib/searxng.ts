@@ -98,7 +98,7 @@ export class SearxngClient {
       const response = await axios.get(url.toString(), {
         timeout: 3000, // Reduced timeout for speed
         headers: {
-          'User-Agent': 'Perplexica/1.11.0-rc1',
+          'User-Agent': 'Perplexify/1.11.0-rc1',
           'Accept': 'application/json',
         },
       });

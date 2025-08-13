@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Make request to SearXNG
     const response = await fetch(searxngApiUrl.toString(), {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Perplexica/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Perplexify/1.0)',
       },
     });
 

@@ -1,4 +1,4 @@
-# 🚀 Perplexica - An AI-powered search engine 🔎 <!-- omit in toc -->
+# 🚀 Perplexify - An AI-powered search engine 🔎 <!-- omit in toc -->
 
 > **Note:** This is a fork of the original [Perplexica project](https://github.com/ItzCrazyKns/Perplexica) by [@ItzCrazyKns](https://github.com/ItzCrazyKns). This fork is maintained separately with additional features, improvements, and independent installation using local build for complete independence from external registries.
 
@@ -13,26 +13,26 @@
 
 ---
 
-## 🚀 How to Run Perplexica
+## 🚀 How to Run Perplexify
 
-There are **3 different ways** to run Perplexica depending on your needs:
+There are **3 different ways** to run Perplexify depending on your needs:
 
 ### 🟢 **Option 1: Production Docker (Recommended for End Users)**
 
-**Best for**: Regular users who want to run Perplexica as a service
+**Best for**: Regular users who want to run Perplexify as a service
 
 **Setup**:
 1. Install Docker Desktop from [here](https://www.docker.com/products/docker-desktop/)
 2. Clone the repository:
    ```bash
-   git clone https://github.com/Kamran1819G/Perplexica.git
-   cd Perplexica
+   git clone https://github.com/Kamran1819G/Perplexify.git
+   cd Perplexify
    ```
 3. Copy the config file:
    ```bash
    cp sample.config.toml config.toml
    ```
-4. Start Perplexica:
+4. Start Perplexify:
    ```bash
    docker compose up --build
    ```
@@ -51,8 +51,8 @@ There are **3 different ways** to run Perplexica depending on your needs:
 1. Install Docker Desktop and Node.js/yarn
 2. Clone the repository:
    ```bash
-   git clone https://github.com/Kamran1819G/Perplexica.git
-   cd Perplexica
+   git clone https://github.com/Kamran1819G/Perplexify.git
+   cd Perplexify
    ```
 3. Copy the config file:
    ```bash
@@ -85,8 +85,8 @@ There are **3 different ways** to run Perplexica depending on your needs:
 1. Install Node.js, SearXNG, and configure it
 2. Clone the repository:
    ```bash
-   git clone https://github.com/Kamran1819G/Perplexica.git
-   cd Perplexica
+   git clone https://github.com/Kamran1819G/Perplexify.git
+   cd Perplexify
    ```
 3. Copy and configure the config file:
    ```bash
@@ -109,7 +109,7 @@ There are **3 different ways** to run Perplexica depending on your needs:
 
 | Use Case | Recommended Option | Why? |
 |----------|-------------------|------|
-| **Just want to use Perplexica** | Option 1: Production Docker | Easiest setup, works out of the box |
+| **Just want to use Perplexify** | Option 1: Production Docker | Easiest setup, works out of the box |
 | **Want to contribute code** | Option 2: Development Setup | Fast development with hot reloading |
 | **Advanced user, no Docker** | Option 3: Manual Installation | Full control over the environment |
 | **Testing/Evaluation** | Option 1: Production Docker | Quick to get started |
@@ -131,8 +131,8 @@ There are **3 different ways** to run Perplexica depending on your needs:
   - [Non-Docker Installation](#non-docker-installation)
   - [Ollama Connection Errors](#ollama-connection-errors)
 - [Using as a Search Engine](#using-as-a-search-engine)
-- [Using Perplexica's API](#using-perplexicas-api)
-- [Expose Perplexica to a network](#expose-perplexica-to-network)
+- [Using Perplexify's API](#using-perplexify's-api)
+- [Expose Perplexify to a network](#expose-perplexify-to-network)
 - [One-Click Deployment](#one-click-deployment)
 - [Support Us](#support-us)
   - [Donations](#donations)
@@ -142,13 +142,13 @@ There are **3 different ways** to run Perplexica depending on your needs:
 
 ## Overview
 
-Perplexica is an open-source AI-powered searching tool or an AI-powered search engine that goes deep into the internet to find answers. Inspired by Perplexity AI, it's an open-source option that not just searches the web but understands your questions. It uses advanced machine learning algorithms like similarity searching and embeddings to refine results and provides clear answers with sources cited.
+Perplexify is an open-source AI-powered searching tool or an AI-powered search engine that goes deep into the internet to find answers. Inspired by Perplexity AI, it's an open-source option that not just searches the web but understands your questions. It uses advanced machine learning algorithms like similarity searching and embeddings to refine results and provides clear answers with sources cited.
 
-Using SearxNG to stay current and fully open source, Perplexica ensures you always get the most up-to-date information without compromising your privacy.
+Using SearxNG to stay current and fully open source, Perplexify ensures you always get the most up-to-date information without compromising your privacy.
 
 **This Fork:** This repository is a fork of the original [Perplexica project](https://github.com/ItzCrazyKns/Perplexica) with additional features, improvements, and an independent installation system using local build for complete independence from external registries. We maintain this fork separately to provide enhanced functionality while staying true to the original project's goals.
 
-Want to know more about its architecture and how it works? You can read it [here](https://github.com/Kamran1819G/Perplexica/tree/master/docs/architecture/README.md).
+Want to know more about its architecture and how it works? You can read it [here](https://github.com/Kamran1819G/Perplexify/tree/master/docs/architecture/README.md).
 
 ## Preview
 
@@ -194,15 +194,15 @@ Want to know more about its architecture and how it works? You can read it [here
   - Technical Deep-Dive & Case Studies
   - Future Implications & Critical Assessment
 
-- **Web Search:** Perplexica searches across the entire web to find the best and most relevant results for your queries.
-- **Current Information:** Some search tools might give you outdated info because they use data from crawling bots and convert them into embeddings and store them in a index. Unlike them, Perplexica uses SearxNG, a metasearch engine to get the results and rerank and get the most relevant source out of it, ensuring you always get the latest information without the overhead of daily data updates.
-- **API**: Integrate Perplexica into your existing applications and make use of its capibilities.
+- **Web Search:** Perplexify searches across the entire web to find the best and most relevant results for your queries.
+- **Current Information:** Some search tools might give you outdated info because they use data from crawling bots and convert them into embeddings and store them in a index. Unlike them, Perplexify uses SearxNG, a metasearch engine to get the results and rerank and get the most relevant source out of it, ensuring you always get the latest information without the overhead of daily data updates.
+- **API**: Integrate Perplexify into your existing applications and make use of its capibilities.
 
 It has many more features like image and video search. Some of the planned features are mentioned in [upcoming features](#upcoming-features).
 
 ## 🤖 Supported AI Models
 
-Perplexica supports a wide range of AI models and providers, giving you flexibility to choose the best model for your needs:
+Perplexify supports a wide range of AI models and providers, giving you flexibility to choose the best model for your needs:
 
 ### 🧠 **Large Language Models (LLMs)**
 - **OpenAI**: GPT-4, GPT-3.5-turbo, and more
@@ -222,7 +222,7 @@ Perplexica supports a wide range of AI models and providers, giving you flexibil
 - **LM Studio**: Local embedding models
 
 ### 🆕 **Latest Gemini 2.5 Models**
-Perplexica now supports the latest Gemini 2.5 models from Google:
+Perplexify now supports the latest Gemini 2.5 models from Google:
 
 - **Gemini 2.5 Pro**: Most powerful thinking model for complex reasoning
 - **Gemini 2.5 Flash**: Best price-performance balance
@@ -232,7 +232,7 @@ For detailed information about Gemini models, see [Gemini Models Documentation](
 
 ## Installation
 
-There are **3 different installation methods** for Perplexica. Choose the one that best fits your needs:
+There are **3 different installation methods** for Perplexify. Choose the one that best fits your needs:
 
 ### 🟢 **Option 1: Production Docker (Recommended for End Users)**
 
@@ -240,8 +240,8 @@ The easiest way to get started. Everything runs in Docker containers.
 
 **Quick Start**:
 ```bash
-git clone https://github.com/Kamran1819G/Perplexica.git
-cd Perplexica
+git clone https://github.com/Kamran1819G/Perplexify.git
+cd Perplexify
 cp sample.config.toml config.toml
 docker compose up --build
 ```
@@ -255,8 +255,8 @@ Hybrid approach: SearXNG in Docker + Next.js on host for fast development.
 
 **Quick Start**:
 ```bash
-git clone https://github.com/Kamran1819G/Perplexica.git
-cd Perplexica
+git clone https://github.com/Kamran1819G/Perplexify.git
+cd Perplexify
 cp sample.config.toml config.toml
 ./dev.sh  # Linux/macOS
 # or
@@ -284,7 +284,7 @@ Full manual setup without Docker dependencies.
 - **Contributors**: Use Option 2 (Development Setup)
 - **Advanced users**: Choose Option 3 (Manual Installation)
 
-See the [installation documentation](https://github.com/Kamran1819G/Perplexica/tree/master/docs/installation) for more information like updating, etc.
+See the [installation documentation](https://github.com/Kamran1819G/Perplexify/tree/master/docs/installation) for more information like updating, etc.
 
 ### Ollama Connection Errors
 
@@ -307,22 +307,22 @@ If you're encountering an Ollama connection error, it is likely due to the backe
 
 ## Using as a Search Engine
 
-If you wish to use Perplexica as an alternative to traditional search engines like Google or Bing, or if you want to add a shortcut for quick access from your browser's search bar, follow these steps:
+If you wish to use Perplexify as an alternative to traditional search engines like Google or Bing, or if you want to add a shortcut for quick access from your browser's search bar, follow these steps:
 
 1. Open your browser's settings.
 2. Navigate to the 'Search Engines' section.
-3. Add a new site search with the following URL: `http://localhost:3000/?q=%s`. Replace `localhost` with your IP address or domain name, and `3000` with the port number if Perplexica is not hosted locally.
-4. Click the add button. Now, you can use Perplexica directly from your browser's search bar.
+3. Add a new site search with the following URL: `http://localhost:3000/?q=%s`. Replace `localhost` with your IP address or domain name, and `3000` with the port number if Perplexify is not hosted locally.
+4. Click the add button. Now, you can use Perplexify directly from your browser's search bar.
 
-## Using Perplexica's API
+## Using Perplexify's API
 
-Perplexica also provides an API for developers looking to integrate its powerful search engine into their own applications. You can run searches, use multiple models and get answers to your queries.
+Perplexify also provides an API for developers looking to integrate its powerful search engine into their own applications. You can run searches, use multiple models and get answers to your queries.
 
-For more details, check out the full documentation [here](https://github.com/Kamran1819G/Perplexica/tree/master/docs/API/SEARCH.md).
+For more details, check out the full documentation [here](https://github.com/Kamran1819G/Perplexify/tree/master/docs/API/SEARCH.md).
 
-## Expose Perplexica to network
+## Expose Perplexify to network
 
-Perplexica runs on Next.js and handles all API requests. It works right away on the same network and stays accessible even with port forwarding.
+Perplexify runs on Next.js and handles all API requests. It works right away on the same network and stays accessible even with port forwarding.
 
 ## One-Click Deployment
 
@@ -361,23 +361,23 @@ kubectl apply -f deploy-template.yaml
 
 ## Contribution
 
-Perplexica is built on the idea that AI and large language models should be easy for everyone to use. If you find bugs or have ideas, please share them in via GitHub Issues. For more information on contributing to Perplexica you can read the [CONTRIBUTING.md](CONTRIBUTING.md) file to learn more about Perplexica and how you can contribute to it.
+Perplexify is built on the idea that AI and large language models should be easy for everyone to use. If you find bugs or have ideas, please share them in via GitHub Issues. For more information on contributing to Perplexify you can read the [CONTRIBUTING.md](CONTRIBUTING.md) file to learn more about Perplexify and how you can contribute to it.
 
 ### 🌍 Language Contributions
 
-We welcome contributions to add new languages or improve existing translations! Perplexica currently supports **12 languages** including RTL support for Arabic.
+We welcome contributions to add new languages or improve existing translations! Perplexify currently supports **12 languages** including RTL support for Arabic.
 
 - **Want to add a new language?** Check out our [Language Contribution Guide](docs/LANGUAGE_CONTRIBUTION.md)
 - **Current languages**: English, Spanish, French, German, Italian, Portuguese, Russian, Japanese, Korean, Chinese, Arabic, Hindi
 - **Need help?** Join our [Discord community](https://discord.gg/EFwsmQDgAu) for translation support
 
-Your contributions help make Perplexica accessible to users worldwide! 🌍
+Your contributions help make Perplexify accessible to users worldwide! 🌍
 
 ## Help and Support
 
 If you have any questions or feedback, please feel free to reach out to us. You can create an issue on GitHub or join our Discord server. There, you can connect with other users, share your experiences and reviews, and receive more personalized help. [Click here](https://discord.gg/EFwsmQDgAu) to join the Discord server. To discuss matters outside of regular support, feel free to contact me on Discord at `Kamran1819G`.
 
-Thank you for exploring Perplexica, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexica and expand its capabilities. We value your feedback and contributions which help us make Perplexica even better. Don't forget to check back for updates and new features!
+Thank you for exploring Perplexify, the AI-powered search engine designed to enhance your search experience. We are constantly working to improve Perplexify and expand its capabilities. We value your feedback and contributions which help us make Perplexify even better. Don't forget to check back for updates and new features!
 
 
 

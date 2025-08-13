@@ -1,6 +1,6 @@
 # 🌍 Language Contribution Guide
 
-Thank you for your interest in contributing to Perplexica's internationalization! This guide will help you add new languages or improve existing translations.
+Thank you for your interest in contributing to Perplexify's internationalization! This guide will help you add new languages or improve existing translations.
 
 ## 📋 Table of Contents
 
@@ -15,7 +15,7 @@ Thank you for your interest in contributing to Perplexica's internationalization
 
 ## Overview
 
-Perplexica uses a modular translation system based on JSON files. All translations are stored in `src/lib/translations/` with separate files for each language. The system supports:
+Perplexify uses a modular translation system based on JSON files. All translations are stored in `src/lib/translations/` with separate files for each language. The system supports:
 
 - **12 languages** currently
 - **RTL support** (Arabic)
@@ -293,8 +293,8 @@ if (newLocale === 'ar') {
 
 ### 1. Fork the Repository
 ```bash
-git clone https://github.com/Kamran1819G/Perplexica.git
-cd Perplexica
+git clone https://github.com/Kamran1819G/Perplexify.git
+cd Perplexify
 ```
 
 ### 2. Create a Feature Branch
@@ -470,7 +470,7 @@ Contributors who add new languages will be:
 - Mentioned in release notes
 - Given credit in the project documentation
 
-Thank you for helping make Perplexica accessible to users worldwide! 🌍
+Thank you for helping make Perplexify accessible to users worldwide! 🌍
 
 ---
 

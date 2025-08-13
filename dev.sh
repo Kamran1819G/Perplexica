@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Starting Perplexica Development Environment"
+echo "🚀 Starting Perplexify Development Environment"
 
 # Start SearXNG in Docker
 echo "📡 Starting SearXNG..."

@@ -1,6 +1,6 @@
-# Development Setup with Hot Reloading
+# Development Guide
 
-This guide explains how to run Perplexica in development mode with hot reloading enabled.
+This guide explains how to run Perplexify in development mode with hot reloading enabled.
 
 ## Important Note: Docker Hot Reload Limitation
 

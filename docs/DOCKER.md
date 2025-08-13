@@ -1,6 +1,6 @@
-# 🐳 Docker Setup Guide for Perplexica
+# 🐳 Docker Setup Guide for Perplexify
 
-This guide covers how to use Docker for both development and production environments with Perplexica, including live updates during development.
+This guide covers how to use Docker for both development and production environments with Perplexify, including live updates during development.
 
 ## 📋 Prerequisites
 
@@ -12,8 +12,8 @@ This guide covers how to use Docker for both development and production environm
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/Kamran1819G/Perplexica.git
-cd Perplexica
+git clone https://github.com/Kamran1819G/Perplexify.git
+cd Perplexify
 ```
 
 ### 2. Setup Configuration
@@ -68,13 +68,13 @@ docker-compose logs -f app
 
 ### Volume Mounts (Development)
 The development setup mounts these directories for live updates:
-- `./src` → `/home/perplexica/src`
-- `./public` → `/home/perplexica/public`
-- `./drizzle` → `/home/perplexica/drizzle`
-- `./package.json` → `/home/perplexica/package.json`
-- `./yarn.lock` → `/home/perplexica/yarn.lock`
-- `./tsconfig.json` → `/home/perplexica/tsconfig.json`
-- `./next.config.mjs` → `/home/perplexica/next.config.mjs`
+- `./src` → `/home/perplexify/src`
+- `./public` → `/home/perplexify/public`
+- `./drizzle` → `/home/perplexify/drizzle`
+- `./package.json` → `/home/perplexify/package.json`
+- `./yarn.lock` → `/home/perplexify/yarn.lock`
+- `./tsconfig.json` → `/home/perplexify/tsconfig.json`
+- `./next.config.mjs` → `/home/perplexify/next.config.mjs`
 - And more configuration files...
 
 ## 🏭 Production Environment
@@ -163,7 +163,7 @@ docker-compose logs -f app
 docker-compose down
 
 # Access development container shell
-docker exec -it perplexica-app-1 /bin/bash
+docker exec -it perplexify-app-1 /bin/bash
 ```
 
 ### Production Commands
@@ -181,7 +181,7 @@ docker-compose logs -f
 docker-compose down
 
 # Access production container shell
-docker exec -it perplexica-app-1 /bin/bash
+docker exec -it perplexify-app-1 /bin/bash
 ```
 
 ### General Commands
@@ -190,7 +190,7 @@ docker exec -it perplexica-app-1 /bin/bash
 docker ps
 
 # View container logs
-docker logs perplexica-app-1
+docker logs perplexify-app-1
 
 # Clean up unused containers/images
 docker system prune -a
@@ -199,7 +199,7 @@ docker system prune -a
 docker volume ls
 
 # Remove specific volume
-docker volume rm perplexica_backend-dbstore
+docker volume rm perplexify_backend-dbstore
 ```
 
 ## 🔄 Live Updates During Development
@@ -263,7 +263,7 @@ chmod +x entrypoint.sh
 ```bash
 # Reset database volume
 docker-compose down -v
-docker volume rm perplexica_backend-dbstore
+docker volume rm perplexify_backend-dbstore
 docker-compose up --build
 ```
 
@@ -280,13 +280,13 @@ Make sure Ollama is running and accessible from Docker containers.
 docker ps -a
 
 # View detailed container info
-docker inspect perplexica-app-1
+docker inspect perplexify-app-1
 
 # Check container resources
-docker stats perplexica-app-1
+docker stats perplexify-app-1
 
 # View container filesystem
-docker exec -it perplexica-app-1 ls -la /home/perplexica
+docker exec -it perplexify-app-1 ls -la /home/perplexify
 ```
 
 ## 🔗 External Services Integration
@@ -340,8 +340,8 @@ SEARXNG = "http://your-searxng-instance:8080"
 - [Docker Documentation](https://docs.docker.com/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Next.js Docker Deployment](https://nextjs.org/docs/deployment#docker-image)
-- [Perplexica Architecture](docs/architecture/README.md)
-- [Perplexica API Documentation](docs/API/SEARCH.md)
+- [Perplexify Architecture](docs/architecture/README.md)
+- [Perplexify API Documentation](docs/API/SEARCH.md)
 
 ---
 

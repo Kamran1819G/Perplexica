@@ -1,8 +1,8 @@
-# Perplexica Search API Documentation
+# Perplexify Search API Documentation
 
 ## Overview
 
-Perplexica’s Search API makes it easy to use our AI-powered search engine. You can run different types of searches, pick the models you want to use, and get the most recent info. Follow the following headings to learn more about Perplexica's search API.
+Perplexify's Search API makes it easy to use our AI-powered search engine. You can run different types of searches, pick the models you want to use, and get the most recent info. Follow the following headings to learn more about Perplexify's search API.
 
 ## Endpoint
 
@@ -27,12 +27,12 @@ The API accepts a JSON object in the request body, where you define the chat mod
     "name": "text-embedding-3-large"
   },
   "optimizationMode": "speed",
-  "query": "What is Perplexica",
+  "query": "What is Perplexify",
   "history": [
     ["human", "Hi, how are you?"],
     ["assistant", "I am doing well, how can I help you today?"]
   ],
-  "systemInstructions": "Focus on providing technical details about Perplexica's architecture.",
+  "systemInstructions": "Focus on providing technical details about Perplexify's architecture.",
   "stream": false
 }
 ```
@@ -67,8 +67,8 @@ The API accepts a JSON object in the request body, where you define the chat mod
 
   ```json
   [
-    ["human", "What is Perplexica?"],
-    ["assistant", "Perplexica is an AI-powered search engine..."]
+    ["human", "What is Perplexify?"],
+    ["assistant", "Perplexify is an AI-powered search engine..."]
   ]
   ```
 
@@ -82,20 +82,20 @@ The response from the API includes both the final message and the sources used t
 
 ```json
 {
-  "message": "Perplexica is an innovative, open-source AI-powered search engine designed to enhance the way users search for information online. Here are some key features and characteristics of Perplexica:\n\n- **AI-Powered Technology**: It utilizes advanced machine learning algorithms to not only retrieve information but also to understand the context and intent behind user queries, providing more relevant results [1][5].\n\n- **Open-Source**: Being open-source, Perplexica offers flexibility and transparency, allowing users to explore its functionalities without the constraints of proprietary software [3][10].",
+  "message": "Perplexify is an innovative, open-source AI-powered search engine designed to enhance the way users search for information online. Here are some key features and characteristics of Perplexify:\n\n- **AI-Powered Technology**: It utilizes advanced machine learning algorithms to not only retrieve information but also to understand the context and intent behind user queries, providing more relevant results [1][5].\n\n- **Open-Source**: Being open-source, Perplexify offers flexibility and transparency, allowing users to explore its functionalities without the constraints of proprietary software [3][10].",
   "sources": [
     {
-      "pageContent": "Perplexica is an innovative, open-source AI-powered search engine designed to enhance the way users search for information online.",
+      "pageContent": "Perplexify is an innovative, open-source AI-powered search engine designed to enhance the way users search for information online.",
       "metadata": {
-        "title": "What is Perplexica, and how does it function as an AI-powered search ...",
-        "url": "https://askai.glarity.app/search/What-is-Perplexica--and-how-does-it-function-as-an-AI-powered-search-engine"
+        "title": "What is Perplexify, and how does it function as an AI-powered search ...",
+        "url": "https://askai.glarity.app/search/What-is-Perplexify--and-how-does-it-function-as-an-AI-powered-search-engine"
       }
     },
     {
-      "pageContent": "Perplexica is an open-source AI-powered search tool that dives deep into the internet to find precise answers.",
+      "pageContent": "Perplexify is an open-source AI-powered search tool that dives deep into the internet to find precise answers.",
       "metadata": {
         "title": "Sahar Mor's Post",
-        "url": "https://www.linkedin.com/posts/sahar-mor_a-new-open-source-project-called-perplexica-activity-7204489745668694016-ncja"
+        "url": "https://www.linkedin.com/posts/sahar-mor_a-new-open-source-project-called-perplexify-activity-7204489745668694016-ncja"
       }
     }
         ....
@@ -112,7 +112,7 @@ Example of streamed response objects:
 ```
 {"type":"init","data":"Stream connected"}
 {"type":"sources","data":[{"pageContent":"...","metadata":{"title":"...","url":"..."}},...]}
-{"type":"response","data":"Perplexica is an "}
+{"type":"response","data":"Perplexify is an "}
 {"type":"response","data":"innovative, open-source "}
 {"type":"response","data":"AI-powered search engine..."}
 {"type":"done"}

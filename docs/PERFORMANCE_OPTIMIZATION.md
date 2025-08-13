@@ -1,6 +1,6 @@
-# Performance Optimization Guide
+# 🚀 Performance Optimization Guide
 
-This document outlines the performance optimizations implemented in Perplexica to improve efficiency, reduce latency, and enhance user experience.
+This document outlines the performance optimizations implemented in Perplexify to improve efficiency, reduce latency, and enhance user experience.
 
 ## 🚀 Key Performance Improvements
 
@@ -267,4 +267,4 @@ curl http://localhost:3000/api/health?detailed=true
 
 ---
 
-This performance optimization guide ensures Perplexica maintains high performance, reliability, and scalability as the user base grows.
+This performance optimization guide ensures Perplexify maintains high performance, reliability, and scalability as the user base grows.

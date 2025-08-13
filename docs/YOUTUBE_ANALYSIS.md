@@ -1,8 +1,6 @@
-# YouTube Video Analysis Feature
+# 🎥 YouTube Video Analysis Feature
 
-## Overview
-
-Perplexica now includes a powerful YouTube video analysis feature that automatically detects YouTube links in messages and provides intelligent responses based on video content. This feature works similarly to Perplexity AI's video analysis capabilities.
+Perplexify now includes a powerful YouTube video analysis feature that automatically detects YouTube links in messages and provides intelligent responses based on video content. This feature works sim
 
 ## How It Works
 

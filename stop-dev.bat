@@ -1,5 +1,5 @@
 @echo off
-echo 🛑 Stopping Perplexica Development Environment
+echo 🛑 Stopping Perplexify Development Environment
 
 REM Stop SearXNG Docker container
 echo 📡 Stopping SearXNG...

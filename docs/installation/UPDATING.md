@@ -1,13 +1,13 @@
-# Update Perplexica to the latest version
+# Update Perplexify to the latest version
 
-To update Perplexica to the latest version, follow these steps:
+To update Perplexify to the latest version, follow these steps:
 
 ## For Docker users
 
-1. Clone the latest version of Perplexica from GitHub:
+1. Clone the latest version of Perplexify from GitHub:
 
    ```bash
-   git clone https://github.com/Kamran1819G/Perplexica.git
+   git clone https://github.com/Kamran1819G/Perplexify.git
    ```
 
 2. Navigate to the project directory.
@@ -30,10 +30,10 @@ To update Perplexica to the latest version, follow these steps:
 
 ## For non-Docker users
 
-1. Clone the latest version of Perplexica from GitHub:
+1. Clone the latest version of Perplexify from GitHub:
 
    ```bash
-   git clone https://github.com/Kamran1819G/Perplexica.git
+   git clone https://github.com/Kamran1819G/Perplexify.git
    ```
 
 2. Navigate to the project directory.

@@ -33,7 +33,7 @@ export const POST = async (req: Request) => {
               `https://api.open-meteo.com/v1/forecast?latitude=${body.lat}&longitude=${body.lng}&current=weather_code,temperature_2m,apparent_temperature,is_day,relative_humidity_2m,wind_speed_10m,wind_direction_10m,pressure_msl&timezone=auto`,
               {
                 headers: {
-                  'User-Agent': 'Perplexica Weather Widget',
+                  'User-Agent': 'Perplexify Weather Widget',
                 },
                 signal: AbortSignal.timeout(10000), // 10 seconds timeout
               }

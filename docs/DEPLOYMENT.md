@@ -1,10 +1,10 @@
-# 🚀 Deployment Guide for Perplexica
+# 🚀 Deployment Guide for Perplexify
 
-This guide covers deployment options for Perplexica, which uses local Docker builds for complete independence from external registries.
+This guide covers deployment options for Perplexify, which uses local Docker builds for complete independence from external registries.
 
 ## 🎯 Deployment Overview
 
-Perplexica uses **local Docker builds** instead of pre-built images from registries. This approach provides:
+Perplexify uses **local Docker builds** instead of pre-built images from registries. This approach provides:
 - ✅ **Complete independence** from external registries
 - ✅ **Security** - no dependency on third-party image sources
 - ✅ **Reliability** - builds from your own source code
@@ -15,8 +15,8 @@ Perplexica uses **local Docker builds** instead of pre-built images from registr
 ### Production Deployment
 ```bash
 # Clone the repository
-git clone https://github.com/Kamran1819G/Perplexica.git
-cd Perplexica
+git clone https://github.com/Kamran1819G/Perplexify.git
+cd Perplexify
 
 # Setup configuration
 cp sample.config.toml config.toml
@@ -55,8 +55,8 @@ docker-compose up --build
 ### Google Cloud Run
 ```bash
 # Build and deploy to Cloud Run
-gcloud builds submit --tag gcr.io/PROJECT_ID/perplexica
-gcloud run deploy perplexica --image gcr.io/PROJECT_ID/perplexica --platform managed
+gcloud builds submit --tag gcr.io/PROJECT_ID/perplexify
+gcloud run deploy perplexify --image gcr.io/PROJECT_ID/perplexify --platform managed
 ```
 
 ## ☸️ Kubernetes Deployment
@@ -67,8 +67,8 @@ gcloud run deploy perplexica --image gcr.io/PROJECT_ID/perplexica --platform man
 kubectl apply -f deploy-template.yaml
 
 # Check deployment status
-kubectl get pods -n perplexica
-kubectl get services -n perplexica
+kubectl get pods -n perplexify
+kubectl get services -n perplexify
 ```
 
 ### Custom Kubernetes Deployment
@@ -77,20 +77,20 @@ kubectl get services -n perplexica
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: perplexica-app
+  name: perplexify-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: perplexica-app
+      app: perplexify-app
   template:
     metadata:
       labels:
-        app: perplexica-app
+        app: perplexify-app
     spec:
       containers:
-      - name: perplexica-app
-        image: perplexica-app:latest
+      - name: perplexify-app
+        image: perplexify-app:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 3000
@@ -103,7 +103,7 @@ Set these environment variables in your deployment platform:
 
 ```bash
 SEARXNG_API_URL=http://searxng:8080
-DATA_DIR=/home/perplexica
+DATA_DIR=/home/perplexify
 NODE_ENV=production
 ```
 
@@ -150,10 +150,10 @@ docker-compose up --build
 #### Configuration Issues
 ```bash
 # Verify configuration file
-docker exec -it perplexica-app-1 cat /home/perplexica/config.toml
+docker exec -it perplexify-app-1 cat /home/perplexify/config.toml
 
 # Check environment variables
-docker exec -it perplexica-app-1 env | grep SEARXNG
+docker exec -it perplexify-app-1 env | grep SEARXNG
 ```
 
 #### Port Issues
@@ -181,13 +181,13 @@ netstat -tulpn | grep :4000
 #### Kubernetes
 ```bash
 # Check pod status
-kubectl describe pod -n perplexica
+kubectl describe pod -n perplexify
 
 # Check logs
-kubectl logs -n perplexica perplexica-app-xxx
+kubectl logs -n perplexify perplexify-app-xxx
 
 # Check services
-kubectl get svc -n perplexica
+kubectl get svc -n perplexify
 ```
 
 ## 📊 Monitoring and Maintenance
@@ -210,16 +210,16 @@ docker-compose logs -f app
 docker-compose logs -f searxng
 
 # Monitor resource usage
-docker stats perplexica-app-1 perplexica-searxng-1
+docker stats perplexify-app-1 perplexify-searxng-1
 ```
 
 ### Backup and Recovery
 ```bash
 # Backup data volumes
-docker run --rm -v perplexica_backend-dbstore:/data -v $(pwd):/backup alpine tar czf /backup/perplexica-data-backup.tar.gz -C /data .
+docker run --rm -v perplexify_backend-dbstore:/data -v $(pwd):/backup alpine tar czf /backup/perplexify-data-backup.tar.gz -C /data .
 
 # Restore data volumes
-docker run --rm -v perplexica_backend-dbstore:/data -v $(pwd):/backup alpine tar xzf /backup/perplexica-data-backup.tar.gz -C /data
+docker run --rm -v perplexify_backend-dbstore:/data -v $(pwd):/backup alpine tar xzf /backup/perplexify-data-backup.tar.gz -C /data
 ```
 
 ## 🔄 Updates and Upgrades
@@ -237,7 +237,7 @@ docker-compose up --build -d
 ### Database Migrations
 ```bash
 # Run migrations manually if needed
-docker exec -it perplexica-app-1 yarn db:push
+docker exec -it perplexify-app-1 yarn db:push
 ```
 
 ## 📚 Additional Resources
