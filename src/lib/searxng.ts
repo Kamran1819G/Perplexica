@@ -93,36 +93,80 @@ export class SearxngClient {
     options: SearxngSearchOptions, 
     cacheKey: string
   ): Promise<{ results: SearxngSearchResult[]; suggestions: string[] }> {
-    try {
-      const url = this.buildSearchUrl(query, options);
-      const response = await axios.get(url.toString(), {
-        timeout: 3000, // Reduced timeout for speed
-        headers: {
-          'User-Agent': 'Perplexify/1.11.0-rc1',
-          'Accept': 'application/json',
-        },
-      });
-      
-      let results: SearxngSearchResult[] = response.data.results || [];
-      const suggestions: string[] = response.data.suggestions || [];
+    const maxRetries = 2;
+    let lastError: any = null;
 
-      // Apply result processing
-      results = this.processResults(results, options);
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const url = this.buildSearchUrl(query, options);
+        const timeoutMs = attempt === 0 ? 5000 : (attempt === 1 ? 8000 : 12000); // Progressive timeout
+        
+        const response = await axios.get(url.toString(), {
+          timeout: timeoutMs,
+          headers: {
+            'User-Agent': 'Perplexify/1.11.0-rc1',
+            'Accept': 'application/json',
+            'Connection': 'keep-alive',
+          },
+          validateStatus: (status) => status < 500, // Accept 4xx errors but retry on 5xx
+        });
 
-      // Cache results
-      this.cache.set(cacheKey, { results, timestamp: Date.now() });
-      
-      // Clean old cache entries
-      if (this.cache.size > 100) {
-        const oldestKeys = Array.from(this.cache.keys()).slice(0, 20);
-        oldestKeys.forEach(key => this.cache.delete(key));
+        // Handle non-200 responses
+        if (response.status >= 400) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        let results: SearxngSearchResult[] = response.data?.results || [];
+        const suggestions: string[] = response.data?.suggestions || [];
+
+        // Apply result processing
+        results = this.processResults(results, options);
+
+        // Cache results
+        this.cache.set(cacheKey, { results, timestamp: Date.now() });
+        
+        // Clean old cache entries
+        if (this.cache.size > 100) {
+          const oldestKeys = Array.from(this.cache.keys()).slice(0, 20);
+          oldestKeys.forEach(key => this.cache.delete(key));
+        }
+        
+        return { results, suggestions };
+      } catch (error: any) {
+        lastError = error;
+        const isTimeoutError = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+        const isNetworkError = error.code === 'ECONNRESET' || error.code === 'ENOTFOUND';
+        const isServerError = error.response?.status >= 500;
+        
+        // Log attempt details
+        console.warn(`SearXNG search attempt ${attempt + 1}/${maxRetries + 1} failed:`, {
+          error: error.message,
+          code: error.code,
+          status: error.response?.status,
+          isTimeout: isTimeoutError,
+          isNetwork: isNetworkError,
+          isServer: isServerError
+        });
+
+        // Don't retry for client errors (4xx) unless it's specific cases
+        if (error.response?.status >= 400 && error.response?.status < 500 && 
+            error.response?.status !== 429) { // Retry on rate limits
+          break;
+        }
+
+        // If this is the last attempt, break
+        if (attempt === maxRetries) {
+          break;
+        }
+
+        // Wait before retry with exponential backoff
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt), 5000);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
       }
-      
-      return { results, suggestions };
-    } catch (error) {
-      console.error('SearXNG search failed:', error);
-      return { results: [], suggestions: [] };
     }
+
+    console.error(`SearXNG search failed after ${maxRetries + 1} attempts:`, lastError?.message || 'Unknown error');
+    return { results: [], suggestions: [] };
   }
 
   async multiQuerySearch(
@@ -393,9 +437,16 @@ export class SearxngClient {
   // Health check
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await axios.get(`${this.baseUrl}/healthz`, { timeout: 5000 });
+      const response = await axios.get(`${this.baseUrl}/healthz`, { 
+        timeout: 3000,
+        headers: {
+          'User-Agent': 'Perplexify/1.11.0-rc1',
+          'Accept': 'application/json',
+        },
+      });
       return response.status === 200;
-    } catch {
+    } catch (error: any) {
+      console.warn('SearXNG health check failed:', error.message);
       return false;
     }
   }
@@ -406,10 +457,20 @@ export const searchSearxng = async (
   query: string,
   opts?: SearxngSearchOptions,
 ) => {
-  const searcher = new SearxngClient();
-  const result = await searcher.search(query, opts);
-  return {
-    results: result.results,
-    suggestions: result.suggestions
-  };
+  try {
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+      console.warn('Invalid search query provided:', query);
+      return { results: [], suggestions: [] };
+    }
+
+    const searcher = new SearxngClient();
+    const result = await searcher.search(query.trim(), opts);
+    return {
+      results: result.results || [],
+      suggestions: result.suggestions || []
+    };
+  } catch (error: any) {
+    console.error('Error in searchSearxng wrapper:', error.message);
+    return { results: [], suggestions: [] };
+  }
 };

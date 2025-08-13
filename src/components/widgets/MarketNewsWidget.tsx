@@ -85,7 +85,7 @@ const MarketNewsWidget: React.FC = () => {
     // Refresh news every 30 minutes
     const interval = setInterval(fetchMarketNews, 30 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMarketNews]);
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);

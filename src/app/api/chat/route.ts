@@ -1,5 +1,4 @@
 import prompts from '@/lib/prompts';
-import MetaSearchAgent from '@/lib/search/metaSearchAgent';
 import crypto from 'crypto';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { EventEmitter } from 'stream';
@@ -20,7 +19,7 @@ import {
   getCustomOpenaiApiUrl,
   getCustomOpenaiModelName,
 } from '@/lib/config';
-import { searchHandlers, orchestratorHandlers } from '@/lib/search';
+import { orchestratorHandlers } from '@/lib/search';
 import { containsYouTubeLink, extractYouTubeLinks } from '@/lib/utils/youtube';
 import { trackAsync } from '@/lib/performance';
 import { withErrorHandling, circuitBreakers } from '@/lib/errorHandling';
@@ -67,6 +66,9 @@ const handleEmitterEvents = async (
 ) => {
   let recievedMessage = '';
   let sources: any[] = [];
+  let images: any[] = [];
+  let videos: any[] = [];
+  let searchIntent: any = null;
   let isStreamClosed = false;
 
   // Helper function to safely write to stream
@@ -123,6 +125,39 @@ const handleEmitterEvents = async (
         ).catch(err => console.error('Write error:', err));
 
         sources = parsedData.data;
+      } else if (parsedData.type === 'images') {
+        console.log('🖼️ API: Forwarding images, count:', parsedData.data.length);
+        safeWrite(
+          JSON.stringify({
+            type: 'images',
+            data: parsedData.data,
+            messageId: aiMessageId,
+          }) + '\n',
+        ).catch(err => console.error('Write error:', err));
+
+        images = parsedData.data;
+      } else if (parsedData.type === 'videos') {
+        console.log('🎥 API: Forwarding videos, count:', parsedData.data.length);
+        safeWrite(
+          JSON.stringify({
+            type: 'videos',
+            data: parsedData.data,
+            messageId: aiMessageId,
+          }) + '\n',
+        ).catch(err => console.error('Write error:', err));
+
+        videos = parsedData.data;
+      } else if (parsedData.type === 'intent_detected') {
+        console.log('🎯 API: Forwarding search intent:', parsedData.data.intent.primaryIntent);
+        safeWrite(
+          JSON.stringify({
+            type: 'intent_detected',
+            data: parsedData.data,
+            messageId: aiMessageId,
+          }) + '\n',
+        ).catch(err => console.error('Write error:', err));
+
+        searchIntent = parsedData.data.intent;
       } else {
         console.log('🔄 API: Forwarding event type:', parsedData.type);
         // Forward all other events (progress, followUps, plan, etc.) directly to the frontend
@@ -165,6 +200,9 @@ const handleEmitterEvents = async (
           metadata: JSON.stringify({
             createdAt: new Date(),
             ...(sources && sources.length > 0 && { sources }),
+            ...(images && images.length > 0 && { images }),
+            ...(videos && videos.length > 0 && { videos }),
+            ...(searchIntent && { searchIntent }),
           }),
         })
         .execute()
@@ -433,7 +471,7 @@ export const POST = async (req: Request) => {
     
     console.log('🔍 Search mode:', searchMode);
     console.log('🗂️ Available orchestrator handlers:', Object.keys(orchestratorHandlers));
-    console.log('🗂️ Available search handlers:', Object.keys(searchHandlers));
+    console.log('🗂️ Using SearchOrchestrator for all modes');
     
     // Combine system instructions with personalization data
     const enhancedSystemInstructions = enhanceSystemInstructions(
@@ -448,44 +486,10 @@ export const POST = async (req: Request) => {
     
     let stream;
     
-    // TEMPORARY: Force use old handler for debugging
-    if (searchMode === 'quickSearch') {
-      console.log('🔄 Using old MetaSearchAgent for debugging...');
-      const handler = searchHandlers['quickSearch'];
-      stream = await handler.searchAndAnswer(
-        message.content,
-        history,
-        llm,
-        embedding,
-        body.files,
-        enhancedSystemInstructions,
-      );
-    } else if (orchestratorHandlers[searchMode]) {
-      // Use new orchestrator (ProSearch, etc.)
-      console.log('🚀 Using orchestrator:', searchMode);
-      const orchestrator = orchestratorHandlers[searchMode];
-      stream = await orchestrator.executeSearch(
-        message.content,
-        history,
-        llm,
-        embedding,
-        body.files,
-        enhancedSystemInstructions,
-      );
-    } else {
-      // Fallback to old search handlers
-      console.log('🔄 Fallback to old search handler');
-      const handler = searchHandlers['quickSearch'];
-      stream = await handler.searchAndAnswer(
-        message.content,
-        history,
-        llm,
-        embedding,
-        body.files,
-        enhancedSystemInstructions,
-      );
-    }
-
+    // Use SearchOrchestrator for all search modes
+    console.log('🚀 Using orchestrator:', searchMode);
+    const orchestrator = orchestratorHandlers[searchMode] || orchestratorHandlers['quickSearch'];
+    
     const responseStream = new TransformStream();
     const writer = responseStream.writable.getWriter();
     const encoder = new TextEncoder();
@@ -499,6 +503,17 @@ export const POST = async (req: Request) => {
       controller.abort();
     });
 
+    // Start the search and immediately attach event listeners
+    stream = await orchestrator.executeSearch(
+      message.content,
+      history,
+      llm,
+      embedding,
+      body.files,
+      enhancedSystemInstructions,
+    );
+
+    // Attach event listeners immediately after getting the stream
     handleEmitterEvents(stream, writer, encoder, aiMessageId, message.chatId);
     handleHistorySave(message, humanMessageId, body.files);
 

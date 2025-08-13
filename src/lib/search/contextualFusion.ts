@@ -214,6 +214,16 @@ export class ContextualFusion {
     chunks: ContextChunk[],
     llm: BaseChatModel
   ): Promise<ContextChunk[]> {
+    // Add safety checks
+    if (!llm) {
+      console.warn('LLM not provided to enhanceChunksWithContext, returning chunks as-is');
+      return chunks;
+    }
+    
+    if (!chunks || chunks.length === 0) {
+      console.warn('No chunks provided to enhanceChunksWithContext');
+      return [];
+    }
     const prompt = ChatPromptTemplate.fromTemplate(`
       Enhance the following context chunk to better answer the query.
       Add relevant context, clarify ambiguous information, and ensure coherence.
@@ -232,8 +242,14 @@ export class ContextualFusion {
     ]);
 
     const enhancedChunks = await Promise.all(
-      chunks.map(async (chunk) => {
+      chunks.map(async (chunk, index) => {
         try {
+          // Add safety check for chunk content
+          if (!chunk || !chunk.content) {
+            console.warn(`Chunk ${index} has no content, skipping enhancement`);
+            return chunk;
+          }
+
           const enhancedContent = await chain.invoke({
             query,
             chunk: chunk.content
@@ -244,7 +260,7 @@ export class ContextualFusion {
             content: enhancedContent.trim()
           };
         } catch (error) {
-          console.warn(`Failed to enhance chunk ${chunk.id}:`, error);
+          console.warn(`Failed to enhance chunk ${chunk?.id || index}:`, error);
           return chunk;
         }
       })
@@ -258,7 +274,13 @@ export class ContextualFusion {
     chunks: ContextChunk[],
     llm: BaseChatModel
   ): Promise<string> {
-    if (chunks.length === 0) return '';
+    // Add safety checks
+    if (!chunks || chunks.length === 0) return '';
+    
+    if (!llm) {
+      console.warn('LLM not provided to mergeChunksIntoUnifiedContext, returning concatenated chunks');
+      return chunks.map(chunk => chunk.content).join('\n\n');
+    }
 
     const prompt = ChatPromptTemplate.fromTemplate(`
       Merge the following context chunks into a unified, coherent context that answers the query.
@@ -280,7 +302,15 @@ export class ContextualFusion {
     ]);
 
     try {
-      const chunksText = chunks.map((chunk, i) => 
+      // Add safety check for chunks content
+      const validChunks = chunks.filter(chunk => chunk && chunk.content && chunk.content.trim().length > 0);
+      
+      if (validChunks.length === 0) {
+        console.warn('No valid chunks to merge');
+        return '';
+      }
+
+      const chunksText = validChunks.map((chunk, i) => 
         `Chunk ${i + 1}:\n${chunk.content}\n`
       ).join('\n');
 
@@ -293,7 +323,8 @@ export class ContextualFusion {
     } catch (error) {
       console.error('Failed to merge chunks:', error);
       // Fallback: concatenate chunks with separators
-      return chunks.map(chunk => chunk.content).join('\n\n---\n\n');
+      const validChunks = chunks.filter(chunk => chunk && chunk.content);
+      return validChunks.map(chunk => chunk.content).join('\n\n---\n\n');
     }
   }
 

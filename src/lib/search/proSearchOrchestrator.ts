@@ -424,16 +424,22 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
 
       console.log('🔧 ProSearch: Creating enhanced response prompt...');
       const enhancedResponsePrompt = `
-        You are an expert research assistant providing focused, insightful analysis with multiple perspectives.
+        You are an expert research assistant providing direct, insightful analysis without verbose introductions.
         
         System Instructions: {systemInstructions}
         
         Query: {query}
         Date: {date}
         
+        ### Critical Response Rules
+        - **NEVER start with phrases like**: "Of course", "Here is", "I'll help you", "Let me provide", "Certainly", or similar introductory statements
+        - **Start immediately with the core answer** to the user's question
+        - **Be direct and substantive** - jump straight into the main information
+        - **No verbose openings** - lead with the actual answer or key finding
+        
         Based on comprehensive research using multiple targeted searches, provide a well-structured response that:
         
-        1. **Starts with a clear answer** - Get to the point quickly
+        1. **Leads with the direct answer** - First sentence should contain the core response
         2. **Presents key insights** - Highlight the most important findings
         3. **Shows multiple angles** - Include different perspectives when relevant
         4. **Provides context** - Explain why this information matters
@@ -442,14 +448,14 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
         7. **Stays focused** - Avoid unnecessary detail while being comprehensive
         
         ### Response Structure
-        - **Direct answer** (1-2 sentences)
+        - **Direct answer** (lead with the core information immediately)
         - **Key points** (bullet points for main insights)
         - **Context and details** (paragraphs for important background)
         - **Practical implications** (when relevant)
         - **Related considerations** (if applicable)
         
         ### Writing Style
-        - Conversational but professional
+        - Direct and immediate
         - Clear and accessible
         - Well-organized with headings
         - Concise paragraphs (2-3 sentences)
@@ -458,7 +464,7 @@ export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implement
         Sources and Context:
         {context}
         
-        Write a focused, insightful response that provides depth without being overwhelming.
+        Write a focused, insightful response that immediately provides the answer and then adds depth.
         Use numbered citations [1], [2], etc. that correspond to the source order provided.
       `;
 

@@ -27,8 +27,8 @@ import Rewrite from './MessageActions/Rewrite';
 import Export from './MessageActions/Export';
 import MessageSources from './MessageSources';
 import FollowUpQuestions from './FollowUpQuestions';
-import SearchImages from './SearchImages';
-import SearchVideos from './SearchVideos';
+import MessageImages from './MessageImages';
+import MessageVideos from './MessageVideos';
 import { useSpeech } from 'react-text-to-speech';
 import ThinkBox from './ThinkBox';
 import SearchSteps from './SearchSteps';
@@ -347,14 +347,16 @@ const MessageBox = ({
     return [];
   }, [message.agents]);
 
-  // Track content availability and manage tab visibility
+  // Track content availability and manage tab visibility based on search intent and actual data
   useEffect(() => {
     const newAvailableTabs = new Set<TabType>();
     
-    // Always show steps tab
-    newAvailableTabs.add('steps');
+    // Always show steps tab for all assistant messages (not just loading)
+    if (message.role === 'assistant' || loading || message.isOrchestrator) {
+      newAvailableTabs.add('steps');
+    }
     
-    // Always show answer tab for assistant messages or when not loading
+    // Always show answer tab for assistant messages
     if (message.role === 'assistant') {
       newAvailableTabs.add('answer');
     }
@@ -364,31 +366,67 @@ const MessageBox = ({
       newAvailableTabs.add('sources');
     }
     
-    // For assistant messages, show images/videos tabs (they will load content dynamically)
+    // Show images/videos tabs only when data is available
     if (message.role === 'assistant') {
-      newAvailableTabs.add('images');
-      newAvailableTabs.add('videos');
-      if (!loading) {
-        setLoadedTabs(prev => new Set([...prev, 'images', 'videos']));
+      // Show images tab only when images are available
+      if (message.images && message.images.length > 0) {
+        console.log('🖼️ MessageBox: Adding images tab, found', message.images.length, 'images');
+        newAvailableTabs.add('images');
+        setLoadedTabs(prev => new Set([...prev, 'images']));
+      } else {
+        console.log('🖼️ MessageBox: No images available, images data:', message.images);
+      }
+      
+      // Show videos tab only when videos are available
+      if (message.videos && message.videos.length > 0) {
+        console.log('🎥 MessageBox: Adding videos tab, found', message.videos.length, 'videos');
+        newAvailableTabs.add('videos');
+        setLoadedTabs(prev => new Set([...prev, 'videos']));
+      } else {
+        console.log('🎥 MessageBox: No videos available, videos data:', message.videos);
       }
     }
     
+    console.log('📊 MessageBox: Available tabs:', Array.from(newAvailableTabs), 'for message:', message.messageId);
     setAvailableTabs(newAvailableTabs);
-  }, [message.sources, message.role, loading, isLast]);
+  }, [message.sources, message.images, message.videos, message.searchIntent, message.role, message.isOrchestrator, loading, isLast]);
 
-  // Show steps when loading starts, redirect to answer when complete
+  // Smart tab selection based on search intent and loading state
   useEffect(() => {
     if (loading && isLast) {
       setShowSteps(true);
       setActiveTab('steps');
     } else if (!loading && showSteps && message.role === 'assistant') {
-      // When loading completes, switch to answer tab after a brief delay
+      // When loading completes, switch to the most relevant tab based on search intent
       setTimeout(() => {
         setShowSteps(false);
-        setActiveTab('answer');
+        
+        const searchIntent = message.searchIntent;
+        const hasImages = message.images && message.images.length > 0;
+        const hasVideos = message.videos && message.videos.length > 0;
+        const hasSources = message.sources && message.sources.length > 0;
+        
+        // Smart tab selection based on primary intent and available content
+        if (searchIntent?.primaryIntent === 'images' && hasImages) {
+          setActiveTab('images');
+        } else if (searchIntent?.primaryIntent === 'videos' && hasVideos) {
+          setActiveTab('videos');
+        } else if (searchIntent?.primaryIntent === 'mixed') {
+          // For mixed intent, prefer the content type with higher confidence and availability
+          if (hasImages && searchIntent.confidence.images >= searchIntent.confidence.videos) {
+            setActiveTab('images');
+          } else if (hasVideos) {
+            setActiveTab('videos');
+          } else {
+            setActiveTab('answer');
+          }
+        } else {
+          // Default to answer tab for document-focused or fallback
+          setActiveTab('answer');
+        }
       }, 1000);
     }
-  }, [loading, isLast, showSteps, message.role]);
+  }, [loading, isLast, showSteps, message.role, message.searchIntent, message.images, message.videos, message.sources]);
 
   // Show timeline steps for the last user message when loading
   const shouldShowSteps = (loading && isLast && message.role === 'user') || 
@@ -473,13 +511,13 @@ const MessageBox = ({
       id: 'images' as TabType,
       label: 'Images',
       icon: ImageIcon,
-      count: null,
+      count: message.images?.length || 0,
     },
     {
       id: 'videos' as TabType,
       label: 'Videos',
       icon: Video,
-      count: null,
+      count: message.videos?.length || 0,
     },
     {
       id: 'sources' as TabType,
@@ -657,26 +695,48 @@ const MessageBox = ({
       case 'images':
         return (
           <div className="flex flex-col space-y-4">
-            {loadedTabs.has('images') && (
-              <SearchImages
+            {message.images && message.images.length > 0 ? (
+              <MessageImages
                 key={`images-${message.messageId}`}
-                query={history[messageIndex - 1]?.content || ''}
-                chatHistory={history.slice(0, messageIndex - 1)}
-                messageId={message.messageId}
+                images={message.images}
+                query={history[messageIndex - 1]?.content || message.content || ''}
+                loading={false}
               />
+            ) : loading && message.searchIntent?.needsImages ? (
+              <MessageImages
+                key={`images-loading-${message.messageId}`}
+                images={[]}
+                query={history[messageIndex - 1]?.content || message.content || ''}
+                loading={true}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-black/70 dark:text-white/70">No images found for this query</p>
+              </div>
             )}
           </div>
         );
       case 'videos':
         return (
           <div className="flex flex-col space-y-4">
-            {loadedTabs.has('videos') && (
-              <SearchVideos
+            {message.videos && message.videos.length > 0 ? (
+              <MessageVideos
                 key={`videos-${message.messageId}`}
-                chatHistory={history.slice(0, messageIndex - 1)}
-                query={history[messageIndex - 1]?.content || ''}
-                messageId={message.messageId}
+                videos={message.videos}
+                query={history[messageIndex - 1]?.content || message.content || ''}
+                loading={false}
               />
+            ) : loading && message.searchIntent?.needsVideos ? (
+              <MessageVideos
+                key={`videos-loading-${message.messageId}`}
+                videos={[]}
+                query={history[messageIndex - 1]?.content || message.content || ''}
+                loading={true}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-black/70 dark:text-white/70">No videos found for this query</p>
+              </div>
             )}
           </div>
         );

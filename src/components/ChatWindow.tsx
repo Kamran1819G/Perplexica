@@ -14,6 +14,30 @@ import Link from 'next/link';
 import NextError from 'next/error';
 
 
+export type ImageResult = {
+  img_src: string;
+  url: string;
+  title: string;
+};
+
+export type VideoResult = {
+  img_src: string;
+  url: string;
+  title: string;
+  iframe_src: string;
+};
+
+export type SearchIntent = {
+  needsImages: boolean;
+  needsVideos: boolean;
+  confidence: {
+    images: number;
+    videos: number;
+  };
+  reasoning: string;
+  primaryIntent: 'documents' | 'images' | 'videos' | 'mixed';
+};
+
 export type Message = {
   messageId: string;
   chatId: string;
@@ -22,6 +46,12 @@ export type Message = {
   role: 'user' | 'assistant';
   suggestions?: string[];
   sources?: Document[];
+  
+  // Unified search results
+  images?: ImageResult[];
+  videos?: VideoResult[];
+  searchIntent?: SearchIntent;
+  
   currentStep?: string;
   steps?: string[];
   // Orchestrator data
@@ -623,6 +653,54 @@ const ChatWindow = ({ id }: { id?: string }) => {
             })
           );
         }
+        setMessageAppeared(true);
+      }
+
+      // Handle unified search results - images
+      if (data.type === 'images') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === data.messageId) {
+              return {
+                ...msg,
+                images: data.data,
+              };
+            }
+            return msg;
+          })
+        );
+        setMessageAppeared(true);
+      }
+
+      // Handle unified search results - videos
+      if (data.type === 'videos') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === data.messageId) {
+              return {
+                ...msg,
+                videos: data.data,
+              };
+            }
+            return msg;
+          })
+        );
+        setMessageAppeared(true);
+      }
+
+      // Handle search intent detection
+      if (data.type === 'intent_detected') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (msg.messageId === data.messageId) {
+              return {
+                ...msg,
+                searchIntent: data.data.intent,
+              };
+            }
+            return msg;
+          })
+        );
         setMessageAppeared(true);
       }
 

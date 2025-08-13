@@ -248,10 +248,12 @@ export const classifyError = (error: any): string => {
   return 'UNKNOWN';
 };
 
-export default {
+const errorHandling = {
   circuitBreakers,
   retryHandlers,
   errorTracker,
   withErrorHandling,
   classifyError,
 };
+
+export default errorHandling;

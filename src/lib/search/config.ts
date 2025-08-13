@@ -4,6 +4,8 @@ export const searchConfigs: Record<string, OrchestratorConfig> = {
   quickSearch: {
     mode: 'quick',
     maxSources: 8, // Tight, focused source set for immediate answers
+    maxImages: 12, // Reasonable image set for quick visual results
+    maxVideos: 8, // Focused video set for immediate media results
     rerankingConfig: {
       threshold: 0.5, // High threshold for only most relevant sources
       maxDocuments: 12, // Minimal set for speed
@@ -22,13 +24,16 @@ export const searchConfigs: Record<string, OrchestratorConfig> = {
       maxQueries: 1, // Single focused query for speed
       parallelSearches: true,
       fallbackEnabled: false,
-      expertSourcing: false
+      expertSourcing: false,
+      intelligentIntent: true // Enable for better intent detection
     }
   },
   
   proSearch: {
     mode: 'pro',
     maxSources: 15, // Broader coverage for research depth
+    maxImages: 20, // More images for comprehensive visual research
+    maxVideos: 15, // More videos for multi-perspective media content
     rerankingConfig: {
       threshold: 0.25, // Lower threshold for wider source inclusion
       maxDocuments: 30, // More documents for comprehensive coverage
@@ -47,13 +52,16 @@ export const searchConfigs: Record<string, OrchestratorConfig> = {
       maxQueries: 3, // Multiple angles for comprehensive research
       parallelSearches: true,
       fallbackEnabled: true, // Enable for reliability
-      expertSourcing: true // Include authoritative sources
+      expertSourcing: true, // Include authoritative sources
+      intelligentIntent: true // Use LLM for smart intent detection
     }
   },
   
   ultraSearch: {
     mode: 'ultra',
     maxSources: 25, // Premium source selection for rigorous analysis
+    maxImages: 30, // Extensive image collection for thorough visual analysis
+    maxVideos: 25, // Comprehensive video collection for multi-modal research
     rerankingConfig: {
       threshold: 0.15, // Very low threshold for exhaustive coverage
       maxDocuments: 50, // Maximum documents for comprehensive analysis
@@ -72,7 +80,8 @@ export const searchConfigs: Record<string, OrchestratorConfig> = {
       maxQueries: 6, // Multiple search angles for exhaustive coverage
       parallelSearches: true,
       fallbackEnabled: true, // Maximum reliability for high-stakes queries
-      expertSourcing: true // Prioritize authoritative and expert sources
+      expertSourcing: true, // Prioritize authoritative and expert sources
+      intelligentIntent: true // Use advanced LLM intent analysis
     }
   }
 };

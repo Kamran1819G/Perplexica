@@ -275,7 +275,7 @@ export const getSystemHealth = () => {
   };
 };
 
-export default {
+const performanceUtils = {
   performanceMonitor,
   memoryMonitor,
   databaseMonitor,
@@ -283,3 +283,5 @@ export default {
   trackAsync,
   getSystemHealth,
 };
+
+export default performanceUtils;

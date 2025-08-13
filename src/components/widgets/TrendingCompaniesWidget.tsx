@@ -116,7 +116,7 @@ const TrendingCompaniesWidget: React.FC = () => {
     // Refresh data every 10 minutes
     const interval = setInterval(fetchTrendingCompanies, 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchTrendingCompanies]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { 
