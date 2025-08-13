@@ -104,6 +104,9 @@ export class SearchOrchestrator {
           }
         }));
 
+        // Emit end event to close the stream
+        this.emitter.emit('end');
+
         return this.emitter;
       } catch (error) {
         console.error('Search failed:', error);
@@ -112,6 +115,10 @@ export class SearchOrchestrator {
           type: 'error',
           data: { error: errorMessage }
         }));
+        
+        // Emit end event even on error to close the stream
+        this.emitter.emit('end');
+        
         throw error;
       }
     });
@@ -442,9 +449,28 @@ export class SearchOrchestrator {
       llm
     );
 
+    // Emit sources first (as expected by the frontend)
+    const maxSources = this.config.maxSources;
+    this.emitter.emit('data', JSON.stringify({
+      type: 'sources',
+      data: sources.slice(0, maxSources),
+      metadata: {
+        totalFound: sources.length,
+        maxDisplayed: maxSources,
+        mode: this.config.mode
+      }
+    }));
+
     // Generate final answer
     const answer = await this.generateFinalAnswer(query, unifiedContext, sources, llm);
 
+    // Emit the response in the format expected by the chat API
+    this.emitter.emit('data', JSON.stringify({
+      type: 'response',
+      data: answer
+    }));
+    
+    // Also emit the structured answer data for other consumers
     this.emitter.emit('data', JSON.stringify({
       type: 'answer_generated',
       data: {
@@ -455,6 +481,23 @@ export class SearchOrchestrator {
           score: doc.relevanceScore
         }))
       }
+    }));
+
+    // Emit completion progress
+    this.emitter.emit('data', JSON.stringify({
+      type: 'progress',
+      data: {
+        step: 'complete',
+        message: 'Search completed successfully',
+        details: 'Answer generation finished',
+        progress: 100
+      }
+    }));
+
+    // Emit done signal to indicate completion
+    this.emitter.emit('data', JSON.stringify({
+      type: 'done',
+      data: 'Search completed successfully'
     }));
   }
 

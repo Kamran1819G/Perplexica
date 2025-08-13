@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1bb630d4-28c6-4fff-85bf-c2090602d1cc",
+  "id": "f04c65a6-3350-4842-83de-0f0b55d333b4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chats": {
@@ -38,8 +38,8 @@
         }
       },
       "indexes": {
-        "created_at_idx": {
-          "name": "created_at_idx",
+        "chats_created_at_idx": {
+          "name": "chats_created_at_idx",
           "columns": [
             "createdAt"
           ],
@@ -95,6 +95,13 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -124,6 +131,13 @@
           "columns": [
             "chatId",
             "type"
+          ],
+          "isUnique": false
+        },
+        "messages_created_at_idx": {
+          "name": "messages_created_at_idx",
+          "columns": [
+            "createdAt"
           ],
           "isUnique": false
         }

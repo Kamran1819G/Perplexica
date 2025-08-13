@@ -20,7 +20,7 @@ export class FilterAgent extends BaseNewsAgent {
   }
 
   async process(article: NewsArticle): Promise<NewsArticle> {
-    return this.executeWithErrorHandling(async () => {
+    const result = await this.executeWithErrorHandling(async () => {
       const qualityScore = await this.calculateQualityScore(article);
       const credibility = this.assessSourceCredibility(article.source.domain);
       const sentiment = await this.analyzeSentiment(article);
@@ -38,7 +38,9 @@ export class FilterAgent extends BaseNewsAgent {
         bias,
         topics
       };
-    }, 'article filtering') || article;
+    }, 'article filtering');
+    
+    return result || article;
   }
 
   private async calculateQualityScore(article: NewsArticle): Promise<number> {

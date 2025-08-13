@@ -177,7 +177,7 @@ const ArticlePage = () => {
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-black dark:text-white mb-4">Article Not Found</h1>
             <p className="text-black/70 dark:text-white/70 mb-6">
-              The article you're looking for could not be loaded.
+              The article you&apos;re looking for could not be loaded.
             </p>
             <Link
               href="/discover"

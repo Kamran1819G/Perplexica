@@ -5,17 +5,19 @@ CREATE TABLE `chats` (
 	`files` text DEFAULT '[]'
 );
 --> statement-breakpoint
-CREATE INDEX `created_at_idx` ON `chats` (`createdAt`);--> statement-breakpoint
+CREATE INDEX `chats_created_at_idx` ON `chats` (`createdAt`);--> statement-breakpoint
 CREATE TABLE `messages` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`content` text NOT NULL,
 	`chatId` text NOT NULL,
 	`messageId` text NOT NULL,
 	`type` text,
-	`metadata` text
+	`metadata` text,
+	`createdAt` text NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `chat_id_idx` ON `messages` (`chatId`);--> statement-breakpoint
 CREATE INDEX `message_id_idx` ON `messages` (`messageId`);--> statement-breakpoint
 CREATE INDEX `role_idx` ON `messages` (`type`);--> statement-breakpoint
-CREATE INDEX `chat_role_idx` ON `messages` (`chatId`,`type`);
+CREATE INDEX `chat_role_idx` ON `messages` (`chatId`,`type`);--> statement-breakpoint
+CREATE INDEX `messages_created_at_idx` ON `messages` (`createdAt`);

@@ -1,1 +1,0 @@
-ALTER TABLE `messages` ADD `createdAt` text DEFAULT (datetime('now')) NOT NULL;

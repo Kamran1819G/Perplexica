@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       searchSearxng(searchQuery, {
         engines: [engine],
         pageno: page,
-        time_range: 'day', // Focus on recent news
+        time_range: ['day'], // Focus on recent news
       }).catch(err => {
         console.warn(`Engine ${engine} failed:`, err);
         return { results: [] };

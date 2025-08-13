@@ -161,6 +161,7 @@ const handleEmitterEvents = async (
           chatId: chatId,
           messageId: aiMessageId,
           role: 'assistant',
+          createdAt: new Date().toISOString(),
           metadata: JSON.stringify({
             createdAt: new Date(),
             ...(sources && sources.length > 0 && { sources }),
@@ -230,6 +231,7 @@ const handleHistorySave = async (
         chatId: message.chatId,
         messageId: humanMessageId,
         role: 'user',
+        createdAt: new Date().toISOString(),
         metadata: JSON.stringify({
           createdAt: new Date(),
         }),

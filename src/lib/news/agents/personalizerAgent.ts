@@ -8,7 +8,7 @@ export class PersonalizerAgent extends BaseNewsAgent {
   }
 
   async process(data: { articles: NewsArticle[], userPreferences: UserPreferences }): Promise<NewsArticle[]> {
-    return this.executeWithErrorHandling(async () => {
+    const result = await this.executeWithErrorHandling(async () => {
       const { articles, userPreferences } = data;
       
       // Calculate relevance scores for each article
@@ -20,7 +20,9 @@ export class PersonalizerAgent extends BaseNewsAgent {
       return scoredArticles
         .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
         
-    }, 'personalization') || data.articles;
+    }, 'personalization');
+    
+    return result || data.articles;
   }
 
   private async calculateRelevanceScore(

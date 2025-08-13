@@ -6,11 +6,11 @@ export const messages = sqliteTable('messages', {
   content: text('content').notNull(),
   chatId: text('chatId').notNull(),
   messageId: text('messageId').notNull(),
-  role: text('type', { enum: ['assistant', 'user'] }),
+  role: text('type').$type<'assistant' | 'user'>(),
   metadata: text('metadata', {
     mode: 'json',
   }),
-  createdAt: text('createdAt').notNull().default(sql`datetime('now')`),
+  createdAt: text('createdAt').notNull(),
 }, (table) => ({
   // Add indexes for better query performance
   chatIdIdx: index('chat_id_idx').on(table.chatId),
@@ -19,7 +19,7 @@ export const messages = sqliteTable('messages', {
   // Composite index for common queries
   chatRoleIdx: index('chat_role_idx').on(table.chatId, table.role),
   // Add index for sorting by creation date
-  createdAtIdx: index('created_at_idx').on(table.createdAt),
+  createdAtIdx: index('messages_created_at_idx').on(table.createdAt),
 
 }));
 
@@ -37,5 +37,5 @@ export const chats = sqliteTable('chats', {
     .default(sql`'[]'`),
 }, (table) => ({
   // Add index for sorting by creation date
-  createdAtIdx: index('created_at_idx').on(table.createdAt),
+  createdAtIdx: index('chats_created_at_idx').on(table.createdAt),
 }));

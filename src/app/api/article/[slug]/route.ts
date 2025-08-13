@@ -13,10 +13,11 @@ const articleStore = ArticleStore.getInstance();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const slug = decodeURIComponent(params.slug);
+    const { slug: rawSlug } = await params;
+    const slug = decodeURIComponent(rawSlug);
     
     // Try to get article by slug first (most common case)
     let article = articleStore.getArticleBySlug(slug);
@@ -139,7 +140,7 @@ async function findRelatedArticles(topics: string[], excludeUrl: string): Promis
         const searchResult = await searchSearxng(topic, {
           engines: ['bing news', 'google news'],
           pageno: 1,
-          time_range: 'week'
+          time_range: ['week']
         });
 
         if (searchResult.results) {
@@ -187,18 +188,19 @@ async function findRelatedArticles(topics: string[], excludeUrl: string): Promis
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const body = await request.json();
     const { action, query } = body;
-    const slug = decodeURIComponent(params.slug);
+    const { slug: rawSlug } = await params;
+    const slug = decodeURIComponent(rawSlug);
 
     switch (action) {
       case 'analyze':
         // Re-analyze the article with fresh AI processing
         if (slug.startsWith('http')) {
-          const article = await analyzeArticleFromUrl(slug);
+          const article = await scrapeAndStoreArticle(slug);
           return NextResponse.json({
             success: true,
             article,

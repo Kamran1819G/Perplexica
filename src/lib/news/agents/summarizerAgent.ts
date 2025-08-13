@@ -8,7 +8,7 @@ export class SummarizerAgent extends BaseNewsAgent {
   }
 
   async process(article: NewsArticle): Promise<NewsArticle> {
-    return this.executeWithErrorHandling(async () => {
+    const result = await this.executeWithErrorHandling(async () => {
       const prompt = this.getPromptTemplate('summarize', {
         title: article.title,
         content: article.content,
@@ -22,7 +22,9 @@ export class SummarizerAgent extends BaseNewsAgent {
         ...article,
         summary
       };
-    }, 'article summarization') || article;
+    }, 'article summarization');
+    
+    return result || article;
   }
 
   private async generateSummary(article: NewsArticle): Promise<string> {
