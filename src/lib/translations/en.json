@@ -100,9 +100,9 @@
     "quickSearch": "Quick Search",
     "proSearch": "Pro Search",
     "ultraSearch": "Ultra Search",
-    "quickSearchDescription": "Fast web search with immediate results",
-    "proSearchDescription": "Deep research with comprehensive analysis",
-    "ultraSearchDescription": "PhD-level research with parallel agents and cross-validation",
+    "quickSearchDescription": "Immediate, concise answers with tight retrieval. Perfect for definitions, quick facts, and everyday lookups where speed matters most.",
+    "proSearchDescription": "Comprehensive research with broader source coverage, structured analysis, and transparent citations. Ideal for academic overviews and market research.",
+    "ultraSearchDescription": "Premium reasoning and synthesis for complex queries. Rigorous multi-hop analysis with methodical structure for high-stakes decisions.",
     "proBadge": "PRO",
     "ultraBadge": "ULTRA",
     "powered": "Powered by multiple search engines"

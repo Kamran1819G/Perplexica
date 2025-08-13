@@ -17,7 +17,7 @@ import LineListOutputParser from '../outputParsers/listLineOutputParser';
 import LineOutputParser from '../outputParsers/lineOutputParser';
 import { getDocumentsFromLinks } from '../utils/documents';
 import { Document } from 'langchain/document';
-import { searchSearxng } from '../searxng';
+import { searchSearxng, SearxngClient } from '../searxng';
 import path from 'node:path';
 import fs from 'node:fs';
 import computeSimilarity from '../utils/computeSimilarity';
@@ -69,6 +69,23 @@ interface OrchestratorConfig {
   activeEngines: string[];
   planningPrompt: string;
   maxSources?: number; // Maximum sources to return after ranking
+  neuralReranker?: any; // Neural reranker component
+  contextualFusion?: any; // Contextual fusion component
+  multiModelRouter?: any; // Multi-model router component
+  rerankingConfig?: {
+    threshold: number;
+    maxDocuments: number;
+    diversityBoost: boolean;
+    semanticWeight: number;
+    keywordWeight: number;
+  };
+  fusionConfig?: {
+    maxChunkSize: number;
+    overlapSize: number;
+    maxChunks: number;
+    semanticGrouping: boolean;
+    deduplication: boolean;
+  };
 }
 
 type BasicChainInput = {
@@ -81,11 +98,13 @@ class QuickSearchOrchestrator implements SearchOrchestratorType {
   private strParser = new StringOutputParser();
   protected emitter: eventEmitter;
   protected followUpGenerator: FollowUpGenerator;
+  protected searxngClient: SearxngClient;
 
   constructor(config: OrchestratorConfig) {
     this.config = config;
     this.emitter = new eventEmitter();
     this.followUpGenerator = new FollowUpGenerator();
+    this.searxngClient = new SearxngClient();
   }
 
   private createPlanningChain(llm: BaseChatModel) {

@@ -72,7 +72,7 @@ const StepsComponent = ({
     icon: `https://s2.googleusercontent.com/s2/favicons?domain_url=${source.metadata?.url}&sz=16`
   })) || [], [sources]);
 
-  // Define step progression mapping
+  // Enhanced step progression mapping for better visualization
   const stepProgression = useMemo((): Record<string, string> => ({
     // Search phase steps
     'planning': 'search',
@@ -104,6 +104,32 @@ const StepsComponent = ({
     'complete': 'finished',
     'ultra_complete': 'finished'
   }), []);
+
+  // Enhanced phase descriptions
+  const phaseDescriptions = useMemo(() => ({
+    search: {
+      title: 'Research Planning & Execution',
+      description: mode === 'ultra' ? 'Multi-agent parallel research with dynamic replanning' :
+                  mode === 'pro' ? 'Comprehensive multi-angle search strategy' :
+                  'Efficient search planning and execution'
+    },
+    sources: {
+      title: 'Source Analysis & Processing',
+      description: mode === 'ultra' ? 'Advanced neural reranking and contextual fusion' :
+                  mode === 'pro' ? 'Enhanced document processing and ranking' :
+                  'Document retrieval and relevance scoring'
+    },
+    generating: {
+      title: 'Answer Generation',
+      description: mode === 'ultra' ? 'Multi-model orchestrated response synthesis' :
+                  mode === 'pro' ? 'Deep analysis and comprehensive answer generation' :
+                  'Focused answer generation from verified sources'
+    },
+    finished: {
+      title: 'Complete',
+      description: 'Research completed with comprehensive results'
+    }
+  }), [mode]);
 
   // Calculate current phase and steps
   const currentPhase = useMemo(() => {

@@ -6,7 +6,7 @@ import eventEmitter from 'events';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence, RunnableLambda } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { searchSearxng } from '../searxng';
+import { searchSearxng, SearxngClient } from '../searxng';
 import { Document } from 'langchain/document';
 import { getDocumentsFromLinks } from '../utils/documents';
 import CacheManager, { CacheKeys } from '../cache';
@@ -52,6 +52,23 @@ interface ProSearchConfig {
   maxSearchSteps: number;
   deepAnalysis: boolean;
   maxSources?: number; // Maximum sources to return after ranking
+  neuralReranker?: any; // Neural reranker component
+  contextualFusion?: any; // Contextual fusion component
+  multiModelRouter?: any; // Multi-model router component
+  rerankingConfig?: {
+    threshold: number;
+    maxDocuments: number;
+    diversityBoost: boolean;
+    semanticWeight: number;
+    keywordWeight: number;
+  };
+  fusionConfig?: {
+    maxChunkSize: number;
+    overlapSize: number;
+    maxChunks: number;
+    semanticGrouping: boolean;
+    deduplication: boolean;
+  };
 }
 
 export class ProSearchOrchestrator extends QuickSearchOrchestratorBase implements SearchOrchestratorType {

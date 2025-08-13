@@ -6,13 +6,13 @@ import {
   getAvailableEmbeddingModelProviders,
 } from '@/lib/providers';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
-import { SearchOrchestratorType } from '@/lib/search/quickSearchOrchestrator';
 import {
   getCustomOpenaiApiKey,
   getCustomOpenaiApiUrl,
   getCustomOpenaiModelName,
 } from '@/lib/config';
 import { orchestratorHandlers } from '@/lib/search';
+import { SearchOrchestrator } from '@/lib/search/orchestrator';
 import { enhanceSystemInstructions } from '@/lib/utils/personalization';
 
 interface chatModel {
@@ -117,7 +117,7 @@ export const POST = async (req: Request) => {
 
     // Determine search mode - default to quickSearch if not specified
     const searchMode = body.searchMode || 'quickSearch';
-    const searchHandler: SearchOrchestratorType = orchestratorHandlers[searchMode];
+    const searchHandler: SearchOrchestrator = orchestratorHandlers[searchMode];
 
     if (!searchHandler) {
       return Response.json(
@@ -135,12 +135,11 @@ export const POST = async (req: Request) => {
       }
     );
 
-    const emitter = await searchHandler.planAndExecute(
+    const emitter = await searchHandler.executeSearch(
       body.query,
       history,
       llm,
       embeddings,
-
       [],
       enhancedSystemInstructions,
     );

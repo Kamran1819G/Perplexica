@@ -462,7 +462,7 @@ export const POST = async (req: Request) => {
       // Use new orchestrator (ProSearch, etc.)
       console.log('🚀 Using orchestrator:', searchMode);
       const orchestrator = orchestratorHandlers[searchMode];
-      stream = await orchestrator.planAndExecute(
+      stream = await orchestrator.executeSearch(
         message.content,
         history,
         llm,
