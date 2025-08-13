@@ -83,6 +83,7 @@ const Page = () => {
   const [showInterests, setShowInterests] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedInterestFilter, setSelectedInterestFilter] = useState<string>('all');
+  const [processingArticle, setProcessingArticle] = useState<string | null>(null);
 
   // Available interests with icons
   const availableInterests: Interest[] = [
@@ -211,17 +212,49 @@ const Page = () => {
     setPage(1);
   }, [infiniteMode, selectedInterestFilter]);
 
+  const handleArticleClick = async (url: string) => {
+    try {
+      setProcessingArticle(url);
+      
+      // Process article and get slug
+      const response = await fetch('/api/article/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        // Navigate to article page with proper slug
+        window.location.href = `/article/${data.slug}`;
+      } else {
+        // Fallback to original URL
+        window.open(url, '_blank');
+        setProcessingArticle(null);
+      }
+    } catch (error) {
+      console.error('Failed to process article:', error);
+      // Fallback to original URL
+      window.open(url, '_blank');
+      setProcessingArticle(null);
+    }
+  };
+
   const renderArticleCard = (item: Discover, index: number, isGrid = false) => {
     const urlObj = new URL(item.url);
     const website = urlObj.hostname.replace('www.', '');
+    const isProcessing = processingArticle === item.url;
     
     if (isGrid) {
       return (
-        <Link
-          href={`/?q=Summary: ${item.url}`}
+        <div
           key={index}
-          className="bg-light-secondary dark:bg-dark-secondary rounded-lg overflow-hidden hover:bg-light-200 dark:hover:bg-dark-200 transition-colors duration-200 cursor-pointer border border-light-200 dark:border-dark-200"
-          target="_blank"
+          onClick={() => !isProcessing && handleArticleClick(item.url)}
+          className={`bg-light-secondary dark:bg-dark-secondary rounded-lg overflow-hidden transition-colors duration-200 border border-light-200 dark:border-dark-200 ${
+            isProcessing 
+              ? 'opacity-75 cursor-wait' 
+              : 'hover:bg-light-200 dark:hover:bg-dark-200 cursor-pointer'
+          }`}
         >
           <div className="h-32 sm:h-40 bg-light-200 dark:bg-dark-200">
             <img
@@ -239,25 +272,34 @@ const Page = () => {
           </div>
           <div className="p-3 sm:p-4">
             <h3 className="font-semibold mb-2 line-clamp-2 hover:text-[#24A0ED] transition-colors duration-200 text-black dark:text-white text-sm sm:text-base">{item.title}</h3>
-            <div className="flex items-center justify-start">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1.5 px-2 py-1 bg-black/5 dark:bg-white/5 rounded-full">
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></div>
                   <span className="text-xs sm:text-sm font-medium text-black/70 dark:text-white/70">{getSourceName(item.url)}</span>
                 </div>
               </div>
+              {isProcessing && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 border-2 border-[#24A0ED]/30 border-t-[#24A0ED] rounded-full animate-spin"></div>
+                  <span className="text-xs text-[#24A0ED]">Processing...</span>
+                </div>
+              )}
             </div>
           </div>
-        </Link>
+        </div>
       );
     }
 
     return (
-      <Link
-        href={`/?q=Summary: ${item.url}`}
+      <div
         key={index}
-        className="bg-light-secondary dark:bg-dark-secondary rounded-lg overflow-hidden hover:bg-light-200 dark:hover:bg-dark-200 transition-colors duration-200 cursor-pointer border border-light-200 dark:border-dark-200"
-        target="_blank"
+        onClick={() => !isProcessing && handleArticleClick(item.url)}
+        className={`bg-light-secondary dark:bg-dark-secondary rounded-lg overflow-hidden transition-colors duration-200 border border-light-200 dark:border-dark-200 ${
+          isProcessing 
+            ? 'opacity-75 cursor-wait' 
+            : 'hover:bg-light-200 dark:hover:bg-dark-200 cursor-pointer'
+        }`}
       >
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1 p-4 sm:p-6">
@@ -266,13 +308,19 @@ const Page = () => {
             </div>
             <h2 className="text-lg sm:text-xl font-bold mb-3 hover:text-[#24A0ED] transition-colors duration-200 text-black dark:text-white">{item.title}</h2>
             <p className="text-black/70 dark:text-white/70 mb-4 leading-relaxed text-sm sm:text-base line-clamp-3">{item.content}</p>
-            <div className="flex items-center justify-start">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1.5 px-2 py-1 bg-black/5 dark:bg-white/5 rounded-full">
                   <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full"></div>
                   <span className="text-xs sm:text-sm font-medium text-black/70 dark:text-white/70">{getSourceName(item.url)}</span>
                 </div>
               </div>
+              {isProcessing && (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-[#24A0ED]/30 border-t-[#24A0ED] rounded-full animate-spin"></div>
+                  <span className="text-sm text-[#24A0ED]">Processing article...</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="w-full lg:w-80 h-48 sm:h-64 lg:h-auto bg-light-200 dark:bg-dark-200 flex-shrink-0">
@@ -290,7 +338,7 @@ const Page = () => {
             />
           </div>
         </div>
-      </Link>
+      </div>
     );
   };
 

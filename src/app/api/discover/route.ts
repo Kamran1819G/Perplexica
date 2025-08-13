@@ -1,5 +1,9 @@
 import { searchSearxng } from '@/lib/searxng';
 import { getNewsEnginesForCategory } from '@/lib/newsSearchEngines';
+import { FilterAgent } from '@/lib/news/agents/filterAgent';
+import { SummarizerAgent } from '@/lib/news/agents/summarizerAgent';
+import { PersonalizerAgent } from '@/lib/news/agents/personalizerAgent';
+import { NewsArticle, UserPreferences } from '@/lib/news/types';
 
 const articleWebsites = [
   'yahoo.com',
@@ -18,6 +22,11 @@ const topics = ['AI', 'tech']; /* TODO: Add UI to customize this */
 // Get primary news engines from configuration
 const newsEngines = getNewsEnginesForCategory('primary');
 
+// Initialize AI agents
+const filterAgent = new FilterAgent();
+const summarizerAgent = new SummarizerAgent();
+const personalizerAgent = new PersonalizerAgent();
+
 export const GET = async (req: Request) => {
   try {
     const params = new URL(req.url).searchParams;
@@ -29,6 +38,10 @@ export const GET = async (req: Request) => {
     const page = parseInt(params.get('page') || '1', 10);
     const pageSize = parseInt(params.get('pageSize') || '12', 10);
     const sort = params.get('sort') || 'relevance';
+    const includeAI = params.get('includeAI') === 'true';
+    const personalize = params.get('personalize') === 'true';
+    const minQuality = parseInt(params.get('minQuality') || '30');
+    const userId = params.get('userId');
 
     let data = [];
 
@@ -157,27 +170,105 @@ export const GET = async (req: Request) => {
       index === self.findIndex(t => t.url === item.url)
     );
 
+    // Convert to NewsArticle format and apply AI processing if requested
+    let processedArticles: NewsArticle[] = uniqueData.map((item: any, index: number) => {
+      const url = new URL(item.url || 'https://example.com');
+      return {
+        id: `discover_${Date.now()}_${index}`,
+        title: item.title || 'Untitled',
+        content: item.content || item.description || '',
+        url: item.url || '',
+        thumbnail: item.img_src || item.thumbnail,
+        publishedAt: item.publishedDate || item.date || new Date().toISOString(),
+        source: {
+          name: item.engine || url.hostname.replace('www.', ''),
+          domain: url.hostname.replace('www.', ''),
+          credibility: 'medium' as const
+        },
+        qualityScore: 50,
+        topics: []
+      };
+    });
+
+    // Apply AI enhancements if requested
+    if (includeAI && processedArticles.length > 0) {
+      try {
+        // Filter and enhance with AI
+        const filteredArticles = await filterAgent.batchFilter(processedArticles, minQuality);
+        processedArticles = await summarizerAgent.batchProcess(filteredArticles);
+      } catch (aiError) {
+        console.warn('AI processing failed, continuing without enhancements:', aiError);
+      }
+    }
+
+    // Apply personalization if requested
+    if (personalize && userId && processedArticles.length > 0) {
+      try {
+        // In production, fetch user preferences from database
+        const userPreferences: UserPreferences = {
+          interests: topic ? [topic] : ['AI', 'tech'],
+          preferredSources: [],
+          avoidedSources: [],
+          readingHistory: [],
+          interactionHistory: [],
+          personalizedTopics: [
+            { topic: 'Technology', weight: 0.8 },
+            { topic: 'Business', weight: 0.6 }
+          ]
+        };
+
+        processedArticles = await personalizerAgent.generatePersonalizedFeed(
+          processedArticles,
+          userPreferences,
+          pageSize * 2 // Get more for better filtering
+        );
+      } catch (personalizationError) {
+        console.warn('Personalization failed:', personalizationError);
+      }
+    }
+
+    // Convert back to the expected format for backwards compatibility
+    const enhancedData = processedArticles.map(article => ({
+      title: article.title,
+      content: article.content,
+      url: article.url,
+      thumbnail: article.thumbnail,
+      published: article.publishedAt,
+      engine: article.source.name,
+      publishedDate: article.publishedAt,
+      qualityScore: article.qualityScore,
+      summary: article.summary,
+      topics: article.topics,
+      sentiment: article.sentiment,
+      relevanceScore: article.relevanceScore
+    }));
+
     // Sorting
     const getDate = (item: any) => {
       if (item.publishedDate) return new Date(item.publishedDate).getTime();
       if (item.date) return new Date(item.date).getTime();
       return 0;
     };
+    
     if (sort === 'newest') {
-      uniqueData.sort((a, b) => getDate(b) - getDate(a));
+      enhancedData.sort((a, b) => getDate(b) - getDate(a));
     } else if (sort === 'oldest') {
-      uniqueData.sort((a, b) => getDate(a) - getDate(b));
+      enhancedData.sort((a, b) => getDate(a) - getDate(b));
     } else if (sort === 'website') {
-      uniqueData.sort((a, b) => {
+      enhancedData.sort((a, b) => {
         const hostA = (a.url ? new URL(a.url).hostname : '').replace('www.', '');
         const hostB = (b.url ? new URL(b.url).hostname : '').replace('www.', '');
         return hostA.localeCompare(hostB);
       });
+    } else if (sort === 'relevance' && personalize) {
+      enhancedData.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+    } else if (sort === 'quality') {
+      enhancedData.sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
     }
 
-    const totalResults = uniqueData.length;
+    const totalResults = enhancedData.length;
     const totalPages = Math.ceil(totalResults / pageSize);
-    const pagedData = uniqueData.slice((page - 1) * pageSize, page * pageSize);
+    const pagedData = enhancedData.slice((page - 1) * pageSize, page * pageSize);
 
     return Response.json(
       {

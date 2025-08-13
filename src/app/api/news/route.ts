@@ -1,57 +1,193 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { searchSearxng } from '@/lib/searxng';
+import { getNewsEnginesForCategory } from '@/lib/newsSearchEngines';
+import { FilterAgent } from '@/lib/news/agents/filterAgent';
+import { SummarizerAgent } from '@/lib/news/agents/summarizerAgent';
+import { PersonalizerAgent } from '@/lib/news/agents/personalizerAgent';
+import { NewsArticle, UserPreferences, NewsFilter } from '@/lib/news/types';
 
-interface NewsArticle {
-  title: string;
-  description: string;
-  url: string;
-  publishedAt: string;
-  source: string;
-  sentiment?: 'positive' | 'negative' | 'neutral';
-}
+// Initialize AI agents
+const filterAgent = new FilterAgent();
+const summarizerAgent = new SummarizerAgent();
+const personalizerAgent = new PersonalizerAgent();
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category') || 'business';
-    const limit = parseInt(searchParams.get('limit') || '5');
     
-    // Try to fetch from a free news API
-    let newsData: NewsArticle[] = [];
+    // Parse parameters
+    const category = searchParams.get('category') || 'general';
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt(searchParams.get('page') || '1');
+    const personalize = searchParams.get('personalize') === 'true';
+    const includeAI = searchParams.get('includeAI') === 'true';
+    const minQuality = parseInt(searchParams.get('minQuality') || '30');
+    const userId = searchParams.get('userId');
     
-    try {
-      // Using NewsAPI.org (free tier) - you would need to sign up for a free API key
-      // For demo purposes, we'll use a public RSS feed or return fallback data
-      
-      // Alternative: Using a public RSS feed for financial news
-      const response = await fetch('https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC,^IXIC,^DJI&region=US&lang=en-US');
-      
-      if (response.ok) {
-        const text = await response.text();
-        // Parse RSS feed (simplified parsing)
-        const articles = parseRSSFeed(text);
-        newsData = articles.slice(0, limit);
-      } else {
-        throw new Error('Failed to fetch RSS feed');
-      }
-    } catch (error) {
-      console.error('Error fetching news from external API:', error);
-      // Return fallback data
-      newsData = getFallbackNews();
+    // Parse filter parameters
+    const topicsParam = searchParams.get('topics');
+    const sourcesParam = searchParams.get('sources');
+    const sentimentParam = searchParams.get('sentiment');
+    
+    const filter: NewsFilter = {
+      topics: topicsParam ? topicsParam.split(',') : undefined,
+      sources: sourcesParam ? sourcesParam.split(',') : undefined,
+      sentiment: sentimentParam ? [sentimentParam as any] : undefined,
+      qualityThreshold: minQuality
+    };
+
+    // Get news engines based on category
+    const newsEngines = getNewsEnginesForCategory('primary');
+    
+    // Build search query based on category and filters
+    let searchQuery = '';
+    if (category && category !== 'general') {
+      searchQuery = category;
+    }
+    if (filter.topics && filter.topics.length > 0) {
+      searchQuery += ` ${filter.topics.join(' OR ')}`;
     }
     
-    return NextResponse.json({
-      success: true,
-      data: newsData.slice(0, limit),
-      timestamp: new Date().toISOString()
+    // If no specific query, use trending topics
+    if (!searchQuery.trim()) {
+      searchQuery = 'breaking news OR latest news';
+    }
+
+    // Fetch news from multiple engines
+    const searchPromises = newsEngines.map(engine => 
+      searchSearxng(searchQuery, {
+        engines: [engine],
+        pageno: page,
+        time_range: 'day', // Focus on recent news
+      }).catch(err => {
+        console.warn(`Engine ${engine} failed:`, err);
+        return { results: [] };
+      })
+    );
+
+    const results = await Promise.allSettled(searchPromises);
+    const rawArticles = results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => (result as PromiseFulfilledResult<any>).value.results)
+      .flat();
+
+    // Convert to our NewsArticle format
+    let articles: NewsArticle[] = rawArticles.map((result: any, index: number) => {
+      const url = new URL(result.url);
+      return {
+        id: `article_${Date.now()}_${index}`,
+        title: result.title || 'Untitled',
+        content: result.content || result.description || '',
+        url: result.url,
+        thumbnail: result.img_src || result.thumbnail,
+        publishedAt: result.publishedDate || result.date || new Date().toISOString(),
+        source: {
+          name: result.engine || url.hostname.replace('www.', ''),
+          domain: url.hostname.replace('www.', ''),
+          credibility: 'medium' as const
+        },
+        qualityScore: 50, // Will be updated by filter agent
+        topics: [] // Will be populated by filter agent
+      };
     });
-    
+
+    // Remove duplicates by URL
+    const uniqueArticles = articles.filter((article, index, self) => 
+      index === self.findIndex(a => a.url === article.url)
+    );
+
+    // Apply AI processing if requested
+    if (includeAI) {
+      // Filter and enhance articles with AI
+      const filteredArticles = await filterAgent.batchFilter(uniqueArticles, minQuality);
+      
+      // Add summaries
+      articles = await summarizerAgent.batchProcess(filteredArticles);
+    } else {
+      articles = uniqueArticles;
+    }
+
+    // Apply personalization if requested and user provided
+    if (personalize && userId) {
+      try {
+        // In production, fetch user preferences from database
+        const userPreferences: UserPreferences = {
+          interests: ['technology', 'business'], // Example
+          preferredSources: [],
+          avoidedSources: [],
+          readingHistory: [],
+          interactionHistory: [],
+          personalizedTopics: [
+            { topic: 'Technology', weight: 0.8 },
+            { topic: 'Business', weight: 0.6 }
+          ]
+        };
+
+        articles = await personalizerAgent.generatePersonalizedFeed(
+          articles, 
+          userPreferences, 
+          limit
+        );
+      } catch (error) {
+        console.error('Personalization failed:', error);
+        // Continue without personalization
+      }
+    }
+
+    // Apply additional filters
+    if (filter.sentiment) {
+      articles = articles.filter(article => 
+        !article.sentiment || filter.sentiment!.includes(article.sentiment)
+      );
+    }
+
+    if (filter.sources) {
+      articles = articles.filter(article => 
+        filter.sources!.some(source => 
+          article.source.domain.includes(source) || 
+          article.source.name.toLowerCase().includes(source.toLowerCase())
+        )
+      );
+    }
+
+    // Sort by relevance score (if personalized) or by publication date
+    articles.sort((a, b) => {
+      if (personalize && a.relevanceScore && b.relevanceScore) {
+        return b.relevanceScore - a.relevanceScore;
+      }
+      return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+    });
+
+    // Paginate
+    const startIndex = (page - 1) * limit;
+    const paginatedArticles = articles.slice(startIndex, startIndex + limit);
+
+    // Prepare response with metadata
+    const response = {
+      success: true,
+      data: paginatedArticles,
+      metadata: {
+        total: articles.length,
+        page,
+        limit,
+        totalPages: Math.ceil(articles.length / limit),
+        category,
+        personalized: personalize,
+        aiEnhanced: includeAI,
+        filters: filter,
+        engines: newsEngines,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    return NextResponse.json(response);
+
   } catch (error) {
-    console.error('Error in news API:', error);
+    console.error('Error in enhanced news API:', error);
     return NextResponse.json(
       { 
         success: false, 
         error: 'Failed to fetch news',
-        data: getFallbackNews(),
         timestamp: new Date().toISOString()
       },
       { status: 500 }
@@ -59,101 +195,60 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Simple RSS parser (basic implementation)
-function parseRSSFeed(xmlText: string): NewsArticle[] {
-  const articles: NewsArticle[] = [];
-  
+export async function POST(request: NextRequest) {
   try {
-    // Extract items from RSS feed using regex (simplified)
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-    const titleRegex = /<title>(.*?)<\/title>/;
-    const descriptionRegex = /<description>(.*?)<\/description>/;
-    const linkRegex = /<link>(.*?)<\/link>/;
-    const pubDateRegex = /<pubDate>(.*?)<\/pubDate>/;
-    
-    let match;
-    while ((match = itemRegex.exec(xmlText)) !== null && articles.length < 10) {
-      const itemContent = match[1];
-      
-      const titleMatch = itemContent.match(titleRegex);
-      const descriptionMatch = itemContent.match(descriptionRegex);
-      const linkMatch = itemContent.match(linkRegex);
-      const pubDateMatch = itemContent.match(pubDateRegex);
-      
-      if (titleMatch && linkMatch) {
-        articles.push({
-          title: decodeXMLEntities(titleMatch[1]),
-          description: descriptionMatch ? decodeXMLEntities(descriptionMatch[1]) : '',
-          url: linkMatch[1],
-          publishedAt: pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString(),
-          source: 'Yahoo Finance',
-          sentiment: getRandomSentiment()
+    const body = await request.json();
+    const { action, userId, articleId, topics, source, preferences } = body;
+
+    switch (action) {
+      case 'updatePreferences':
+        if (!userId || !preferences) {
+          return NextResponse.json(
+            { success: false, error: 'Missing userId or preferences' },
+            { status: 400 }
+          );
+        }
+        
+        // In production, save to database
+        // await saveUserPreferences(userId, preferences);
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Preferences updated successfully'
         });
-      }
+
+      case 'recordInteraction':
+        if (!userId || !articleId || !action) {
+          return NextResponse.json(
+            { success: false, error: 'Missing required fields' },
+            { status: 400 }
+          );
+        }
+
+        // In production, update user interaction history
+        // const updatedPreferences = await personalizerAgent.updateUserPreferences(
+        //   currentPreferences, 
+        //   { articleId, topics, source, action }
+        // );
+        // await saveUserPreferences(userId, updatedPreferences);
+
+        return NextResponse.json({
+          success: true,
+          message: 'Interaction recorded'
+        });
+
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Invalid action' },
+          { status: 400 }
+        );
     }
+
   } catch (error) {
-    console.error('Error parsing RSS feed:', error);
+    console.error('Error in news POST endpoint:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-  
-  return articles.length > 0 ? articles : getFallbackNews();
 }
-
-function decodeXMLEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'");
-}
-
-function getRandomSentiment(): 'positive' | 'negative' | 'neutral' {
-  const sentiments: ('positive' | 'negative' | 'neutral')[] = ['positive', 'negative', 'neutral'];
-  return sentiments[Math.floor(Math.random() * sentiments.length)];
-}
-
-function getFallbackNews(): NewsArticle[] {
-  return [
-    {
-      title: "Federal Reserve Signals Potential Rate Cuts in 2024",
-      description: "The Federal Reserve indicated a more dovish stance, suggesting potential interest rate cuts could be on the horizon as inflation continues to moderate.",
-      url: "https://www.ft.com/content/fed-rate-cuts-2024",
-      publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      source: "Financial Times",
-      sentiment: "positive"
-    },
-    {
-      title: "Tech Stocks Rally on Strong Earnings Reports",
-      description: "Major technology companies reported better-than-expected quarterly earnings, driving a broad market rally in the tech sector.",
-      url: "https://www.reuters.com/tech-stocks-rally",
-      publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      source: "Reuters",
-      sentiment: "positive"
-    },
-    {
-      title: "Oil Prices Decline Amid Global Economic Concerns",
-      description: "Crude oil prices fell as investors weighed concerns about global economic growth and its impact on energy demand.",
-      url: "https://www.bloomberg.com/oil-prices-decline",
-      publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-      source: "Bloomberg",
-      sentiment: "negative"
-    },
-    {
-      title: "Cryptocurrency Market Shows Signs of Recovery",
-      description: "Bitcoin and other major cryptocurrencies gained ground as institutional adoption continues to grow.",
-      url: "https://www.coindesk.com/crypto-recovery",
-      publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      source: "CoinDesk",
-      sentiment: "positive"
-    },
-    {
-      title: "Global Markets React to Central Bank Policy Changes",
-      description: "International markets showed mixed reactions as central banks around the world adjust their monetary policies in response to changing economic conditions.",
-      url: "https://www.wsj.com/global-markets-central-banks",
-      publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
-      source: "The Wall Street Journal",
-      sentiment: "neutral"
-    }
-  ];
-} 
